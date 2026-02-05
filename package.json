@@ -19,6 +19,7 @@
     "js-yaml": "^4.1.0",
     "lucide-react": "^0.395.0",
     "next": "14.x",
+    "next-pwa": "^5.6.0",
     "react": "18.x",
     "react-dom": "18.x",
     "tailwind-merge": "^2.3.0",

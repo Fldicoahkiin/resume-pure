@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- FileText icon from Lucide, scaled to 512x512 -->
+  <path
+    d="M298.667 42.667H128c-23.564 0-42.667 19.103-42.667 42.666v341.334c0 23.563 19.103 42.666 42.667 42.666h256c23.564 0 42.667-19.103 42.667-42.666V170.667L298.667 42.667z"
+    stroke="#1f2937"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M298.667 42.667v128h128"
+    stroke="#1f2937"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M341.333 277.333H170.667M341.333 362.667H170.667M213.333 192H170.667"
+    stroke="#1f2937"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

@@ -18,6 +18,7 @@ A dead-simple online resume editor. Pure means no clutter, no signup, no trackin
 - **Theme Settings** - Colors, fonts, sizes, spacing, line height
 - **Section Control** - Reorder, show/hide sections
 - **Custom Contacts** - Add any contact with custom icons
+- **PWA Support** - Install to desktop, works offline
 
 ## Deploy
 
@@ -92,6 +93,7 @@ MIT
 - **主题配置** - 颜色、字体、字号、间距、行高
 - **Section 控制** - 排序、显隐
 - **联系方式** - 自定义图标
+- **PWA 支持** - 可安装到桌面，支持离线使用
 
 ## 部署
 
