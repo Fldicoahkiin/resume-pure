@@ -4,20 +4,21 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Education } from '@/types';
 import { GraduationCap, Plus, Trash2 } from 'lucide-react';
 
-export function EducationEditor() {
-  const { resume, hasHydrated, addEducation, updateEducation, deleteEducation, updateSectionConfig } = useResumeStore();
+interface EducationEditorProps {
+  embedded?: boolean;
+}
+
+export function EducationEditor({ embedded = false }: EducationEditorProps) {
+  const { resume, hasHydrated, addEducation, updateEducation, deleteEducation } = useResumeStore();
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
+      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white p-6 shadow animate-pulse"}>
         <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
         <div className="h-32 bg-gray-200 rounded"></div>
       </div>
     );
   }
-
-  const section = resume.sections.find(s => s.id === 'education');
-  const sectionTitle = section?.title || '教育背景';
 
   const handleAdd = () => {
     const newEdu: Education = {
@@ -34,20 +35,8 @@ export function EducationEditor() {
     addEducation(newEdu);
   };
 
-  return (
-    <section className="rounded-lg bg-white p-6 shadow">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="h-5 w-5 text-gray-600" />
-          <input
-            type="text"
-            value={sectionTitle}
-            onChange={(e) => updateSectionConfig('education', { title: e.target.value })}
-            className="text-lg font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 -ml-1"
-          />
-        </div>
-      </div>
-
+  const content = (
+    <>
       {resume.education.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -131,6 +120,20 @@ export function EducationEditor() {
           添加教育
         </button>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <section className="rounded-lg bg-white p-6 shadow">
+      <div className="flex items-center gap-2 mb-4">
+        <GraduationCap className="h-5 w-5 text-gray-600" />
+        <h2 className="text-lg font-semibold text-gray-900">教育背景</h2>
+      </div>
+      {content}
     </section>
   );
 }

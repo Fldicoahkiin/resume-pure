@@ -6,17 +6,86 @@ import { ExperienceEditor } from '@/components/editor/ExperienceEditor';
 import { EducationEditor } from '@/components/editor/EducationEditor';
 import { ProjectEditor } from '@/components/editor/ProjectEditor';
 import { SkillEditor } from '@/components/editor/SkillEditor';
+import { ThemeEditor } from '@/components/editor/ThemeEditor';
+import { DraggableSection } from '@/components/editor/DraggableSection';
 import { RawEditor } from '@/components/editor/RawEditor';
 import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
-import { FileText, Code, FormInput } from 'lucide-react';
+import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench } from 'lucide-react';
 import Link from 'next/link';
+import { useResumeStore } from '@/store/resumeStore';
 
 type EditorMode = 'form' | 'raw';
+
+const sectionIcons: Record<string, React.ReactNode> = {
+  experience: <Briefcase size={18} />,
+  education: <GraduationCap size={18} />,
+  projects: <FolderKanban size={18} />,
+  skills: <Wrench size={18} />,
+};
+
+const sectionEditors: Record<string, React.ReactNode> = {
+  experience: <ExperienceEditor embedded />,
+  education: <EducationEditor embedded />,
+  projects: <ProjectEditor embedded />,
+  skills: <SkillEditor embedded />,
+};
 
 export default function BuilderPage() {
   const [scale, setScale] = useState(0.6);
   const [editorMode, setEditorMode] = useState<EditorMode>('form');
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+
+  const { resume, hasHydrated, reorderSections, updateSectionConfig } = useResumeStore();
+
+  // 排除 summary（个人简介在头部显示）
+  const sortableSections = hasHydrated
+    ? [...resume.sections].filter(s => s.id !== 'summary').sort((a, b) => a.order - b.order)
+    : [];
+
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+
+    const newSections = [...sortableSections];
+    const [removed] = newSections.splice(draggedIdx, 1);
+    newSections.splice(idx, 0, removed);
+
+    // 保持 summary 的位置
+    const summarySection = resume.sections.find(s => s.id === 'summary');
+    const allSections = summarySection ? [summarySection, ...newSections] : newSections;
+
+    reorderSections(allSections);
+    setDraggedIdx(idx);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+  };
+
+  const toggleCollapse = (sectionId: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return next;
+    });
+  };
+
+  const toggleVisible = (sectionId: string) => {
+    const section = resume.sections.find(s => s.id === sectionId);
+    if (section) {
+      updateSectionConfig(sectionId, { visible: !section.visible });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,11 +136,29 @@ export default function BuilderPage() {
           {editorMode === 'form' ? (
             <div className="flex-1 overflow-y-auto">
               <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto lg:mr-0">
+                {/* 个人信息 - 固定在顶部 */}
                 <PersonalInfoEditor />
-                <ExperienceEditor />
-                <EducationEditor />
-                <ProjectEditor />
-                <SkillEditor />
+
+                {/* 可拖拽的模块 */}
+                {sortableSections.map((section, idx) => (
+                  <DraggableSection
+                    key={section.id}
+                    section={section}
+                    icon={sectionIcons[section.id]}
+                    isCollapsed={collapsedSections.has(section.id)}
+                    onToggleCollapse={() => toggleCollapse(section.id)}
+                    onToggleVisible={() => toggleVisible(section.id)}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDragEnd={handleDragEnd}
+                    isDragging={draggedIdx === idx}
+                  >
+                    {sectionEditors[section.id]}
+                  </DraggableSection>
+                ))}
+
+                {/* 主题设置 - 固定在底部 */}
+                <ThemeEditor />
                 <div className="h-8" />
               </div>
             </div>

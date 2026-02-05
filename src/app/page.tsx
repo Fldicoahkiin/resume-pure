@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, ArrowRight } from 'lucide-react';
+import { FileText, ArrowRight, Github, Eye, HardDrive, Download, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -13,29 +13,42 @@ export default function HomePage() {
             <FileText className="text-gray-800" size={28} />
             <span className="text-xl font-semibold">Resume Pure</span>
           </div>
-          <Link
-            href="/builder"
-            className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition"
-          >
-            开始编辑
-          </Link>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/Fldicoahkiin/resume-pure"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-gray-900 transition"
+            >
+              <Github size={22} />
+            </a>
+            <Link
+              href="/builder"
+              className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition"
+            >
+              开始编辑
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="container mx-auto px-6 py-24">
+      <section className="container mx-auto px-6 py-20">
         <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
-            写简历，不折腾
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
+            简单好用的在线简历编辑器
           </h1>
-          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-            一个干净的简历编辑器。填写内容，实时预览，导出 PDF。没有注册，没有水印，数据存在本地。
+          <p className="text-lg text-gray-600 mb-3 leading-relaxed">
+            不用注册，不用下载，打开就能写。数据存本地，导出免费。
+          </p>
+          <p className="text-gray-500 mb-8">
+            适合想快速做份干净简历的人。
           </p>
           <Link
             href="/builder"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
           >
-            开始写简历
+            立即制作简历
             <ArrowRight size={18} />
           </Link>
         </div>
@@ -43,31 +56,67 @@ export default function HomePage() {
 
       {/* Features */}
       <section className="container mx-auto px-6 py-16 border-t">
-        <div className="grid md:grid-cols-3 gap-12">
+        <div className="grid md:grid-cols-3 gap-10">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">实时预览</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Eye className="text-gray-700" size={20} />
+              <h3 className="text-lg font-semibold text-gray-900">实时预览</h3>
+            </div>
             <p className="text-gray-600">
-              左边编辑，右边预览。改一个字，立刻看到效果。
+              A4 尺寸 1:1 渲染，左边编辑右边看，不用反复导出。
             </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">本地存储</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <HardDrive className="text-gray-700" size={20} />
+              <h3 className="text-lg font-semibold text-gray-900">本地存储</h3>
+            </div>
             <p className="text-gray-600">
-              数据保存在浏览器里，关掉页面再打开，内容还在。
+              数据存在浏览器本地，没网也能用，隐私不担心。
             </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">导出 PDF</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Download className="text-gray-700" size={20} />
+              <h3 className="text-lg font-semibold text-gray-900">多格式导出</h3>
+            </div>
             <p className="text-gray-600">
-              一键导出标准 A4 尺寸的 PDF 文件，直接投递。
+              PDF / PNG / JSON / YAML，投简历、备份、换设备都方便。
             </p>
           </div>
         </div>
       </section>
 
+      {/* Why */}
+      <section className="container mx-auto px-6 py-16 border-t bg-gray-50/50">
+        <div className="max-w-2xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="text-gray-700" size={20} />
+            <h2 className="text-xl font-semibold text-gray-900">为什么要用 Resume Pure</h2>
+          </div>
+          <ul className="space-y-3 text-gray-600">
+            <li>· 不用注册账号，打开即用</li>
+            <li>· 没有付费墙，所有功能免费</li>
+            <li>· 排版简洁专业，不用自己调格式</li>
+            <li>· 数据自己掌控，随时可以导出备份</li>
+          </ul>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="container mx-auto px-6 py-8 border-t text-center text-gray-500 text-sm">
-        <p>Resume Pure · 开源项目</p>
+        <p>
+          <a
+            href="https://github.com/Fldicoahkiin/resume-pure"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-700"
+          >
+            GitHub
+          </a>
+          <span className="mx-2">·</span>
+          MIT License
+        </p>
       </footer>
     </div>
   );

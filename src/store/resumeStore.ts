@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill } from '@/types';
+import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig } from '@/types';
 
 // 深度合并函数，确保嵌套对象正确合并
 function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData {
@@ -42,8 +42,10 @@ interface ResumeStore {
   hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
   updatePersonalInfo: (info: Partial<ResumeData['personalInfo']>) => void;
+  updateIconConfig: (config: Partial<ContactIconConfig>) => void;
   updateTheme: (theme: Partial<ThemeConfig>) => void;
   updateSectionConfig: (sectionId: string, config: Partial<SectionConfig>) => void;
+  reorderSections: (sections: SectionConfig[]) => void;
   addExperience: (exp: Experience) => void;
   updateExperience: (id: string, exp: Partial<Experience>) => void;
   deleteExperience: (id: string) => void;
@@ -56,6 +58,11 @@ interface ResumeStore {
   addSkill: (skill: Skill) => void;
   updateSkill: (id: string, skill: Partial<Skill>) => void;
   deleteSkill: (id: string) => void;
+  // 联系方式相关
+  addContact: (contact: ContactItem) => void;
+  updateContact: (id: string, contact: Partial<ContactItem>) => void;
+  deleteContact: (id: string) => void;
+  reorderContacts: (contacts: ContactItem[]) => void;
   importData: (data: ResumeData) => void;
   reset: () => void;
 }
@@ -85,6 +92,7 @@ const initialResume: ResumeData = {
     fontSize: 11,
     spacing: 8,
     lineHeight: 1.5,
+    enableLinks: true,
   },
 };
 
@@ -103,6 +111,17 @@ export const useResumeStore = create<ResumeStore>()(
           },
         })),
 
+      updateIconConfig: (config) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            personalInfo: {
+              ...state.resume.personalInfo,
+              iconConfig: { ...state.resume.personalInfo.iconConfig, ...config },
+            },
+          },
+        })),
+
       updateTheme: (theme) =>
         set((state) => ({
           resume: {
@@ -118,6 +137,14 @@ export const useResumeStore = create<ResumeStore>()(
             sections: state.resume.sections.map((section) =>
               section.id === sectionId ? { ...section, ...config } : section
             ),
+          },
+        })),
+
+      reorderSections: (sections) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            sections: sections.map((s, idx) => ({ ...s, order: idx + 1 })),
           },
         })),
 
@@ -222,6 +249,53 @@ export const useResumeStore = create<ResumeStore>()(
           resume: {
             ...state.resume,
             skills: state.resume.skills.filter((item) => item.id !== id),
+          },
+        })),
+
+      // 联系方式相关
+      addContact: (contact) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            personalInfo: {
+              ...state.resume.personalInfo,
+              contacts: [...(state.resume.personalInfo.contacts || []), contact],
+            },
+          },
+        })),
+
+      updateContact: (id, contact) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            personalInfo: {
+              ...state.resume.personalInfo,
+              contacts: (state.resume.personalInfo.contacts || []).map((item) =>
+                item.id === id ? { ...item, ...contact } : item
+              ),
+            },
+          },
+        })),
+
+      deleteContact: (id) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            personalInfo: {
+              ...state.resume.personalInfo,
+              contacts: (state.resume.personalInfo.contacts || []).filter((item) => item.id !== id),
+            },
+          },
+        })),
+
+      reorderContacts: (contacts) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            personalInfo: {
+              ...state.resume.personalInfo,
+              contacts: contacts.map((c, idx) => ({ ...c, order: idx })),
+            },
           },
         })),
 

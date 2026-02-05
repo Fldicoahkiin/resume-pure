@@ -4,20 +4,21 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Skill } from '@/types';
 import { Wrench, Plus, X } from 'lucide-react';
 
-export function SkillEditor() {
-  const { resume, hasHydrated, addSkill, updateSkill, deleteSkill, updateSectionConfig } = useResumeStore();
+interface SkillEditorProps {
+  embedded?: boolean;
+}
+
+export function SkillEditor({ embedded = false }: SkillEditorProps) {
+  const { resume, hasHydrated, addSkill, updateSkill, deleteSkill } = useResumeStore();
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
+      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white p-6 shadow animate-pulse"}>
         <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
         <div className="h-32 bg-gray-200 rounded"></div>
       </div>
     );
   }
-
-  const section = resume.sections.find(s => s.id === 'skills');
-  const sectionTitle = section?.title || '技能专长';
 
   const handleAdd = () => {
     const newSkill: Skill = {
@@ -33,27 +34,8 @@ export function SkillEditor() {
     updateSkill(id, { items });
   };
 
-  return (
-    <section className="rounded-lg bg-white p-6 shadow">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-gray-600" />
-          <input
-            type="text"
-            value={sectionTitle}
-            onChange={(e) => updateSectionConfig('skills', { title: e.target.value })}
-            className="text-lg font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 -ml-1"
-          />
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition"
-        >
-          <Plus size={16} />
-          添加
-        </button>
-      </div>
-
+  const content = (
+    <>
       {resume.skills.length === 0 ? (
         <div className="text-center py-6 text-gray-400 text-sm">
           点击右上角添加技能
@@ -89,6 +71,30 @@ export function SkillEditor() {
           ))}
         </div>
       )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleAdd}
+          className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+        >
+          <Plus size={16} />
+          添加技能
+        </button>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <section className="rounded-lg bg-white p-6 shadow">
+      <div className="flex items-center gap-2 mb-4">
+        <Wrench className="h-5 w-5 text-gray-600" />
+        <h2 className="text-lg font-semibold text-gray-900">技能专长</h2>
+      </div>
+      {content}
     </section>
   );
 }

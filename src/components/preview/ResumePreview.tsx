@@ -1,19 +1,34 @@
 'use client';
 
 import { useResumeStore } from '@/store/resumeStore';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
+import { ContactIconType } from '@/types';
 
 // 联系信息图标组件
-function ContactIcon({ type }: { type: string }) {
-  const iconClass = "w-3 h-3 text-gray-500";
+function ContactIcon({ type, className }: { type: string | ContactIconType; className?: string }) {
+  const iconClass = className || "w-3 h-3 text-gray-500";
   switch (type) {
-    case 'email': return <Mail className={iconClass} />;
+    case 'email':
+    case 'mail': return <Mail className={iconClass} />;
     case 'phone': return <Phone className={iconClass} />;
-    case 'location': return <MapPin className={iconClass} />;
-    case 'website': return <Globe className={iconClass} />;
+    case 'location':
+    case 'map-pin': return <MapPin className={iconClass} />;
+    case 'website':
+    case 'globe': return <Globe className={iconClass} />;
     case 'linkedin': return <Linkedin className={iconClass} />;
     case 'github': return <Github className={iconClass} />;
-    default: return null;
+    case 'twitter': return <Twitter className={iconClass} />;
+    case 'instagram': return <Instagram className={iconClass} />;
+    case 'facebook': return <Facebook className={iconClass} />;
+    case 'youtube': return <Youtube className={iconClass} />;
+    case 'dribbble': return <Dribbble className={iconClass} />;
+    case 'link': return <Link className={iconClass} />;
+    case 'user': return <User className={iconClass} />;
+    case 'briefcase': return <Briefcase className={iconClass} />;
+    case 'calendar': return <Calendar className={iconClass} />;
+    case 'message-circle': return <MessageCircle className={iconClass} />;
+    case 'at-sign': return <AtSign className={iconClass} />;
+    default: return <Globe className={iconClass} />;
   }
 }
 
@@ -83,15 +98,45 @@ export function ResumePreview() {
     .filter(s => s.visible)
     .sort((a, b) => a.order - b.order);
 
-  // 联系信息项
-  const contactItems = [
-    { type: 'email', value: personalInfo.email },
-    { type: 'phone', value: personalInfo.phone },
-    { type: 'location', value: personalInfo.location },
-    { type: 'website', value: personalInfo.website },
-    { type: 'linkedin', value: personalInfo.linkedin },
-    { type: 'github', value: personalInfo.github },
+  // URL 安全检查
+  const sanitizeUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined;
+    const trimmed = url.trim();
+    // 只允许 http, https, mailto, tel 协议
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
+      return trimmed;
+    }
+    // 如果看起来像邮箱，添加 mailto:
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      return `mailto:${trimmed}`;
+    }
+    // 如果看起来像电话号码，添加 tel:
+    if (/^[\d\s\-+()]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 7) {
+      return `tel:${trimmed.replace(/\s/g, '')}`;
+    }
+    // 如果看起来像域名，添加 https://
+    if (/^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+    return undefined;
+  };
+
+  // 基础联系信息项（使用自定义图标配置）
+  const iconConfig = personalInfo.iconConfig || {};
+  const baseContactItems = [
+    { type: iconConfig.emailIcon || 'mail', value: personalInfo.email, href: sanitizeUrl(personalInfo.email) },
+    { type: iconConfig.phoneIcon || 'phone', value: personalInfo.phone, href: sanitizeUrl(personalInfo.phone) },
+    { type: iconConfig.locationIcon || 'map-pin', value: personalInfo.location, href: undefined },
+    { type: iconConfig.websiteIcon || 'globe', value: personalInfo.website, href: sanitizeUrl(personalInfo.website) },
   ].filter(item => item.value);
+
+  // 自定义联系方式
+  const customContacts = (personalInfo.contacts || [])
+    .filter(c => c.value)
+    .sort((a, b) => a.order - b.order)
+    .map(c => ({ type: c.type, value: c.value, href: c.href ? sanitizeUrl(c.href) : sanitizeUrl(c.value) }));
+
+  const allContactItems = [...baseContactItems, ...customContacts];
 
   return (
     <div
@@ -135,13 +180,24 @@ export function ResumePreview() {
             </p>
           )}
 
-          {/* 联系方式 */}
-          {contactItems.length > 0 && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
-              {contactItems.map(({ type, value }) => (
-                <div key={type} className="flex items-center gap-1.5">
+          {/* 联系方式 - 每行两个 */}
+          {allContactItems.length > 0 && (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
+              {allContactItems.map(({ type, value, href }, idx) => (
+                <div key={`${type}-${idx}`} className="flex items-center gap-1.5 min-w-0">
                   <ContactIcon type={type} />
-                  <span className="text-xs text-gray-600">{value}</span>
+                  {href && theme.enableLinks !== false ? (
+                    <a
+                      href={href}
+                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline truncate"
+                      target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
+                      rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    >
+                      {value}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gray-600 truncate">{value}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -178,7 +234,7 @@ export function ResumePreview() {
                               {exp.location && <span className="text-gray-500"> · {exp.location}</span>}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {exp.startDate} - {exp.current ? '至今' : exp.endDate}
+                              {exp.startDate}{exp.current ? '至今' : exp.endDate}
                             </span>
                           </div>
                           <BulletList items={exp.description} />
@@ -212,7 +268,7 @@ export function ResumePreview() {
                               {edu.gpa && <span className="text-gray-500"> · GPA: {edu.gpa}</span>}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {edu.startDate} - {edu.endDate}
+                              {edu.startDate}{edu.endDate}
                             </span>
                           </div>
                           {edu.description && <BulletList items={edu.description} />}
@@ -239,7 +295,7 @@ export function ResumePreview() {
                             )}
                           </h3>
                           <span className="text-xs text-gray-500">
-                            {proj.startDate} - {proj.current ? '至今' : proj.endDate}
+                            {proj.startDate}{proj.current ? '至今' : proj.endDate}
                           </span>
                         </div>
                         <BulletList items={proj.description} />

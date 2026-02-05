@@ -4,20 +4,21 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Project } from '@/types';
 import { Lightbulb, Plus, Trash2 } from 'lucide-react';
 
-export function ProjectEditor() {
-  const { resume, hasHydrated, addProject, updateProject, deleteProject, updateSectionConfig } = useResumeStore();
+interface ProjectEditorProps {
+  embedded?: boolean;
+}
+
+export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
+  const { resume, hasHydrated, addProject, updateProject, deleteProject } = useResumeStore();
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
+      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white p-6 shadow animate-pulse"}>
         <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
         <div className="h-32 bg-gray-200 rounded"></div>
       </div>
     );
   }
-
-  const section = resume.sections.find(s => s.id === 'projects');
-  const sectionTitle = section?.title || '项目经验';
 
   const handleAdd = () => {
     const newProj: Project = {
@@ -63,20 +64,8 @@ export function ProjectEditor() {
     updateProject(id, { technologies });
   };
 
-  return (
-    <section className="rounded-lg bg-white p-6 shadow">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-gray-600" />
-          <input
-            type="text"
-            value={sectionTitle}
-            onChange={(e) => updateSectionConfig('projects', { title: e.target.value })}
-            className="text-lg font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 -ml-1"
-          />
-        </div>
-      </div>
-
+  const content = (
+    <>
       {resume.projects.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <Lightbulb className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -193,6 +182,20 @@ export function ProjectEditor() {
           添加项目
         </button>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <section className="rounded-lg bg-white p-6 shadow">
+      <div className="flex items-center gap-2 mb-4">
+        <Lightbulb className="h-5 w-5 text-gray-600" />
+        <h2 className="text-lg font-semibold text-gray-900">项目经验</h2>
+      </div>
+      {content}
     </section>
   );
 }

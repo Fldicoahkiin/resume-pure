@@ -4,20 +4,21 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Experience } from '@/types';
 import { Briefcase, Plus, Trash2 } from 'lucide-react';
 
-export function ExperienceEditor() {
-  const { resume, hasHydrated, addExperience, updateExperience, deleteExperience, updateSectionConfig } = useResumeStore();
+interface ExperienceEditorProps {
+  embedded?: boolean;
+}
+
+export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
+  const { resume, hasHydrated, addExperience, updateExperience, deleteExperience } = useResumeStore();
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
+      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white p-6 shadow animate-pulse"}>
         <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
         <div className="h-32 bg-gray-200 rounded"></div>
       </div>
     );
   }
-
-  const section = resume.sections.find(s => s.id === 'experience');
-  const sectionTitle = section?.title || '工作经历';
 
   const handleAdd = () => {
     const newExp: Experience = {
@@ -57,20 +58,8 @@ export function ExperienceEditor() {
     }
   };
 
-  return (
-    <section className="rounded-lg bg-white p-6 shadow">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-gray-600" />
-          <input
-            type="text"
-            value={sectionTitle}
-            onChange={(e) => updateSectionConfig('experience', { title: e.target.value })}
-            className="text-lg font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 -ml-1"
-          />
-        </div>
-      </div>
-
+  const content = (
+    <>
       {resume.experience.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <Briefcase className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -176,6 +165,20 @@ export function ExperienceEditor() {
           添加工作
         </button>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <section className="rounded-lg bg-white p-6 shadow">
+      <div className="flex items-center gap-2 mb-4">
+        <Briefcase className="h-5 w-5 text-gray-600" />
+        <h2 className="text-lg font-semibold text-gray-900">工作经历</h2>
+      </div>
+      {content}
     </section>
   );
 }
