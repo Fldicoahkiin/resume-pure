@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Resume Pure - 简洁的简历编辑器',
-  description: '纯粹的在线简历编辑器，支持实时预览和多格式导出',
+  title: 'Resume Pure - 在线简历编辑器',
+  description: '免费在线简历编辑器，实时预览，支持 PDF 导出',
 };
 
 export default function RootLayout({

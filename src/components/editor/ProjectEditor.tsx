@@ -104,7 +104,7 @@ export function ProjectEditor() {
                 value={proj.name}
                 onChange={(e) => updateProject(proj.id, { name: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="电商平台"
+                placeholder=""
               />
             </label>
 
@@ -115,7 +115,7 @@ export function ProjectEditor() {
                 value={proj.role || ''}
                 onChange={(e) => updateProject(proj.id, { role: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="核心开发者"
+                placeholder=""
               />
             </label>
 
@@ -133,7 +133,7 @@ export function ProjectEditor() {
                   });
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="2023.01 - 至今"
+                placeholder=""
               />
             </label>
 
@@ -144,7 +144,7 @@ export function ProjectEditor() {
                 value={(proj.technologies || []).join(', ')}
                 onChange={(e) => handleUpdateTechnologies(proj.id, e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="React, TypeScript, Node.js (用逗号分隔)"
+                placeholder=""
               />
             </label>
 
@@ -159,7 +159,7 @@ export function ProjectEditor() {
                       value={desc}
                       onChange={(e) => handleUpdateDescription(proj.id, descIdx, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                      placeholder="描述项目内容、你的职责和成果..."
+                      placeholder=""
                     />
                     {proj.description.length > 1 && (
                       <button

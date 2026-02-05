@@ -260,14 +260,21 @@ export function ResumePreview() {
               return (
                 <section key={section.id} className="mb-5">
                   <SectionTitle title={section.title || '技能专长'} themeColor={theme.primaryColor} />
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {skills.map(skill => (
-                      <div key={skill.id} className="flex text-xs">
-                        <span className="font-semibold text-gray-800 w-24 shrink-0">
-                          {skill.category}
-                        </span>
+                      <div key={skill.id} className="text-xs">
+                        {skill.category && (
+                          <span className="font-semibold text-gray-800 mr-2">
+                            {skill.category}:
+                          </span>
+                        )}
                         <span className="text-gray-700">
-                          {skill.items.join(' · ')}
+                          {skill.items.map((item, idx) => (
+                            <span key={idx}>
+                              {idx > 0 && <span className="mx-1.5 text-gray-400">•</span>}
+                              {item}
+                            </span>
+                          ))}
                         </span>
                       </div>
                     ))}

@@ -38,7 +38,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.name}
             onChange={(e) => updatePersonalInfo({ name: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="张三"
+            placeholder=""
           />
         </label>
 
@@ -49,7 +49,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.title || ''}
             onChange={(e) => updatePersonalInfo({ title: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="前端工程师"
+            placeholder=""
           />
         </label>
 
@@ -60,7 +60,7 @@ export function PersonalInfoEditor() {
             onChange={(e) => updatePersonalInfo({ summary: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal resize-none"
             rows={3}
-            placeholder="简要介绍你的背景、技能和职业目标..."
+            placeholder=""
           />
         </label>
 
@@ -71,7 +71,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.email}
             onChange={(e) => updatePersonalInfo({ email: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="zhangsan@example.com"
+            placeholder=""
           />
         </label>
 
@@ -82,7 +82,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.phone}
             onChange={(e) => updatePersonalInfo({ phone: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="138-0000-0000"
+            placeholder=""
           />
         </label>
 
@@ -93,7 +93,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.website || ''}
             onChange={(e) => updatePersonalInfo({ website: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="https://example.com"
+            placeholder=""
           />
         </label>
 
@@ -104,7 +104,7 @@ export function PersonalInfoEditor() {
             value={personalInfo.location}
             onChange={(e) => updatePersonalInfo({ location: e.target.value })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-            placeholder="北京市"
+            placeholder=""
           />
         </label>
       </div>

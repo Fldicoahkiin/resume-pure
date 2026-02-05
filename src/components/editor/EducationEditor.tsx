@@ -75,7 +75,7 @@ export function EducationEditor() {
                 value={edu.school}
                 onChange={(e) => updateEducation(edu.id, { school: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="清华大学"
+                placeholder=""
               />
             </label>
 
@@ -89,7 +89,7 @@ export function EducationEditor() {
                   updateEducation(edu.id, { degree: degree || '', major: major || '' });
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="本科 - 计算机科学与技术"
+                placeholder=""
               />
             </label>
 
@@ -103,7 +103,7 @@ export function EducationEditor() {
                   updateEducation(edu.id, { startDate: start || '', endDate: end || '' });
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="2018.09 - 2022.06"
+                placeholder=""
               />
             </label>
 
@@ -114,7 +114,7 @@ export function EducationEditor() {
                 value={edu.gpa || ''}
                 onChange={(e) => updateEducation(edu.id, { gpa: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="3.8/4.0"
+                placeholder=""
               />
             </label>
           </div>

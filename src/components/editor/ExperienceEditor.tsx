@@ -98,7 +98,7 @@ export function ExperienceEditor() {
                 value={exp.company}
                 onChange={(e) => updateExperience(exp.id, { company: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="XX科技有限公司"
+                placeholder=""
               />
             </label>
 
@@ -109,7 +109,7 @@ export function ExperienceEditor() {
                 value={exp.position}
                 onChange={(e) => updateExperience(exp.id, { position: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="前端工程师"
+                placeholder=""
               />
             </label>
 
@@ -127,7 +127,7 @@ export function ExperienceEditor() {
                   });
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                placeholder="2022.06 - 至今"
+                placeholder=""
               />
             </label>
 
@@ -142,7 +142,7 @@ export function ExperienceEditor() {
                       value={desc}
                       onChange={(e) => handleUpdateDescription(exp.id, descIdx, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
-                      placeholder="描述你的工作职责和成就..."
+                      placeholder=""
                     />
                     {exp.description.length > 1 && (
                       <button
