@@ -2,12 +2,26 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { ResumeData } from '@/types';
 
+Font.register({
+  family: 'NotoSansSC',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYxNbPzS5HE.ttf',
+      fontWeight: 400,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_EnYxNbPzS5HE.ttf',
+      fontWeight: 700,
+    },
+  ],
+});
+
 // 定义样式
 const createStyles = (theme: ResumeData['theme']) => StyleSheet.create({
   page: {
     padding: 40,
     fontSize: theme.fontSize,
-    fontFamily: 'Helvetica',
+    fontFamily: 'NotoSansSC',
     lineHeight: theme.lineHeight,
     backgroundColor: '#ffffff',
   },

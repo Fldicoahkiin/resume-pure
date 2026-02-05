@@ -128,7 +128,7 @@ export function ResumePreview() {
             <p className="text-sm text-gray-600 mt-1">{personalInfo.title}</p>
           )}
 
-          {/* 个人简介 - 放在头部 */}
+          {/* 个人简介 */}
           {personalInfo.summary && (
             <p className="text-xs text-gray-600 mt-2 leading-relaxed">
               {personalInfo.summary}
