@@ -25,6 +25,15 @@ A dead-simple online resume editor. Pure means no clutter, no signup, no trackin
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
 
+### Docker
+
+```bash
+docker build -t resume-pure .
+docker run -p 3000:80 resume-pure
+```
+
+Then open <http://localhost:3000>
+
 ### GitHub Pages
 
 Automatically deployed via GitHub Actions. Configure in:
@@ -89,6 +98,15 @@ MIT
 ### Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
+
+### Docker
+
+```bash
+docker build -t resume-pure .
+docker run -p 3000:80 resume-pure
+```
+
+然后打开 <http://localhost:3000>
 
 ### GitHub Pages
 
