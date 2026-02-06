@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig } from '@/types';
+import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSection, CustomSectionItem } from '@/types';
 
 // 深度合并函数，确保嵌套对象正确合并
 function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData {
@@ -22,6 +22,7 @@ function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData 
     education: source.education ?? target.education,
     projects: source.projects ?? target.projects,
     skills: source.skills ?? target.skills,
+    customSections: source.customSections ?? target.customSections,
     sections: mergedSections,
     theme: {
       ...target.theme,
@@ -56,6 +57,12 @@ interface ResumeStore {
   updateContact: (id: string, contact: Partial<ContactItem>) => void;
   deleteContact: (id: string) => void;
   reorderContacts: (contacts: ContactItem[]) => void;
+  // 自定义模块相关
+  addCustomSection: (title: string) => string;
+  deleteCustomSection: (sectionId: string) => void;
+  addCustomSectionItem: (sectionId: string, item: CustomSectionItem) => void;
+  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<CustomSectionItem>) => void;
+  deleteCustomSectionItem: (sectionId: string, itemId: string) => void;
   importData: (data: ResumeData) => void;
   reset: () => void;
 }
@@ -72,6 +79,7 @@ const initialResume: ResumeData = {
   education: [],
   projects: [],
   skills: [],
+  customSections: [],
   sections: [
     { id: 'summary', title: '', visible: true, order: 1 },
     { id: 'experience', title: '', visible: true, order: 2 },
@@ -289,6 +297,81 @@ export const useResumeStore = create<ResumeStore>()(
               ...state.resume.personalInfo,
               contacts: contacts.map((c, idx) => ({ ...c, order: idx })),
             },
+          },
+        })),
+
+      // 自定义模块相关
+      addCustomSection: (title) => {
+        const sectionId = `custom-${Date.now()}`;
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            sections: [
+              ...state.resume.sections,
+              {
+                id: sectionId,
+                title,
+                visible: true,
+                order: state.resume.sections.length + 1,
+                isCustom: true,
+              },
+            ],
+            customSections: [
+              ...state.resume.customSections,
+              { id: sectionId, items: [] },
+            ],
+          },
+        }));
+        return sectionId;
+      },
+
+      deleteCustomSection: (sectionId) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            sections: state.resume.sections.filter((s) => s.id !== sectionId),
+            customSections: state.resume.customSections.filter((s) => s.id !== sectionId),
+          },
+        })),
+
+      addCustomSectionItem: (sectionId, item) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            customSections: state.resume.customSections.map((section) =>
+              section.id === sectionId
+                ? { ...section, items: [...section.items, item] }
+                : section
+            ),
+          },
+        })),
+
+      updateCustomSectionItem: (sectionId, itemId, item) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            customSections: state.resume.customSections.map((section) =>
+              section.id === sectionId
+                ? {
+                    ...section,
+                    items: section.items.map((i) =>
+                      i.id === itemId ? { ...i, ...item } : i
+                    ),
+                  }
+                : section
+            ),
+          },
+        })),
+
+      deleteCustomSectionItem: (sectionId, itemId) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            customSections: state.resume.customSections.map((section) =>
+              section.id === sectionId
+                ? { ...section, items: section.items.filter((i) => i.id !== itemId) }
+                : section
+            ),
           },
         })),
 

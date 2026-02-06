@@ -267,6 +267,31 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               );
 
             default:
+              // 处理自定义模块
+              if (section.isCustom) {
+                const customSection = data.customSections?.find(cs => cs.id === section.id);
+                if (!customSection || customSection.items.length === 0) return null;
+
+                return (
+                  <View key={section.id} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{section.title}</Text>
+                    {customSection.items.map(item => (
+                      <View key={item.id} style={styles.itemContainer}>
+                        <View style={styles.itemHeader}>
+                          <View>
+                            {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
+                            {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
+                          </View>
+                          {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
+                        </View>
+                        {item.description.map((desc, idx) => (
+                          <Text key={idx} style={styles.bulletPoint}>• {desc}</Text>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                );
+              }
               return null;
           }
         })}

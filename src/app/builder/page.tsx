@@ -6,6 +6,7 @@ import { ExperienceEditor } from '@/components/editor/ExperienceEditor';
 import { EducationEditor } from '@/components/editor/EducationEditor';
 import { ProjectEditor } from '@/components/editor/ProjectEditor';
 import { SkillEditor } from '@/components/editor/SkillEditor';
+import { CustomSectionEditor } from '@/components/editor/CustomSectionEditor';
 import { ThemeEditor } from '@/components/editor/ThemeEditor';
 import { DraggableSection } from '@/components/editor/DraggableSection';
 import { RawEditor } from '@/components/editor/RawEditor';
@@ -13,7 +14,7 @@ import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench } from 'lucide-react';
+import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, FileText as CustomIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +42,7 @@ export default function BuilderPage() {
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
-  const { resume, hasHydrated, reorderSections, updateSectionConfig } = useResumeStore();
+  const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
 
   // 排除 summary（个人简介在头部显示）
   const sortableSections = hasHydrated
@@ -161,7 +162,7 @@ export default function BuilderPage() {
                   <DraggableSection
                     key={section.id}
                     section={section}
-                    icon={sectionIcons[section.id]}
+                    icon={section.isCustom ? <CustomIcon size={18} /> : sectionIcons[section.id]}
                     title={getSectionTitle(section.id)}
                     isCollapsed={collapsedSections.has(section.id)}
                     onToggleCollapse={() => toggleCollapse(section.id)}
@@ -171,10 +172,27 @@ export default function BuilderPage() {
                     onDragOver={(e) => handleDragOver(e, idx)}
                     onDragEnd={handleDragEnd}
                     isDragging={draggedIdx === idx}
+                    onDelete={section.isCustom ? () => deleteCustomSection(section.id) : undefined}
                   >
-                    {sectionEditors[section.id]}
+                    {section.isCustom ? (
+                      <CustomSectionEditor sectionId={section.id} embedded />
+                    ) : (
+                      sectionEditors[section.id]
+                    )}
                   </DraggableSection>
                 ))}
+
+                {/* 添加自定义模块按钮 */}
+                <button
+                  onClick={() => {
+                    const title = t('editor.customSection.newSectionTitle');
+                    addCustomSection(title);
+                  }}
+                  className="w-full py-3 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={18} />
+                  {t('editor.customSection.addSection')}
+                </button>
 
                 {/* 主题设置 - 固定在底部 */}
                 <ThemeEditor />

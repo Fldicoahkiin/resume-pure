@@ -106,6 +106,20 @@
       "noSkills": "点击右上角添加技能",
       "addSkill": "添加技能"
     },
+    "customSection": {
+      "title": "自定义模块",
+      "newSectionTitle": "新模块",
+      "addSection": "添加自定义模块",
+      "noItems": "暂无内容",
+      "addHint": "点击下方按钮添加内容",
+      "itemTitle": "标题",
+      "subtitle": "副标题",
+      "date": "日期",
+      "description": "描述",
+      "addDescription": "+ 添加描述",
+      "addItem": "添加条目",
+      "deleteTitle": "删除此条目"
+    },
     "theme": {
       "title": "自定义设置",
       "reset": "重置",
@@ -192,7 +206,9 @@
   "draggableSection": {
     "hideSection": "点击隐藏此模块",
     "showSection": "点击显示此模块",
-    "clickToEdit": "点击编辑"
+    "clickToEdit": "点击编辑",
+    "deleteSection": "删除此模块",
+    "confirmDelete": "确定要删除这个模块吗？此操作不可撤销。"
   },
   "theme": {
     "switchToLight": "切换到浅色模式",

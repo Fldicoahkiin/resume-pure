@@ -2,7 +2,7 @@
 
 import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
-import { ContactIconType } from '@/types';
+import { ContactIconType, CustomSection } from '@/types';
 import { useTranslation } from 'react-i18next';
 
 // 联系信息图标组件
@@ -355,6 +355,37 @@ export function ResumePreview() {
               );
 
             default:
+              // 处理自定义模块
+              if (section.isCustom) {
+                const customSection = resume.customSections.find(cs => cs.id === section.id);
+                if (!customSection || customSection.items.length === 0) return null;
+
+                return (
+                  <section key={section.id} className="mb-5">
+                    <SectionTitle title={section.title} themeColor={theme.primaryColor} />
+                    <div className="space-y-3">
+                      {customSection.items.map(item => (
+                        <div key={item.id}>
+                          <div className="flex justify-between items-baseline">
+                            {item.title && (
+                              <h3 className="text-sm font-semibold text-gray-800">
+                                {item.title}
+                              </h3>
+                            )}
+                            {item.date && (
+                              <span className="text-xs text-gray-500">{item.date}</span>
+                            )}
+                          </div>
+                          {item.subtitle && (
+                            <p className="text-xs text-gray-600 mt-0.5">{item.subtitle}</p>
+                          )}
+                          <BulletList items={item.description} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              }
               return null;
           }
         })}

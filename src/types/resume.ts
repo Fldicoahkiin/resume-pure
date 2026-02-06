@@ -85,6 +85,22 @@ export interface SectionConfig {
   title: string;
   visible: boolean;
   order: number;
+  isCustom?: boolean; // 是否为自定义模块
+}
+
+// 自定义模块内容项
+export interface CustomSectionItem {
+  id: string;
+  title?: string;      // 可选标题（如：奖项名称、证书名称）
+  subtitle?: string;   // 可选副标题（如：颁发机构）
+  date?: string;       // 可选日期
+  description: string[]; // 描述列表
+}
+
+// 自定义模块
+export interface CustomSection {
+  id: string;          // 对应 SectionConfig 的 id
+  items: CustomSectionItem[];
 }
 
 export interface ThemeConfig {
@@ -102,6 +118,7 @@ export interface ResumeData {
   education: Education[];
   projects: Project[];
   skills: Skill[];
+  customSections: CustomSection[];
   sections: SectionConfig[];
   theme: ThemeConfig;
 }

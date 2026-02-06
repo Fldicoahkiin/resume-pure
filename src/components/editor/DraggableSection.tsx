@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
-import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { SectionConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +18,7 @@ interface DraggableSectionProps {
   onDragOver: (e: React.DragEvent) => void;
   onDragEnd: () => void;
   isDragging: boolean;
+  onDelete?: () => void;
 }
 
 export function DraggableSection({
@@ -33,6 +34,7 @@ export function DraggableSection({
   onDragOver,
   onDragEnd,
   isDragging,
+  onDelete,
 }: DraggableSectionProps) {
   const { t } = useTranslation();
   const displayTitle = title || section.title;
@@ -117,6 +119,22 @@ export function DraggableSection({
         >
           {section.visible ? <Eye size={18} /> : <EyeOff size={18} />}
         </button>
+
+        {onDelete && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm(t('draggableSection.confirmDelete'))) {
+                onDelete();
+              }
+            }}
+            className="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            title={t('draggableSection.deleteSection')}
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
 
         <button
           type="button"
