@@ -5,10 +5,12 @@ import { useResumeStore } from '@/store/resumeStore';
 import { exportToJSON, exportToYAML, importFromJSON, importFromYAML, downloadFile } from '@/lib/export';
 import { Copy, Check, Save, Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Format = 'json' | 'yaml';
 
 export function RawEditor() {
+  const { t } = useTranslation();
   const { resume, importData } = useResumeStore();
   const [format, setFormat] = useState<Format>('json');
   const [content, setContent] = useState('');
@@ -33,7 +35,7 @@ export function RawEditor() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('复制失败');
+      setError(t('rawEditor.copyFailed'));
     }
   };
 
@@ -46,7 +48,7 @@ export function RawEditor() {
       setHasChanges(false);
       setError('');
     } catch {
-      setError(format === 'json' ? 'JSON 格式错误' : 'YAML 格式错误');
+      setError(format === 'json' ? t('rawEditor.jsonError') : t('rawEditor.yamlError'));
     }
   };
 
@@ -71,14 +73,14 @@ export function RawEditor() {
         data = importFromYAML(text);
         setFormat('yaml');
       } else {
-        setError('不支持的文件格式');
+        setError(t('rawEditor.unsupportedFormat'));
         return;
       }
 
       importData(data);
       setError('');
     } catch {
-      setError('文件解析失败');
+      setError(t('rawEditor.parseFailed'));
     }
 
     if (fileInputRef.current) {
@@ -130,21 +132,21 @@ export function RawEditor() {
           <button
             onClick={() => fileInputRef.current?.click()}
             className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-            title="导入文件"
+            title={t('rawEditor.importFile')}
           >
             <Upload size={16} />
           </button>
           <button
             onClick={handleDownload}
             className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-            title="下载文件"
+            title={t('rawEditor.downloadFile')}
           >
             <Download size={16} />
           </button>
           <button
             onClick={handleCopy}
             className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-            title="复制"
+            title={t('rawEditor.copy')}
           >
             {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
           </button>
@@ -154,7 +156,7 @@ export function RawEditor() {
               className="flex items-center gap-1 px-2 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded"
             >
               <Save size={14} />
-              保存
+              {t('rawEditor.save')}
             </button>
           )}
         </div>

@@ -3,12 +3,14 @@
 import { useResumeStore } from '@/store/resumeStore';
 import { Education } from '@/types';
 import { GraduationCap, Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface EducationEditorProps {
   embedded?: boolean;
 }
 
 export function EducationEditor({ embedded = false }: EducationEditorProps) {
+  const { t } = useTranslation();
   const { resume, hasHydrated, addEducation, updateEducation, deleteEducation } = useResumeStore();
 
   if (!hasHydrated) {
@@ -40,8 +42,8 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
       {resume.education.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-          <p className="text-sm">暂无教育背景</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">点击下方按钮添加你的教育经历</p>
+          <p className="text-sm">{t('editor.education.noEducation')}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t('editor.education.addHint')}</p>
         </div>
       ) : (
         resume.education.map((edu, idx) => (
@@ -52,13 +54,13 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
               <button
                 onClick={() => deleteEducation(edu.id)}
                 className="absolute right-0 top-0 p-1 text-gray-400 hover:text-red-500"
-                title="删除此教育经历"
+                title={t('editor.education.deleteTitle')}
               >
                 <Trash2 size={16} />
               </button>
 
             <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-              学校
+              {t('editor.education.school')}
               <input
                 type="text"
                 value={edu.school}
@@ -69,7 +71,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
             </label>
 
             <label className="col-span-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-              学位 / 专业
+              {t('editor.education.degree')}
               <input
                 type="text"
                 value={`${edu.degree}${edu.major ? ' - ' + edu.major : ''}`}
@@ -83,7 +85,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
             </label>
 
             <label className="col-span-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              时间
+              {t('editor.education.date')}
               <input
                 type="text"
                 value={`${edu.startDate}${edu.endDate ? ' - ' + edu.endDate : ''}`}
@@ -97,7 +99,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
             </label>
 
             <label className="col-span-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              GPA
+              {t('editor.education.gpa')}
               <input
                 type="text"
                 value={edu.gpa || ''}
@@ -117,7 +119,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
           className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
         >
           <Plus size={16} />
-          添加教育
+          {t('editor.education.addEducation')}
         </button>
       </div>
     </>
@@ -131,7 +133,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
     <section className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
       <div className="flex items-center gap-2 mb-4">
         <GraduationCap className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">教育背景</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('editor.education.title')}</h2>
       </div>
       {content}
     </section>

@@ -16,6 +16,26 @@ Font.register({
   ],
 });
 
+export interface PDFTranslations {
+  summary: string;
+  experience: string;
+  education: string;
+  projects: string;
+  skills: string;
+  technologies: string;
+  present: string;
+}
+
+const defaultTranslations: PDFTranslations = {
+  summary: '个人简介',
+  experience: '工作经历',
+  education: '教育背景',
+  projects: '项目经验',
+  skills: '技能专长',
+  technologies: '技术栈',
+  present: '至今',
+};
+
 // 定义样式
 const createStyles = (theme: ResumeData['theme']) => StyleSheet.create({
   page: {
@@ -100,9 +120,11 @@ const createStyles = (theme: ResumeData['theme']) => StyleSheet.create({
 
 interface ResumePDFProps {
   data: ResumeData;
+  translations?: PDFTranslations;
 }
 
-export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
+export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defaultTranslations }) => {
+  const t = translations;
   const styles = createStyles(data.theme);
   const visibleSections = data.sections
     .filter(s => s.visible)
@@ -141,7 +163,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
               if (!data.personalInfo.summary) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>个人简介</Text>
+                  <Text style={styles.sectionTitle}>{t.summary}</Text>
                   <Text style={styles.summary}>{data.personalInfo.summary}</Text>
                 </View>
               );
@@ -150,7 +172,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
               if (data.experience.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>工作经历</Text>
+                  <Text style={styles.sectionTitle}>{t.experience}</Text>
                   {data.experience.map(exp => (
                     <View key={exp.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -161,7 +183,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
                           </Text>
                         </View>
                         <Text style={styles.itemDate}>
-                          {exp.startDate} - {exp.current ? '至今' : exp.endDate}
+                          {exp.startDate} - {exp.current ? t.present : exp.endDate}
                         </Text>
                       </View>
                       {exp.description.map((desc, idx) => (
@@ -176,7 +198,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
               if (data.education.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>教育背景</Text>
+                  <Text style={styles.sectionTitle}>{t.education}</Text>
                   {data.education.map(edu => (
                     <View key={edu.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -203,7 +225,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
               if (data.projects.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>项目经验</Text>
+                  <Text style={styles.sectionTitle}>{t.projects}</Text>
                   {data.projects.map(proj => (
                     <View key={proj.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -214,7 +236,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
                           )}
                         </View>
                         <Text style={styles.itemDate}>
-                          {proj.startDate} - {proj.current ? '至今' : proj.endDate}
+                          {proj.startDate} - {proj.current ? t.present : proj.endDate}
                         </Text>
                       </View>
                       {proj.description.map((desc, idx) => (
@@ -222,7 +244,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
                       ))}
                       {proj.technologies && proj.technologies.length > 0 && (
                         <Text style={styles.itemSubtitle}>
-                          技术栈: {proj.technologies.join(', ')}
+                          {t.technologies}: {proj.technologies.join(', ')}
                         </Text>
                       )}
                     </View>
@@ -234,7 +256,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
               if (data.skills.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>技能专长</Text>
+                  <Text style={styles.sectionTitle}>{t.skills}</Text>
                   {data.skills.map(skill => (
                     <View key={skill.id} style={styles.itemContainer}>
                       <Text style={styles.skillCategory}>{skill.category}</Text>
@@ -254,13 +276,17 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data }) => {
 };
 
 /**
- * 导出为 PDF
+ * Export to PDF
  */
-export async function exportToPDF(data: ResumeData, filename: string = 'resume.pdf'): Promise<void> {
+export async function exportToPDF(
+  data: ResumeData,
+  filename: string = 'resume.pdf',
+  translations?: PDFTranslations
+): Promise<void> {
   const { pdf } = await import('@react-pdf/renderer');
 
   try {
-    const blob = await pdf(<ResumePDF data={data} />).toBlob();
+    const blob = await pdf(<ResumePDF data={data} translations={translations} />).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -270,7 +296,7 @@ export async function exportToPDF(data: ResumeData, filename: string = 'resume.p
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('PDF 导出失败:', error);
-    throw new Error('PDF 导出失败');
+    console.error('PDF export failed:', error);
+    throw new Error('PDF export failed');
   }
 }

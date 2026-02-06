@@ -4,19 +4,12 @@ import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project,
 
 // 深度合并函数，确保嵌套对象正确合并
 function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData {
-  // 合并 sections，确保旧数据中缺少 title 的 section 能获得默认标题
-  const defaultTitles: Record<string, string> = {
-    summary: '个人简介',
-    experience: '工作经历',
-    education: '教育背景',
-    projects: '项目经验',
-    skills: '技能专长',
-  };
-
+  // 合并 sections，不设置默认标题（让组件使用 i18n）
   const mergedSections = source.sections
     ? source.sections.map(section => ({
         ...section,
-        title: section.title || defaultTitles[section.id] || section.id,
+        // 只保留用户自定义的标题，不设置默认值
+        title: section.title || '',
       }))
     : target.sections;
 
@@ -80,11 +73,11 @@ const initialResume: ResumeData = {
   projects: [],
   skills: [],
   sections: [
-    { id: 'summary', title: '个人简介', visible: true, order: 1 },
-    { id: 'experience', title: '工作经历', visible: true, order: 2 },
-    { id: 'education', title: '教育背景', visible: true, order: 3 },
-    { id: 'projects', title: '项目经验', visible: true, order: 4 },
-    { id: 'skills', title: '技能专长', visible: true, order: 5 },
+    { id: 'summary', title: '', visible: true, order: 1 },
+    { id: 'experience', title: '', visible: true, order: 2 },
+    { id: 'education', title: '', visible: true, order: 3 },
+    { id: 'projects', title: '', visible: true, order: 4 },
+    { id: 'skills', title: '', visible: true, order: 5 },
   ],
   theme: {
     primaryColor: '#3b82f6',

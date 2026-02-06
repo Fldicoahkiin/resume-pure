@@ -1,0 +1,211 @@
+{
+  "common": {
+    "appName": "Resume Pure",
+    "startEditing": "Start Editing",
+    "createResume": "Create Resume Now"
+  },
+  "home": {
+    "hero": {
+      "title": "Simple and Easy Online Resume Editor",
+      "description": "No registration, no download, just open and write. Data stored locally, export for free.",
+      "subtext": "Perfect for those who want to quickly create a clean resume."
+    },
+    "features": {
+      "livePreview": {
+        "title": "Live Preview",
+        "description": "A4 size 1:1 rendering, edit on the left and preview on the right, no need to export repeatedly."
+      },
+      "localStorage": {
+        "title": "Local Storage",
+        "description": "Data stored in browser locally, works offline, no privacy concerns."
+      },
+      "multiFormat": {
+        "title": "Multi-format Export",
+        "description": "PDF / PNG / JSON / YAML, convenient for job applications, backups, and device switching."
+      }
+    },
+    "why": {
+      "title": "Why Use Resume Pure",
+      "reasons": {
+        "noAccount": "No account registration required, ready to use",
+        "free": "No paywall, all features are free",
+        "professional": "Clean and professional layout, no manual formatting",
+        "control": "Control your own data, export and backup anytime"
+      }
+    }
+  },
+  "builder": {
+    "form": "Form",
+    "raw": "Raw",
+    "sections": {
+      "experience": "Work Experience",
+      "education": "Education",
+      "projects": "Projects",
+      "skills": "Skills"
+    }
+  },
+  "editor": {
+    "personalInfo": {
+      "title": "Personal Info",
+      "name": "Name",
+      "namePlaceholder": "Your Name",
+      "title_field": "Title",
+      "titlePlaceholder": "e.g. Frontend Developer",
+      "summary": "Summary",
+      "summaryPlaceholder": "Brief self-introduction...",
+      "email": "Email",
+      "phone": "Phone",
+      "website": "Website",
+      "location": "Location",
+      "customContacts": "Custom Contacts",
+      "add": "Add",
+      "addContactHint": "Click \"Add\" to add custom contacts",
+      "content": "Content"
+    },
+    "experience": {
+      "title": "Work Experience",
+      "company": "Company",
+      "position": "Position",
+      "date": "Date",
+      "description": "Description",
+      "noExperience": "No work experience yet",
+      "addHint": "Click the button below to add your work experience",
+      "deleteTitle": "Delete this experience",
+      "addDescription": "+ Add description",
+      "addExperience": "Add Experience"
+    },
+    "education": {
+      "title": "Education",
+      "school": "School",
+      "degree": "Degree / Major",
+      "date": "Date",
+      "gpa": "GPA",
+      "noEducation": "No education yet",
+      "addHint": "Click the button below to add your education",
+      "deleteTitle": "Delete this education",
+      "addEducation": "Add Education"
+    },
+    "projects": {
+      "title": "Projects",
+      "name": "Project Name",
+      "role": "Role",
+      "date": "Date",
+      "technologies": "Technologies",
+      "description": "Description",
+      "noProjects": "No projects yet",
+      "addHint": "Click the button below to add your projects",
+      "deleteTitle": "Delete this project",
+      "addDescription": "+ Add description",
+      "addProject": "Add Project"
+    },
+    "skills": {
+      "title": "Skills",
+      "category": "Category",
+      "items": "Skills",
+      "itemsPlaceholder": "Skills, separated by commas",
+      "noSkills": "Click add to add skills",
+      "addSkill": "Add Skill"
+    },
+    "theme": {
+      "title": "Settings",
+      "reset": "Reset",
+      "resetConfirm": "Are you sure you want to reset all data? This action cannot be undone.",
+      "primaryColor": "Primary Color",
+      "customColor": "Custom color",
+      "fontFamily": "Font",
+      "fontSize": "Font Size",
+      "lineHeight": "Line Height",
+      "spacing": "Section Spacing",
+      "compact": "Compact",
+      "relaxed": "Relaxed",
+      "enableLinks": "Enable Hyperlinks",
+      "enableLinksHint": "Clickable links in exported PDF",
+      "moreSettings": "More settings coming soon..."
+    },
+    "actions": {
+      "delete": "Delete",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down"
+    }
+  },
+  "export": {
+    "export": "Export",
+    "pdf": "PDF",
+    "png": "PNG",
+    "json": "JSON",
+    "yaml": "YAML",
+    "import": "Import",
+    "viewData": "View Data",
+    "exporting": "Exporting...",
+    "exportFailed": "Export failed: ",
+    "pdfExportFailed": "PDF export failed: ",
+    "pngExportFailed": "PNG export failed: "
+  },
+  "metadata": {
+    "title": "Resume Pure - Online Resume Editor",
+    "description": "Free online resume editor with live preview and PDF export"
+  },
+  "rawEditor": {
+    "importFile": "Import file",
+    "downloadFile": "Download file",
+    "copy": "Copy",
+    "save": "Save",
+    "copyFailed": "Copy failed",
+    "jsonError": "JSON format error",
+    "yamlError": "YAML format error",
+    "unsupportedFormat": "Unsupported file format",
+    "parseFailed": "File parse failed"
+  },
+  "import": {
+    "unsupportedFormat": "Unsupported file format, please upload JSON or YAML file",
+    "success": "Import successful!",
+    "failed": "Import failed: ",
+    "importData": "Import Data"
+  },
+  "rawDataModal": {
+    "title": "Raw Data",
+    "copyFailed": "Copy failed",
+    "jsonError": "JSON format error, please check",
+    "copied": "Copied",
+    "copy": "Copy",
+    "saveChanges": "Save Changes"
+  },
+  "iconPicker": {
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "website": "Website",
+    "link": "Link",
+    "user": "User",
+    "work": "Work",
+    "date": "Date",
+    "message": "Message"
+  },
+  "preview": {
+    "experience": "Work Experience",
+    "education": "Education",
+    "projects": "Projects",
+    "skills": "Skills",
+    "technologies": "Technologies:",
+    "present": " - Present"
+  },
+  "draggableSection": {
+    "hideSection": "Click to hide this section",
+    "showSection": "Click to show this section",
+    "clickToEdit": "Click to edit"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "pdf": {
+    "summary": "Summary",
+    "experience": "Work Experience",
+    "education": "Education",
+    "projects": "Projects",
+    "skills": "Skills",
+    "technologies": "Technologies",
+    "present": "Present",
+    "exportFailed": "PDF export failed"
+  }
+}

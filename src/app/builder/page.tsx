@@ -12,9 +12,11 @@ import { RawEditor } from '@/components/editor/RawEditor';
 import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
+import { useTranslation } from 'react-i18next';
 
 type EditorMode = 'form' | 'raw';
 
@@ -33,6 +35,7 @@ const sectionEditors: Record<string, React.ReactNode> = {
 };
 
 export default function BuilderPage() {
+  const { t } = useTranslation();
   const [scale, setScale] = useState(0.6);
   const [editorMode, setEditorMode] = useState<EditorMode>('form');
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
@@ -88,6 +91,15 @@ export default function BuilderPage() {
     }
   };
 
+  const getSectionTitle = (sectionId: string): string | undefined => {
+    const section = resume.sections.find(s => s.id === sectionId);
+    // 如果用户自定义了标题，使用用户的标题；否则返回 undefined 让组件使用 i18n
+    if (section?.title) {
+      return section.title;
+    }
+    return t(`builder.sections.${sectionId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -96,9 +108,10 @@ export default function BuilderPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
               <FileText size={20} />
-              <span className="font-semibold">Resume Pure</span>
+              <span className="font-semibold">{t('common.appName')}</span>
             </Link>
             <div className="flex items-center gap-3">
+              <LanguageToggle />
               <ThemeToggle />
               <ExportButtons />
             </div>
@@ -121,7 +134,7 @@ export default function BuilderPage() {
               }`}
             >
               <FormInput size={14} />
-              表单
+              {t('builder.form')}
             </button>
             <button
               onClick={() => setEditorMode('raw')}
@@ -132,7 +145,7 @@ export default function BuilderPage() {
               }`}
             >
               <Code size={14} />
-              Raw
+              {t('builder.raw')}
             </button>
           </div>
 
@@ -149,9 +162,11 @@ export default function BuilderPage() {
                     key={section.id}
                     section={section}
                     icon={sectionIcons[section.id]}
+                    title={getSectionTitle(section.id)}
                     isCollapsed={collapsedSections.has(section.id)}
                     onToggleCollapse={() => toggleCollapse(section.id)}
                     onToggleVisible={() => toggleVisible(section.id)}
+                    onTitleChange={(newTitle) => updateSectionConfig(section.id, { title: newTitle })}
                     onDragStart={() => handleDragStart(idx)}
                     onDragOver={(e) => handleDragOver(e, idx)}
                     onDragEnd={handleDragEnd}

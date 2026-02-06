@@ -2,12 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { I18nProvider } from '@/i18n/I18nProvider';
+import { DocumentTitle } from '@/components/DocumentTitle';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Resume Pure - 在线简历编辑器',
-  description: '免费在线简历编辑器，实时预览，支持 PDF 导出',
+  title: 'Resume Pure',
+  description: 'Free online resume editor with live preview and PDF export',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -44,7 +46,12 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <DocumentTitle />
+            {children}
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

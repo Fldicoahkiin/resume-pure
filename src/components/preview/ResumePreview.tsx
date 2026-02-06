@@ -3,6 +3,7 @@
 import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
 import { ContactIconType } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 // 联系信息图标组件
 function ContactIcon({ type, className }: { type: string | ContactIconType; className?: string }) {
@@ -68,6 +69,7 @@ function BulletList({ items }: { items: string[] }) {
 }
 
 export function ResumePreview() {
+  const { t } = useTranslation();
   const { resume, hasHydrated } = useResumeStore();
 
   if (!hasHydrated) {
@@ -121,6 +123,18 @@ export function ResumePreview() {
     return undefined;
   };
 
+  // 获取 section 标题，优先使用自定义标题，否则使用 i18n
+  const getSectionTitle = (sectionId: string, customTitle?: string): string => {
+    if (customTitle) return customTitle;
+    switch (sectionId) {
+      case 'experience': return t('preview.experience');
+      case 'education': return t('preview.education');
+      case 'projects': return t('preview.projects');
+      case 'skills': return t('preview.skills');
+      default: return '';
+    }
+  };
+
   // 基础联系信息项（使用自定义图标配置）
   const iconConfig = personalInfo.iconConfig || {};
   const baseContactItems = [
@@ -160,13 +174,15 @@ export function ResumePreview() {
       <div className="px-12 py-8">
         {/* 个人信息头部 */}
         <header className="mb-6">
-          {/* 姓名 */}
-          <h1
-            className="text-2xl font-bold tracking-wide"
-            style={{ color: theme.primaryColor }}
-          >
-            {personalInfo.name || '你的姓名'}
-          </h1>
+          {/* 姓名 - 只有用户输入了才显示 */}
+          {personalInfo.name && (
+            <h1
+              className="text-2xl font-bold tracking-wide"
+              style={{ color: theme.primaryColor }}
+            >
+              {personalInfo.name}
+            </h1>
+          )}
 
           {/* 职位 */}
           {personalInfo.title && (
@@ -215,7 +231,7 @@ export function ResumePreview() {
               if (experience.length === 0) return null;
               return (
                 <section key={section.id} className="mb-5">
-                  <SectionTitle title={section.title || '工作经历'} themeColor={theme.primaryColor} />
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
                   <div className="space-y-3">
                     {experience.map((exp, idx) => {
                       // 如果与上一条是同一家公司，隐藏公司名
@@ -234,7 +250,7 @@ export function ResumePreview() {
                               {exp.location && <span className="text-gray-500"> · {exp.location}</span>}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {exp.startDate}{exp.current ? '至今' : exp.endDate}
+                              {exp.startDate}{exp.current ? t('preview.present') : exp.endDate}
                             </span>
                           </div>
                           <BulletList items={exp.description} />
@@ -249,7 +265,7 @@ export function ResumePreview() {
               if (education.length === 0) return null;
               return (
                 <section key={section.id} className="mb-5">
-                  <SectionTitle title={section.title || '教育背景'} themeColor={theme.primaryColor} />
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
                   <div className="space-y-3">
                     {education.map((edu, idx) => {
                       const hideSchool = idx > 0 && edu.school === education[idx - 1].school;
@@ -283,7 +299,7 @@ export function ResumePreview() {
               if (projects.length === 0) return null;
               return (
                 <section key={section.id} className="mb-5">
-                  <SectionTitle title={section.title || '项目经验'} themeColor={theme.primaryColor} />
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
                   <div className="space-y-3">
                     {projects.map(proj => (
                       <div key={proj.id}>
@@ -295,13 +311,13 @@ export function ResumePreview() {
                             )}
                           </h3>
                           <span className="text-xs text-gray-500">
-                            {proj.startDate}{proj.current ? '至今' : proj.endDate}
+                            {proj.startDate}{proj.current ? t('preview.present') : proj.endDate}
                           </span>
                         </div>
                         <BulletList items={proj.description} />
                         {proj.technologies && proj.technologies.length > 0 && (
                           <p className="text-xs text-gray-500 mt-1.5">
-                            <span className="font-medium">技术栈：</span>
+                            <span className="font-medium">{t('preview.technologies')}</span>
                             {proj.technologies.join(' · ')}
                           </p>
                         )}
@@ -315,7 +331,7 @@ export function ResumePreview() {
               if (skills.length === 0) return null;
               return (
                 <section key={section.id} className="mb-5">
-                  <SectionTitle title={section.title || '技能专长'} themeColor={theme.primaryColor} />
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
                   <div className="space-y-2">
                     {skills.map(skill => (
                       <div key={skill.id} className="text-xs">

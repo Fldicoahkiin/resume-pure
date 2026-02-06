@@ -3,9 +3,11 @@
 import { useTheme } from './ThemeProvider';
 import { Sun, Moon } from 'lucide-react';
 import { flushSync } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -61,7 +63,7 @@ export function ThemeToggle() {
         transition-colors duration-200
         focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500
       "
-      aria-label={isDark ? '切换到浅色模式' : '切换到深色模式'}
+      aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
     >
       <div className="relative w-5 h-5">
         <Sun

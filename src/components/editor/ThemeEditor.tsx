@@ -2,16 +2,17 @@
 
 import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const fontFamilies = [
   { value: 'Inter', label: 'Inter' },
-  { value: 'system-ui', label: '系统默认' },
+  { value: 'system-ui', labelKey: 'System Default' },
   { value: 'Georgia', label: 'Georgia' },
   { value: 'Times New Roman', label: 'Times New Roman' },
   { value: 'Arial', label: 'Arial' },
   { value: 'Helvetica', label: 'Helvetica' },
-  { value: 'Noto Sans SC', label: '思源黑体' },
-  { value: 'Noto Serif SC', label: '思源宋体' },
+  { value: 'Noto Sans SC', label: 'Noto Sans SC' },
+  { value: 'Noto Serif SC', label: 'Noto Serif SC' },
 ];
 
 const presetColors = [
@@ -28,6 +29,7 @@ const presetColors = [
 ];
 
 export function ThemeEditor() {
+  const { t } = useTranslation();
   const { resume, hasHydrated, updateTheme, reset } = useResumeStore();
 
   if (!hasHydrated) {
@@ -50,19 +52,19 @@ export function ThemeEditor() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">自定义设置</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('editor.theme.title')}</h2>
         </div>
         <button
           type="button"
           onClick={() => {
-            if (confirm('确定要重置所有数据吗？此操作不可撤销。')) {
+            if (confirm(t('editor.theme.resetConfirm'))) {
               reset();
             }
           }}
           className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition"
         >
           <RotateCcw size={14} />
-          重置
+          {t('editor.theme.reset')}
         </button>
       </div>
 
@@ -70,7 +72,7 @@ export function ThemeEditor() {
         {/* 主题色 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            主题颜色
+            {t('editor.theme.primaryColor')}
           </label>
           <div className="flex items-center gap-2 flex-wrap">
             {presetColors.map((color) => (
@@ -91,7 +93,7 @@ export function ThemeEditor() {
               value={theme.primaryColor}
               onChange={(e) => updateTheme({ primaryColor: e.target.value })}
               className="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
-              title="自定义颜色"
+              title={t('editor.theme.customColor')}
             />
           </div>
         </div>
@@ -99,7 +101,7 @@ export function ThemeEditor() {
         {/* 字体 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            字体
+            {t('editor.theme.fontFamily')}
           </label>
           <select
             value={theme.fontFamily}
@@ -108,7 +110,7 @@ export function ThemeEditor() {
           >
             {fontFamilies.map((font) => (
               <option key={font.value} value={font.value}>
-                {font.label}
+                {font.label || font.labelKey}
               </option>
             ))}
           </select>
@@ -117,7 +119,7 @@ export function ThemeEditor() {
         {/* 字号 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            基础字号: {theme.fontSize}pt
+            {t('editor.theme.fontSize')}: {theme.fontSize}pt
           </label>
           <input
             type="range"
@@ -137,7 +139,7 @@ export function ThemeEditor() {
         {/* 行高 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            行高: {theme.lineHeight}
+            {t('editor.theme.lineHeight')}: {theme.lineHeight}
           </label>
           <input
             type="range"
@@ -149,15 +151,15 @@ export function ThemeEditor() {
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span>紧凑</span>
-            <span>宽松</span>
+            <span>{t('editor.theme.compact')}</span>
+            <span>{t('editor.theme.relaxed')}</span>
           </div>
         </div>
 
         {/* 间距 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            模块间距: {theme.spacing}px
+            {t('editor.theme.spacing')}: {theme.spacing}px
           </label>
           <input
             type="range"
@@ -169,8 +171,8 @@ export function ThemeEditor() {
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span>紧凑</span>
-            <span>宽松</span>
+            <span>{t('editor.theme.compact')}</span>
+            <span>{t('editor.theme.relaxed')}</span>
           </div>
         </div>
 
@@ -178,10 +180,10 @@ export function ThemeEditor() {
         <div className="flex items-center justify-between">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              启用超链接
+              {t('editor.theme.enableLinks')}
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              导出 PDF 时可点击跳转
+              {t('editor.theme.enableLinksHint')}
             </p>
           </div>
           <button
@@ -203,7 +205,7 @@ export function ThemeEditor() {
       {/* 未来设置提示 */}
       <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-          更多设置功能即将推出...
+          {t('editor.theme.moreSettings')}
         </p>
       </div>
     </section>

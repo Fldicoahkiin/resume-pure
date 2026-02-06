@@ -1,0 +1,211 @@
+{
+  "common": {
+    "appName": "Resume Pure",
+    "startEditing": "开始编辑",
+    "createResume": "立即制作简历"
+  },
+  "home": {
+    "hero": {
+      "title": "简单好用的在线简历编辑器",
+      "description": "不用注册，不用下载，打开就能写。数据存本地，导出免费。",
+      "subtext": "适合想快速做份干净简历的人。"
+    },
+    "features": {
+      "livePreview": {
+        "title": "实时预览",
+        "description": "A4 尺寸 1:1 渲染，左边编辑右边看，不用反复导出。"
+      },
+      "localStorage": {
+        "title": "本地存储",
+        "description": "数据存在浏览器本地，没网也能用，隐私不担心。"
+      },
+      "multiFormat": {
+        "title": "多格式导出",
+        "description": "PDF / PNG / JSON / YAML，投简历、备份、换设备都方便。"
+      }
+    },
+    "why": {
+      "title": "为什么要用 Resume Pure",
+      "reasons": {
+        "noAccount": "不用注册账号，打开即用",
+        "free": "没有付费墙，所有功能免费",
+        "professional": "排版简洁专业，不用自己调格式",
+        "control": "数据自己掌控，随时可以导出备份"
+      }
+    }
+  },
+  "builder": {
+    "form": "表单",
+    "raw": "Raw",
+    "sections": {
+      "experience": "工作经历",
+      "education": "教育背景",
+      "projects": "项目经历",
+      "skills": "专业技能"
+    }
+  },
+  "editor": {
+    "personalInfo": {
+      "title": "个人信息",
+      "name": "姓名",
+      "namePlaceholder": "你的名字",
+      "title_field": "职位",
+      "titlePlaceholder": "如：前端开发工程师",
+      "summary": "个人简介",
+      "summaryPlaceholder": "简短的自我介绍...",
+      "email": "邮箱",
+      "phone": "电话",
+      "website": "个人网站",
+      "location": "地点",
+      "customContacts": "自定义联系方式",
+      "add": "添加",
+      "addContactHint": "点击\"添加\"按钮添加自定义联系方式",
+      "content": "内容"
+    },
+    "experience": {
+      "title": "工作经历",
+      "company": "公司",
+      "position": "职位",
+      "date": "时间",
+      "description": "工作内容",
+      "noExperience": "暂无工作经历",
+      "addHint": "点击下方按钮添加你的工作经历",
+      "deleteTitle": "删除此工作经历",
+      "addDescription": "+ 添加描述",
+      "addExperience": "添加工作"
+    },
+    "education": {
+      "title": "教育背景",
+      "school": "学校",
+      "degree": "学位 / 专业",
+      "date": "时间",
+      "gpa": "GPA",
+      "noEducation": "暂无教育背景",
+      "addHint": "点击下方按钮添加你的教育经历",
+      "deleteTitle": "删除此教育经历",
+      "addEducation": "添加教育"
+    },
+    "projects": {
+      "title": "项目经历",
+      "name": "项目名称",
+      "role": "角色",
+      "date": "时间",
+      "technologies": "技术栈",
+      "description": "项目描述",
+      "noProjects": "暂无项目经验",
+      "addHint": "点击下方按钮添加你的项目经历",
+      "deleteTitle": "删除此项目",
+      "addDescription": "+ 添加描述",
+      "addProject": "添加项目"
+    },
+    "skills": {
+      "title": "技能专长",
+      "category": "类别",
+      "items": "技能",
+      "itemsPlaceholder": "技能项，用逗号分隔",
+      "noSkills": "点击右上角添加技能",
+      "addSkill": "添加技能"
+    },
+    "theme": {
+      "title": "自定义设置",
+      "reset": "重置",
+      "resetConfirm": "确定要重置所有数据吗？此操作不可撤销。",
+      "primaryColor": "主题颜色",
+      "customColor": "自定义颜色",
+      "fontFamily": "字体",
+      "fontSize": "基础字号",
+      "lineHeight": "行高",
+      "spacing": "模块间距",
+      "compact": "紧凑",
+      "relaxed": "宽松",
+      "enableLinks": "启用超链接",
+      "enableLinksHint": "导出 PDF 时可点击跳转",
+      "moreSettings": "更多设置功能即将推出..."
+    },
+    "actions": {
+      "delete": "删除",
+      "moveUp": "上移",
+      "moveDown": "下移"
+    }
+  },
+  "export": {
+    "export": "导出",
+    "pdf": "PDF",
+    "png": "PNG",
+    "json": "JSON",
+    "yaml": "YAML",
+    "import": "导入",
+    "viewData": "查看数据",
+    "exporting": "导出中...",
+    "exportFailed": "导出失败：",
+    "pdfExportFailed": "PDF 导出失败：",
+    "pngExportFailed": "PNG 导出失败："
+  },
+  "metadata": {
+    "title": "Resume Pure - 在线简历编辑器",
+    "description": "免费在线简历编辑器，实时预览，支持 PDF 导出"
+  },
+  "rawEditor": {
+    "importFile": "导入文件",
+    "downloadFile": "下载文件",
+    "copy": "复制",
+    "save": "保存",
+    "copyFailed": "复制失败",
+    "jsonError": "JSON 格式错误",
+    "yamlError": "YAML 格式错误",
+    "unsupportedFormat": "不支持的文件格式",
+    "parseFailed": "文件解析失败"
+  },
+  "import": {
+    "unsupportedFormat": "不支持的文件格式，请上传 JSON 或 YAML 文件",
+    "success": "导入成功！",
+    "failed": "导入失败：",
+    "importData": "导入数据"
+  },
+  "rawDataModal": {
+    "title": "原始数据",
+    "copyFailed": "复制失败",
+    "jsonError": "JSON 格式错误，请检查",
+    "copied": "已复制",
+    "copy": "复制",
+    "saveChanges": "保存更改"
+  },
+  "iconPicker": {
+    "email": "邮箱",
+    "phone": "电话",
+    "location": "地点",
+    "website": "网站",
+    "link": "链接",
+    "user": "用户",
+    "work": "工作",
+    "date": "日期",
+    "message": "消息"
+  },
+  "preview": {
+    "experience": "工作经历",
+    "education": "教育背景",
+    "projects": "项目经验",
+    "skills": "技能专长",
+    "technologies": "技术栈：",
+    "present": " - 至今"
+  },
+  "draggableSection": {
+    "hideSection": "点击隐藏此模块",
+    "showSection": "点击显示此模块",
+    "clickToEdit": "点击编辑"
+  },
+  "theme": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式"
+  },
+  "pdf": {
+    "summary": "个人简介",
+    "experience": "工作经历",
+    "education": "教育背景",
+    "projects": "项目经验",
+    "skills": "技能专长",
+    "technologies": "技术栈",
+    "present": "至今",
+    "exportFailed": "PDF 导出失败"
+  }
+}

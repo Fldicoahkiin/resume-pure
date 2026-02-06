@@ -8,31 +8,32 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { ContactIconType } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface IconOption {
   type: ContactIconType;
   icon: React.ReactNode;
-  label: string;
+  labelKey: string;
 }
 
 const iconOptions: IconOption[] = [
-  { type: 'mail', icon: <Mail size={16} />, label: '邮箱' },
-  { type: 'phone', icon: <Phone size={16} />, label: '电话' },
-  { type: 'map-pin', icon: <MapPin size={16} />, label: '地点' },
-  { type: 'globe', icon: <Globe size={16} />, label: '网站' },
-  { type: 'linkedin', icon: <Linkedin size={16} />, label: 'LinkedIn' },
-  { type: 'github', icon: <Github size={16} />, label: 'GitHub' },
-  { type: 'twitter', icon: <Twitter size={16} />, label: 'Twitter' },
-  { type: 'instagram', icon: <Instagram size={16} />, label: 'Instagram' },
-  { type: 'facebook', icon: <Facebook size={16} />, label: 'Facebook' },
-  { type: 'youtube', icon: <Youtube size={16} />, label: 'YouTube' },
-  { type: 'dribbble', icon: <Dribbble size={16} />, label: 'Dribbble' },
-  { type: 'link', icon: <Link size={16} />, label: '链接' },
-  { type: 'user', icon: <User size={16} />, label: '用户' },
-  { type: 'briefcase', icon: <Briefcase size={16} />, label: '工作' },
-  { type: 'calendar', icon: <Calendar size={16} />, label: '日期' },
-  { type: 'message-circle', icon: <MessageCircle size={16} />, label: '消息' },
-  { type: 'at-sign', icon: <AtSign size={16} />, label: '@' },
+  { type: 'mail', icon: <Mail size={16} />, labelKey: 'iconPicker.email' },
+  { type: 'phone', icon: <Phone size={16} />, labelKey: 'iconPicker.phone' },
+  { type: 'map-pin', icon: <MapPin size={16} />, labelKey: 'iconPicker.location' },
+  { type: 'globe', icon: <Globe size={16} />, labelKey: 'iconPicker.website' },
+  { type: 'linkedin', icon: <Linkedin size={16} />, labelKey: 'LinkedIn' },
+  { type: 'github', icon: <Github size={16} />, labelKey: 'GitHub' },
+  { type: 'twitter', icon: <Twitter size={16} />, labelKey: 'Twitter' },
+  { type: 'instagram', icon: <Instagram size={16} />, labelKey: 'Instagram' },
+  { type: 'facebook', icon: <Facebook size={16} />, labelKey: 'Facebook' },
+  { type: 'youtube', icon: <Youtube size={16} />, labelKey: 'YouTube' },
+  { type: 'dribbble', icon: <Dribbble size={16} />, labelKey: 'Dribbble' },
+  { type: 'link', icon: <Link size={16} />, labelKey: 'iconPicker.link' },
+  { type: 'user', icon: <User size={16} />, labelKey: 'iconPicker.user' },
+  { type: 'briefcase', icon: <Briefcase size={16} />, labelKey: 'iconPicker.work' },
+  { type: 'calendar', icon: <Calendar size={16} />, labelKey: 'iconPicker.date' },
+  { type: 'message-circle', icon: <MessageCircle size={16} />, labelKey: 'iconPicker.message' },
+  { type: 'at-sign', icon: <AtSign size={16} />, labelKey: '@' },
 ];
 
 export function getIconComponent(type: ContactIconType, className?: string) {
@@ -65,8 +66,17 @@ interface IconPickerProps {
 }
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const selected = iconOptions.find(o => o.type === value) || iconOptions[0];
+
+  const getLabel = (labelKey: string) => {
+    // For social media platforms, use the label directly (no translation needed)
+    if (!labelKey.includes('.')) {
+      return labelKey;
+    }
+    return t(labelKey);
+  };
 
   return (
     <div className="relative">
@@ -97,7 +107,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                 className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center ${
                   value === option.type ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                 }`}
-                title={option.label}
+                title={getLabel(option.labelKey)}
               >
                 {option.icon}
               </button>

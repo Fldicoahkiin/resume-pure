@@ -5,8 +5,10 @@ import { User, Plus, Trash2, GripVertical } from 'lucide-react';
 import { IconPicker } from './IconPicker';
 import { ContactIconType, ContactItem } from '@/types';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function PersonalInfoEditor() {
+  const { t } = useTranslation();
   const { resume, hasHydrated, updatePersonalInfo, updateIconConfig, addContact, updateContact, deleteContact, reorderContacts } = useResumeStore();
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
@@ -61,13 +63,13 @@ export function PersonalInfoEditor() {
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
         <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">个人信息</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('editor.personalInfo.title')}</h2>
       </div>
 
       {/* 表单 */}
       <div className="grid grid-cols-6 gap-3">
         <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-          姓名
+          {t('editor.personalInfo.name')}
           <input
             type="text"
             value={personalInfo.name}
@@ -78,7 +80,7 @@ export function PersonalInfoEditor() {
         </label>
 
         <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-          职位
+          {t('editor.personalInfo.title_field')}
           <input
             type="text"
             value={personalInfo.title || ''}
@@ -89,7 +91,7 @@ export function PersonalInfoEditor() {
         </label>
 
         <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-          个人简介
+          {t('editor.personalInfo.summary')}
           <textarea
             value={personalInfo.summary}
             onChange={(e) => updatePersonalInfo({ summary: e.target.value })}
@@ -101,7 +103,7 @@ export function PersonalInfoEditor() {
 
         {/* 邮箱 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">邮箱</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.email')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.emailIcon || 'mail'}
@@ -119,7 +121,7 @@ export function PersonalInfoEditor() {
 
         {/* 电话 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">电话</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.phone')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.phoneIcon || 'phone'}
@@ -137,7 +139,7 @@ export function PersonalInfoEditor() {
 
         {/* 个人网站 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">个人网站</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.website')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.websiteIcon || 'globe'}
@@ -155,7 +157,7 @@ export function PersonalInfoEditor() {
 
         {/* 地点 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">地点</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.location')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.locationIcon || 'map-pin'}
@@ -175,20 +177,20 @@ export function PersonalInfoEditor() {
       {/* 自定义联系方式 */}
       <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">自定义联系方式</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.customContacts')}</h3>
           <button
             type="button"
             onClick={handleAddContact}
             className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
           >
             <Plus size={14} />
-            添加
+            {t('editor.personalInfo.add')}
           </button>
         </div>
 
         {contacts.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-            点击"添加"按钮添加自定义联系方式
+            {t('editor.personalInfo.addContactHint')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -217,7 +219,7 @@ export function PersonalInfoEditor() {
                   value={contact.value}
                   onChange={(e) => updateContact(contact.id, { value: e.target.value })}
                   className="flex-1 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-                  placeholder="内容"
+                  placeholder={t('editor.personalInfo.content')}
                 />
 
                 <button
