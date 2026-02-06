@@ -196,23 +196,23 @@ export function ResumePreview() {
             </p>
           )}
 
-          {/* 联系方式 - 每行两个 */}
+          {/* 联系方式 - 自适应换行 */}
           {allContactItems.length > 0 && (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
+            <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
               {allContactItems.map(({ type, value, href }, idx) => (
-                <div key={`${type}-${idx}`} className="flex items-center gap-1.5 min-w-0">
+                <div key={`${type}-${idx}`} className="flex items-center gap-1.5">
                   <ContactIcon type={type} />
                   {href && theme.enableLinks !== false ? (
                     <a
                       href={href}
-                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline truncate"
+                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
                       target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
                       rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     >
                       {value}
                     </a>
                   ) : (
-                    <span className="text-xs text-gray-600 truncate">{value}</span>
+                    <span className="text-xs text-gray-600">{value}</span>
                   )}
                 </div>
               ))}
