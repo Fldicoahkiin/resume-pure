@@ -95,14 +95,14 @@ export function RawEditor() {
   return (
     <div className="h-full flex flex-col">
       {/* 工具栏 */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setFormat('json')}
             className={`px-3 py-1 text-sm rounded ${
               format === 'json'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-600 hover:bg-gray-200'
+                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             JSON
@@ -111,8 +111,8 @@ export function RawEditor() {
             onClick={() => setFormat('yaml')}
             className={`px-3 py-1 text-sm rounded ${
               format === 'yaml'
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-600 hover:bg-gray-200'
+                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             YAML
@@ -129,21 +129,21 @@ export function RawEditor() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
             title="导入文件"
           >
             <Upload size={16} />
           </button>
           <button
             onClick={handleDownload}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
             title="下载文件"
           >
             <Download size={16} />
           </button>
           <button
             onClick={handleCopy}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
             title="复制"
           >
             {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
@@ -162,7 +162,7 @@ export function RawEditor() {
 
       {/* 错误提示 */}
       {error && (
-        <div className="px-4 py-2 text-sm text-red-500 bg-red-50 border-b border-red-100">
+        <div className="px-4 py-2 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-900/30">
           {error}
         </div>
       )}
@@ -171,7 +171,7 @@ export function RawEditor() {
       <textarea
         value={content}
         onChange={(e) => handleContentChange(e.target.value)}
-        className="flex-1 p-4 text-sm font-mono bg-gray-50 resize-none focus:outline-none"
+        className="flex-1 p-4 text-sm font-mono bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:outline-none"
         spellCheck={false}
       />
     </div>

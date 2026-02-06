@@ -32,11 +32,11 @@ export function ThemeEditor() {
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow animate-pulse">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-200 rounded"></div>
+            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
       </div>
@@ -46,11 +46,11 @@ export function ThemeEditor() {
   const { theme } = resume;
 
   return (
-    <section className="rounded-lg bg-white p-6 shadow">
+    <section className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-900">自定义设置</h2>
+          <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">自定义设置</h2>
         </div>
         <button
           type="button"
@@ -59,7 +59,7 @@ export function ThemeEditor() {
               reset();
             }
           }}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition"
+          className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition"
         >
           <RotateCcw size={14} />
           重置
@@ -69,7 +69,7 @@ export function ThemeEditor() {
       <div className="space-y-5">
         {/* 主题色 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             主题颜色
           </label>
           <div className="flex items-center gap-2 flex-wrap">
@@ -80,7 +80,7 @@ export function ThemeEditor() {
                 onClick={() => updateTheme({ primaryColor: color })}
                 className={`w-8 h-8 rounded-full border-2 transition ${
                   theme.primaryColor === color
-                    ? 'border-gray-900 scale-110'
+                    ? 'border-gray-900 dark:border-white scale-110'
                     : 'border-transparent hover:scale-105'
                 }`}
                 style={{ backgroundColor: color }}
@@ -90,7 +90,7 @@ export function ThemeEditor() {
               type="color"
               value={theme.primaryColor}
               onChange={(e) => updateTheme({ primaryColor: e.target.value })}
-              className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+              className="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
               title="自定义颜色"
             />
           </div>
@@ -98,13 +98,13 @@ export function ThemeEditor() {
 
         {/* 字体 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             字体
           </label>
           <select
             value={theme.fontFamily}
             onChange={(e) => updateTheme({ fontFamily: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             {fontFamilies.map((font) => (
               <option key={font.value} value={font.value}>
@@ -116,7 +116,7 @@ export function ThemeEditor() {
 
         {/* 字号 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             基础字号: {theme.fontSize}pt
           </label>
           <input
@@ -128,7 +128,7 @@ export function ThemeEditor() {
             onChange={(e) => updateTheme({ fontSize: parseFloat(e.target.value) })}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>9pt</span>
             <span>14pt</span>
           </div>
@@ -136,7 +136,7 @@ export function ThemeEditor() {
 
         {/* 行高 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             行高: {theme.lineHeight}
           </label>
           <input
@@ -148,7 +148,7 @@ export function ThemeEditor() {
             onChange={(e) => updateTheme({ lineHeight: parseFloat(e.target.value) })}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>紧凑</span>
             <span>宽松</span>
           </div>
@@ -156,7 +156,7 @@ export function ThemeEditor() {
 
         {/* 间距 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             模块间距: {theme.spacing}px
           </label>
           <input
@@ -168,7 +168,7 @@ export function ThemeEditor() {
             onChange={(e) => updateTheme({ spacing: parseInt(e.target.value) })}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
             <span>紧凑</span>
             <span>宽松</span>
           </div>
@@ -177,10 +177,10 @@ export function ThemeEditor() {
         {/* 超链接开关 */}
         <div className="flex items-center justify-between">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               启用超链接
             </label>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               导出 PDF 时可点击跳转
             </p>
           </div>
@@ -188,7 +188,7 @@ export function ThemeEditor() {
             type="button"
             onClick={() => updateTheme({ enableLinks: !theme.enableLinks })}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              theme.enableLinks !== false ? 'bg-blue-500' : 'bg-gray-300'
+              theme.enableLinks !== false ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
             }`}
           >
             <span
@@ -201,8 +201,8 @@ export function ThemeEditor() {
       </div>
 
       {/* 未来设置提示 */}
-      <div className="mt-6 pt-4 border-t">
-        <p className="text-xs text-gray-400 text-center">
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
           更多设置功能即将推出...
         </p>
       </div>

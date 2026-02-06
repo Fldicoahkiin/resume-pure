@@ -47,7 +47,7 @@ export function ExportButtons() {
     <div className="flex items-center gap-2">
       <button
         onClick={handleExportJSON}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
       >
         <Download size={16} />
         JSON
@@ -55,7 +55,7 @@ export function ExportButtons() {
       <button
         onClick={handleExportPNG}
         disabled={loadingPNG}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50"
       >
         <Download size={16} />
         {loadingPNG ? '...' : 'PNG'}
@@ -63,7 +63,7 @@ export function ExportButtons() {
       <button
         onClick={handleExportPDF}
         disabled={loadingPDF}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-gray-900 hover:bg-gray-800 rounded transition disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded transition disabled:opacity-50"
       >
         <Download size={16} />
         {loadingPDF ? '导出中...' : 'PDF'}

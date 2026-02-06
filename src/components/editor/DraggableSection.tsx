@@ -35,19 +35,19 @@ export function DraggableSection({
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
-      className={`rounded-lg bg-white shadow transition ${
+      className={`rounded-lg bg-white dark:bg-gray-800 shadow transition ${
         isDragging ? 'opacity-50 ring-2 ring-blue-300' : ''
       } ${!section.visible ? 'opacity-60' : ''}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b cursor-grab select-none">
-        <div className="text-gray-400 hover:text-gray-600">
+      <div className="flex items-center gap-2 p-4 border-b border-gray-200 dark:border-gray-700 cursor-grab select-none">
+        <div className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <GripVertical size={18} />
         </div>
 
         <div className="flex items-center gap-2 flex-1">
-          <span className="text-gray-600">{icon}</span>
-          <h2 className="text-lg font-semibold text-gray-900">{section.title}</h2>
+          <span className="text-gray-600 dark:text-gray-400">{icon}</span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{section.title}</h2>
         </div>
 
         <button
@@ -58,8 +58,8 @@ export function DraggableSection({
           }}
           className={`p-1.5 rounded transition ${
             section.visible
-              ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700'
           }`}
           title={section.visible ? '点击隐藏此模块' : '点击显示此模块'}
         >
@@ -72,7 +72,7 @@ export function DraggableSection({
             e.stopPropagation();
             onToggleCollapse();
           }}
-          className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
+          className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition"
         >
           {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </button>

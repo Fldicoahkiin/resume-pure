@@ -73,7 +73,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+        className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700"
       >
         {selected.icon}
         <ChevronDown size={14} className="text-gray-400" />
@@ -85,7 +85,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-1 p-2 bg-white border rounded-lg shadow-lg z-20 grid grid-cols-6 gap-1 w-[200px]">
+          <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 grid grid-cols-6 gap-1 w-[200px]">
             {iconOptions.map((option) => (
               <button
                 key={option.type}
@@ -94,8 +94,8 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                   onChange(option.type);
                   setIsOpen(false);
                 }}
-                className={`p-2 rounded hover:bg-gray-100 transition flex items-center justify-center ${
-                  value === option.type ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+                className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center ${
+                  value === option.type ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                 }`}
                 title={option.label}
               >

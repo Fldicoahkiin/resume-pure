@@ -11,6 +11,7 @@ import { DraggableSection } from '@/components/editor/DraggableSection';
 import { RawEditor } from '@/components/editor/RawEditor';
 import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
@@ -88,16 +89,19 @@ export default function BuilderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-20">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-900 hover:text-gray-600 transition">
+            <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
               <FileText size={20} />
               <span className="font-semibold">Resume Pure</span>
             </Link>
-            <ExportButtons />
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <ExportButtons />
+            </div>
           </div>
         </div>
       </header>
@@ -107,13 +111,13 @@ export default function BuilderPage() {
         {/* 左侧编辑区 */}
         <div className="h-[calc(100vh-57px)] overflow-hidden flex flex-col">
           {/* 编辑模式切换 */}
-          <div className="flex items-center gap-1 px-6 py-2 border-b bg-white">
+          <div className="flex items-center gap-1 px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button
               onClick={() => setEditorMode('form')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
                 editorMode === 'form'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <FormInput size={14} />
@@ -123,8 +127,8 @@ export default function BuilderPage() {
               onClick={() => setEditorMode('raw')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
                 editorMode === 'raw'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <Code size={14} />
@@ -168,21 +172,21 @@ export default function BuilderPage() {
         </div>
 
         {/* 右侧预览区 */}
-        <div className="hidden lg:block bg-gray-100 h-[calc(100vh-57px)] relative">
+        <div className="hidden lg:block bg-gray-100 dark:bg-gray-950 h-[calc(100vh-57px)] relative">
           {/* 缩放控制 */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 py-3 bg-gray-200 border-t z-10">
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 py-3 bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 z-10">
             <button
               onClick={() => setScale(s => Math.max(0.3, s - 0.1))}
-              className="px-3 py-1 bg-white rounded border hover:bg-gray-50 text-sm"
+              className="px-3 py-1 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
             >
               −
             </button>
-            <span className="text-sm font-medium w-12 text-center text-gray-600">
+            <span className="text-sm font-medium w-12 text-center text-gray-600 dark:text-gray-300">
               {Math.round(scale * 100)}%
             </span>
             <button
               onClick={() => setScale(s => Math.min(1, s + 0.1))}
-              className="px-3 py-1 bg-white rounded border hover:bg-gray-50 text-sm"
+              className="px-3 py-1 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
             >
               +
             </button>

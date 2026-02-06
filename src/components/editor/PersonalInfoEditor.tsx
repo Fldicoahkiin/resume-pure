@@ -12,11 +12,11 @@ export function PersonalInfoEditor() {
 
   if (!hasHydrated) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow animate-pulse">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
         <div className="grid grid-cols-2 gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-200 rounded"></div>
+            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
       </div>
@@ -57,43 +57,43 @@ export function PersonalInfoEditor() {
   };
 
   return (
-    <section className="rounded-lg bg-white p-6 shadow">
+    <section className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
-        <User className="h-5 w-5 text-gray-600" />
-        <h2 className="text-lg font-semibold text-gray-900">个人信息</h2>
+        <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">个人信息</h2>
       </div>
 
       {/* 表单 */}
       <div className="grid grid-cols-6 gap-3">
-        <label className="col-span-full text-sm font-medium text-gray-700">
+        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
           姓名
           <input
             type="text"
             value={personalInfo.name}
             onChange={(e) => updatePersonalInfo({ name: e.target.value })}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             placeholder=""
           />
         </label>
 
-        <label className="col-span-full text-sm font-medium text-gray-700">
+        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
           职位
           <input
             type="text"
             value={personalInfo.title || ''}
             onChange={(e) => updatePersonalInfo({ title: e.target.value })}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             placeholder=""
           />
         </label>
 
-        <label className="col-span-full text-sm font-medium text-gray-700">
+        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
           个人简介
           <textarea
             value={personalInfo.summary}
             onChange={(e) => updatePersonalInfo({ summary: e.target.value })}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal resize-none"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             rows={3}
             placeholder=""
           />
@@ -101,7 +101,7 @@ export function PersonalInfoEditor() {
 
         {/* 邮箱 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700">邮箱</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">邮箱</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.emailIcon || 'mail'}
@@ -111,7 +111,7 @@ export function PersonalInfoEditor() {
               type="email"
               value={personalInfo.email}
               onChange={(e) => updatePersonalInfo({ email: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder=""
             />
           </div>
@@ -119,7 +119,7 @@ export function PersonalInfoEditor() {
 
         {/* 电话 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700">电话</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">电话</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.phoneIcon || 'phone'}
@@ -129,7 +129,7 @@ export function PersonalInfoEditor() {
               type="tel"
               value={personalInfo.phone}
               onChange={(e) => updatePersonalInfo({ phone: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder=""
             />
           </div>
@@ -137,7 +137,7 @@ export function PersonalInfoEditor() {
 
         {/* 个人网站 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700">个人网站</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">个人网站</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.websiteIcon || 'globe'}
@@ -147,7 +147,7 @@ export function PersonalInfoEditor() {
               type="url"
               value={personalInfo.website || ''}
               onChange={(e) => updatePersonalInfo({ website: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder=""
             />
           </div>
@@ -155,7 +155,7 @@ export function PersonalInfoEditor() {
 
         {/* 地点 - 带图标选择 */}
         <div className="col-span-full">
-          <span className="text-sm font-medium text-gray-700">地点</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">地点</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
               value={iconConfig.locationIcon || 'map-pin'}
@@ -165,7 +165,7 @@ export function PersonalInfoEditor() {
               type="text"
               value={personalInfo.location}
               onChange={(e) => updatePersonalInfo({ location: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder=""
             />
           </div>
@@ -173,13 +173,13 @@ export function PersonalInfoEditor() {
       </div>
 
       {/* 自定义联系方式 */}
-      <div className="mt-6 pt-4 border-t">
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700">自定义联系方式</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">自定义联系方式</h3>
           <button
             type="button"
             onClick={handleAddContact}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
           >
             <Plus size={14} />
             添加
@@ -187,7 +187,7 @@ export function PersonalInfoEditor() {
         </div>
 
         {contacts.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
             点击"添加"按钮添加自定义联系方式
           </p>
         ) : (
@@ -199,11 +199,11 @@ export function PersonalInfoEditor() {
                 onDragStart={() => handleDragStart(idx)}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDragEnd={handleDragEnd}
-                className={`flex items-center gap-2 p-2 border rounded-md bg-gray-50 ${
+                className={`flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 ${
                   draggedIdx === idx ? 'opacity-50' : ''
                 }`}
               >
-                <div className="cursor-grab text-gray-400 hover:text-gray-600">
+                <div className="cursor-grab text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                   <GripVertical size={16} />
                 </div>
 
@@ -216,7 +216,7 @@ export function PersonalInfoEditor() {
                   type="text"
                   value={contact.value}
                   onChange={(e) => updateContact(contact.id, { value: e.target.value })}
-                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded-md text-sm"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                   placeholder="内容"
                 />
 

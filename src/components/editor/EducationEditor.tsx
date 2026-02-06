@@ -13,9 +13,9 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
 
   if (!hasHydrated) {
     return (
-      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white p-6 shadow animate-pulse"}>
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="h-32 bg-gray-200 rounded"></div>
+      <div className={embedded ? "animate-pulse" : "rounded-lg bg-white dark:bg-gray-800 p-6 shadow animate-pulse"}>
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
       </div>
     );
   }
@@ -38,15 +38,15 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
   const content = (
     <>
       {resume.education.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
           <p className="text-sm">暂无教育背景</p>
-          <p className="text-xs text-gray-400 mt-1">点击下方按钮添加你的教育经历</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">点击下方按钮添加你的教育经历</p>
         </div>
       ) : (
         resume.education.map((edu, idx) => (
           <div key={edu.id}>
-            {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200" />}
+            {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
             <div className="relative grid grid-cols-6 gap-3">
               <button
@@ -57,18 +57,18 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
                 <Trash2 size={16} />
               </button>
 
-            <label className="col-span-full text-sm font-medium text-gray-700">
+            <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
               学校
               <input
                 type="text"
                 value={edu.school}
                 onChange={(e) => updateEducation(edu.id, { school: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""
               />
             </label>
 
-            <label className="col-span-4 text-sm font-medium text-gray-700">
+            <label className="col-span-4 text-sm font-medium text-gray-700 dark:text-gray-300">
               学位 / 专业
               <input
                 type="text"
@@ -77,12 +77,12 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
                   const [degree, major] = e.target.value.split(' - ');
                   updateEducation(edu.id, { degree: degree || '', major: major || '' });
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""
               />
             </label>
 
-            <label className="col-span-2 text-sm font-medium text-gray-700">
+            <label className="col-span-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               时间
               <input
                 type="text"
@@ -91,18 +91,18 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
                   const [start, end] = e.target.value.split(' - ');
                   updateEducation(edu.id, { startDate: start || '', endDate: end || '' });
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""
               />
             </label>
 
-            <label className="col-span-2 text-sm font-medium text-gray-700">
+            <label className="col-span-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               GPA
               <input
                 type="text"
                 value={edu.gpa || ''}
                 onChange={(e) => updateEducation(edu.id, { gpa: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base font-normal"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""
               />
             </label>
@@ -114,7 +114,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
       <div className="mt-4 flex justify-end">
         <button
           onClick={handleAdd}
-          className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+          className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
         >
           <Plus size={16} />
           添加教育
@@ -128,10 +128,10 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
   }
 
   return (
-    <section className="rounded-lg bg-white p-6 shadow">
+    <section className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
       <div className="flex items-center gap-2 mb-4">
-        <GraduationCap className="h-5 w-5 text-gray-600" />
-        <h2 className="text-lg font-semibold text-gray-900">教育背景</h2>
+        <GraduationCap className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">教育背景</h2>
       </div>
       {content}
     </section>
