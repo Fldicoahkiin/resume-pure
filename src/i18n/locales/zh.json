@@ -37,6 +37,8 @@
   "builder": {
     "form": "表单",
     "raw": "Raw",
+    "edit": "编辑",
+    "preview": "预览",
     "sections": {
       "experience": "工作经历",
       "education": "教育背景",

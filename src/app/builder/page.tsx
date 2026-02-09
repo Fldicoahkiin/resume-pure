@@ -14,12 +14,13 @@ import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, FileText as CustomIcon } from 'lucide-react';
+import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
 
 type EditorMode = 'form' | 'raw';
+type MobileView = 'edit' | 'preview';
 
 const sectionIcons: Record<string, React.ReactNode> = {
   experience: <Briefcase size={18} />,
@@ -39,6 +40,7 @@ export default function BuilderPage() {
   const { t } = useTranslation();
   const [scale, setScale] = useState(0.6);
   const [editorMode, setEditorMode] = useState<EditorMode>('form');
+  const [mobileView, setMobileView] = useState<MobileView>('edit');
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
@@ -120,12 +122,38 @@ export default function BuilderPage() {
         </div>
       </header>
 
+      {/* 移动端视图切换 - 放在 Main Content 外部，始终可见 */}
+      <div className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <button
+          onClick={() => setMobileView('edit')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
+            mobileView === 'edit'
+              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Edit3 size={16} />
+          {t('builder.edit')}
+        </button>
+        <button
+          onClick={() => setMobileView('preview')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
+            mobileView === 'preview'
+              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Eye size={16} />
+          {t('builder.preview')}
+        </button>
+      </div>
+
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2">
-        {/* 左侧编辑区 */}
-        <div className="h-[calc(100vh-57px)] overflow-hidden flex flex-col">
+        {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
+        <div className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           {/* 编辑模式切换 */}
-          <div className="flex items-center gap-1 px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="flex items-center gap-1 px-4 sm:px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button
               onClick={() => setEditorMode('form')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
@@ -204,8 +232,8 @@ export default function BuilderPage() {
           )}
         </div>
 
-        {/* 右侧预览区 */}
-        <div className="hidden lg:block bg-gray-100 dark:bg-gray-950 h-[calc(100vh-57px)] relative">
+        {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
+        <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative ${mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 py-3 bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 z-10">
             <button

@@ -37,6 +37,8 @@
   "builder": {
     "form": "Form",
     "raw": "Raw",
+    "edit": "Edit",
+    "preview": "Preview",
     "sections": {
       "experience": "Work Experience",
       "education": "Education",
