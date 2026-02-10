@@ -34,7 +34,7 @@ function ContactIcon({ type, className }: { type: string | ContactIconType; clas
 }
 
 // Section 标题组件
-function SectionTitle({ title, themeColor }: { title: string; themeColor: string }) {
+function SectionTitle({ title, themeColor, fontSize }: { title: string; themeColor: string; fontSize: number }) {
   return (
     <div className="flex items-center gap-3 mb-2">
       <div
@@ -42,8 +42,8 @@ function SectionTitle({ title, themeColor }: { title: string; themeColor: string
         style={{ backgroundColor: themeColor }}
       />
       <h2
-        className="text-sm font-bold tracking-wide uppercase"
-        style={{ color: '#374151' }}
+        className="font-bold tracking-wide uppercase"
+        style={{ color: '#374151', fontSize: `${fontSize + 2}pt` }}
       >
         {title}
       </h2>
@@ -52,14 +52,14 @@ function SectionTitle({ title, themeColor }: { title: string; themeColor: string
 }
 
 // 项目符号列表组件
-function BulletList({ items }: { items: string[] }) {
+function BulletList({ items, fontSize }: { items: string[]; fontSize: number }) {
   const filteredItems = items.filter(item => item && item.trim());
   if (filteredItems.length === 0) return null;
 
   return (
     <ul className="mt-1.5 space-y-1">
       {filteredItems.map((item, idx) => (
-        <li key={idx} className="flex text-xs text-gray-700 leading-relaxed">
+        <li key={idx} className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
           <span className="mr-2 text-gray-400 font-bold">•</span>
           <span className="flex-1">{item}</span>
         </li>
@@ -152,6 +152,8 @@ export function ResumePreview() {
 
   const allContactItems = [...baseContactItems, ...customContacts];
 
+  const fs = theme.fontSize; // 基础字号 (pt)
+
   return (
     <div
       id="resume-preview"
@@ -160,7 +162,7 @@ export function ResumePreview() {
         width: '595px',
         minHeight: '842px',
         fontFamily: `"${theme.fontFamily}", "Noto Sans SC", system-ui, sans-serif`,
-        fontSize: `${theme.fontSize}pt`,
+        fontSize: `${fs}pt`,
         lineHeight: theme.lineHeight,
       }}
     >
@@ -173,12 +175,12 @@ export function ResumePreview() {
       {/* 内容区域 */}
       <div className="px-12 py-8">
         {/* 个人信息头部 */}
-        <header className="mb-6">
-          {/* 姓名 - 只有用户输入了才显示 */}
+        <header style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+          {/* 姓名 */}
           {personalInfo.name && (
             <h1
-              className="text-2xl font-bold tracking-wide"
-              style={{ color: theme.primaryColor }}
+              className="font-bold tracking-wide"
+              style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
             >
               {personalInfo.name}
             </h1>
@@ -186,33 +188,33 @@ export function ResumePreview() {
 
           {/* 职位 */}
           {personalInfo.title && (
-            <p className="text-sm text-gray-600 mt-1">{personalInfo.title}</p>
+            <p className="text-gray-600 mt-1" style={{ fontSize: `${fs + 2}pt` }}>{personalInfo.title}</p>
           )}
 
           {/* 个人简介 */}
           {personalInfo.summary && (
-            <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+            <p className="text-gray-600 mt-2" style={{ fontSize: `${fs}pt` }}>
               {personalInfo.summary}
             </p>
           )}
 
-          {/* 联系方式 - 自适应换行 */}
+          {/* 联系方式 */}
           {allContactItems.length > 0 && (
             <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
               {allContactItems.map(({ type, value, href }, idx) => (
-                <div key={`${type}-${idx}`} className="flex items-center gap-1.5">
+                <div key={`${type}-${idx}`} className="flex items-center gap-1.5" style={{ fontSize: `${fs - 1}pt` }}>
                   <ContactIcon type={type} />
                   {href && theme.enableLinks !== false ? (
                     <a
                       href={href}
-                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
+                      className="text-gray-600 hover:text-gray-900 hover:underline"
                       target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
                       rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     >
                       {value}
                     </a>
                   ) : (
-                    <span className="text-xs text-gray-600">{value}</span>
+                    <span className="text-gray-600">{value}</span>
                   )}
                 </div>
               ))}
@@ -230,30 +232,29 @@ export function ResumePreview() {
             case 'experience':
               if (experience.length === 0) return null;
               return (
-                <section key={section.id} className="mb-5">
-                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
+                <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} fontSize={fs} />
                   <div className="space-y-3">
                     {experience.map((exp, idx) => {
-                      // 如果与上一条是同一家公司，隐藏公司名
                       const hideCompany = idx > 0 && exp.company === experience[idx - 1].company;
 
                       return (
                         <div key={exp.id}>
                           {!hideCompany && (
-                            <h3 className="text-sm font-semibold text-gray-800">
+                            <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                               {exp.company}
                             </h3>
                           )}
                           <div className="flex justify-between items-baseline mt-0.5">
-                            <span className="text-xs text-gray-700">
+                            <span className="text-gray-700" style={{ fontSize: `${fs - 1}pt` }}>
                               {exp.position}
                               {exp.location && <span className="text-gray-500"> · {exp.location}</span>}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
                               {exp.startDate}{exp.current ? t('preview.present') : exp.endDate}
                             </span>
                           </div>
-                          <BulletList items={exp.description} />
+                          <BulletList items={exp.description} fontSize={fs} />
                         </div>
                       );
                     })}
@@ -264,8 +265,8 @@ export function ResumePreview() {
             case 'education':
               if (education.length === 0) return null;
               return (
-                <section key={section.id} className="mb-5">
-                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
+                <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} fontSize={fs} />
                   <div className="space-y-3">
                     {education.map((edu, idx) => {
                       const hideSchool = idx > 0 && edu.school === education[idx - 1].school;
@@ -273,21 +274,21 @@ export function ResumePreview() {
                       return (
                         <div key={edu.id}>
                           {!hideSchool && (
-                            <h3 className="text-sm font-semibold text-gray-800">
+                            <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                               {edu.school}
                             </h3>
                           )}
                           <div className="flex justify-between items-baseline mt-0.5">
-                            <span className="text-xs text-gray-700">
+                            <span className="text-gray-700" style={{ fontSize: `${fs - 1}pt` }}>
                               {edu.degree}
                               {edu.major && ` - ${edu.major}`}
                               {edu.gpa && <span className="text-gray-500"> · GPA: {edu.gpa}</span>}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
                               {edu.startDate}{edu.endDate}
                             </span>
                           </div>
-                          {edu.description && <BulletList items={edu.description} />}
+                          {edu.description && <BulletList items={edu.description} fontSize={fs} />}
                         </div>
                       );
                     })}
@@ -298,25 +299,25 @@ export function ResumePreview() {
             case 'projects':
               if (projects.length === 0) return null;
               return (
-                <section key={section.id} className="mb-5">
-                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
+                <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} fontSize={fs} />
                   <div className="space-y-3">
                     {projects.map(proj => (
                       <div key={proj.id}>
                         <div className="flex justify-between items-baseline">
-                          <h3 className="text-sm font-semibold text-gray-800">
+                          <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                             {proj.name}
                             {proj.role && (
                               <span className="font-normal text-gray-600"> · {proj.role}</span>
                             )}
                           </h3>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
                             {proj.startDate}{proj.current ? t('preview.present') : proj.endDate}
                           </span>
                         </div>
-                        <BulletList items={proj.description} />
+                        <BulletList items={proj.description} fontSize={fs} />
                         {proj.technologies && proj.technologies.length > 0 && (
-                          <p className="text-xs text-gray-500 mt-1.5">
+                          <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
                             <span className="font-medium">{t('preview.technologies')}</span>
                             {proj.technologies.join(' · ')}
                           </p>
@@ -330,11 +331,11 @@ export function ResumePreview() {
             case 'skills':
               if (skills.length === 0) return null;
               return (
-                <section key={section.id} className="mb-5">
-                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} />
+                <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+                  <SectionTitle title={getSectionTitle(section.id, section.title)} themeColor={theme.primaryColor} fontSize={fs} />
                   <div className="space-y-2">
                     {skills.map(skill => (
-                      <div key={skill.id} className="text-xs">
+                      <div key={skill.id} style={{ fontSize: `${fs - 1}pt` }}>
                         {skill.category && (
                           <span className="font-semibold text-gray-800 mr-2">
                             {skill.category}:
@@ -361,25 +362,25 @@ export function ResumePreview() {
                 if (!customSection || customSection.items.length === 0) return null;
 
                 return (
-                  <section key={section.id} className="mb-5">
-                    <SectionTitle title={section.title} themeColor={theme.primaryColor} />
+                  <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
+                    <SectionTitle title={section.title} themeColor={theme.primaryColor} fontSize={fs} />
                     <div className="space-y-3">
                       {customSection.items.map(item => (
                         <div key={item.id}>
                           <div className="flex justify-between items-baseline">
                             {item.title && (
-                              <h3 className="text-sm font-semibold text-gray-800">
+                              <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                                 {item.title}
                               </h3>
                             )}
                             {item.date && (
-                              <span className="text-xs text-gray-500">{item.date}</span>
+                              <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
                             )}
                           </div>
                           {item.subtitle && (
-                            <p className="text-xs text-gray-600 mt-0.5">{item.subtitle}</p>
+                            <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
                           )}
-                          <BulletList items={item.description} />
+                          <BulletList items={item.description} fontSize={fs} />
                         </div>
                       ))}
                     </div>
