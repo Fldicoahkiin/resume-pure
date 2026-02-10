@@ -1,20 +1,10 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { ResumeData } from '@/types';
+import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/fonts';
 
-Font.register({
-  family: 'NotoSansSC',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYxNbPzS5HE.ttf',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_EnYxNbPzS5HE.ttf',
-      fontWeight: 700,
-    },
-  ],
-});
+// 注册中文断词回调
+registerCJKHyphenation();
 
 export interface PDFTranslations {
   summary: string;
@@ -37,86 +27,96 @@ const defaultTranslations: PDFTranslations = {
 };
 
 // 定义样式
-const createStyles = (theme: ResumeData['theme']) => StyleSheet.create({
-  page: {
-    padding: 40,
-    fontSize: theme.fontSize,
-    fontFamily: 'NotoSansSC',
-    lineHeight: theme.lineHeight,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    marginBottom: theme.spacing * 2,
-  },
-  name: {
-    fontSize: theme.fontSize + 8,
-    fontWeight: 'bold',
-    color: theme.primaryColor,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: theme.fontSize + 2,
-    color: '#666',
-    marginBottom: 8,
-  },
-  contactInfo: {
-    fontSize: theme.fontSize - 1,
-    color: '#666',
-    marginBottom: 2,
-  },
-  summary: {
-    fontSize: theme.fontSize,
-    marginTop: theme.spacing,
-    lineHeight: theme.lineHeight,
-  },
-  section: {
-    marginTop: theme.spacing * 2,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize + 2,
-    fontWeight: 'bold',
-    color: theme.primaryColor,
-    marginBottom: theme.spacing,
-    borderBottom: `2 solid ${theme.primaryColor}`,
-    paddingBottom: 4,
-  },
-  itemContainer: {
-    marginBottom: theme.spacing * 1.5,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  itemTitle: {
-    fontSize: theme.fontSize,
-    fontWeight: 'bold',
-  },
-  itemSubtitle: {
-    fontSize: theme.fontSize - 1,
-    color: '#666',
-    marginBottom: 2,
-  },
-  itemDate: {
-    fontSize: theme.fontSize - 1,
-    color: '#666',
-  },
-  bulletPoint: {
-    fontSize: theme.fontSize - 1,
-    marginLeft: 12,
-    marginBottom: 2,
-  },
-  skillCategory: {
-    fontSize: theme.fontSize,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  skillItems: {
-    fontSize: theme.fontSize - 1,
-    color: '#666',
-    marginBottom: theme.spacing,
-  },
-});
+const createStyles = (theme: ResumeData['theme']) => {
+  // 通过字体配置系统获取 PDF 字体（自动注册 + 回退）
+  const fontFamily = getPDFFontFamily(theme.fontFamily);
+
+  return StyleSheet.create({
+    page: {
+      padding: 40,
+      fontSize: theme.fontSize,
+      fontFamily,
+      lineHeight: theme.lineHeight,
+      backgroundColor: '#ffffff',
+    },
+    header: {
+      marginBottom: theme.spacing * 2,
+    },
+    name: {
+      fontSize: theme.fontSize + 8,
+      fontWeight: 'bold',
+      color: theme.primaryColor,
+      marginBottom: 4,
+    },
+    title: {
+      fontSize: theme.fontSize + 2,
+      color: '#666',
+      marginBottom: 8,
+    },
+    contactInfo: {
+      fontSize: theme.fontSize - 1,
+      color: '#666',
+      marginBottom: 2,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    contactItem: {
+      marginRight: 10,
+    },
+    summary: {
+      fontSize: theme.fontSize,
+      marginTop: theme.spacing,
+      lineHeight: theme.lineHeight,
+    },
+    section: {
+      marginTop: theme.spacing * 2,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize + 2,
+      fontWeight: 'bold',
+      color: theme.primaryColor,
+      marginBottom: theme.spacing,
+      borderBottom: `2 solid ${theme.primaryColor}`,
+      paddingBottom: 4,
+    },
+    itemContainer: {
+      marginBottom: theme.spacing * 1.5,
+    },
+    itemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    itemTitle: {
+      fontSize: theme.fontSize,
+      fontWeight: 'bold',
+    },
+    itemSubtitle: {
+      fontSize: theme.fontSize - 1,
+      color: '#666',
+      marginBottom: 2,
+    },
+    itemDate: {
+      fontSize: theme.fontSize - 1,
+      color: '#666',
+    },
+    bulletPoint: {
+      fontSize: theme.fontSize - 1,
+      marginLeft: 12,
+      marginBottom: 2,
+    },
+    skillCategory: {
+      fontSize: theme.fontSize,
+      fontWeight: 'bold',
+      marginBottom: 4,
+    },
+    skillItems: {
+      fontSize: theme.fontSize - 1,
+      color: '#666',
+      marginBottom: theme.spacing,
+    },
+  });
+};
 
 interface ResumePDFProps {
   data: ResumeData;
@@ -139,21 +139,28 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
           {data.personalInfo.title && (
             <Text style={styles.title}>{data.personalInfo.title}</Text>
           )}
-          <Text style={styles.contactInfo}>
+
+          <View style={styles.contactInfo}>
             {[
               data.personalInfo.email,
               data.personalInfo.phone,
               data.personalInfo.location,
-            ].filter(Boolean).join(' | ')}
-          </Text>
-          {(data.personalInfo.website || data.personalInfo.linkedin || data.personalInfo.github) && (
-            <Text style={styles.contactInfo}>
+              data.personalInfo.website,
+            ].filter(Boolean).map((info, idx) => (
+              <Text key={idx} style={styles.contactItem}>{info}</Text>
+            ))}
+          </View>
+
+          {(data.personalInfo.linkedin || data.personalInfo.github || (data.personalInfo.contacts && data.personalInfo.contacts.length > 0)) && (
+            <View style={styles.contactInfo}>
               {[
-                data.personalInfo.website,
                 data.personalInfo.linkedin,
                 data.personalInfo.github,
-              ].filter(Boolean).join(' | ')}
-            </Text>
+                ...(data.personalInfo.contacts || []).map(c => c.value)
+              ].filter(Boolean).map((info, idx) => (
+                <Text key={idx} style={styles.contactItem}>{info}</Text>
+              ))}
+            </View>
           )}
         </View>
 

@@ -7,10 +7,10 @@ function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData 
   // 合并 sections，不设置默认标题（让组件使用 i18n）
   const mergedSections = source.sections
     ? source.sections.map(section => ({
-        ...section,
-        // 只保留用户自定义的标题，不设置默认值
-        title: section.title || '',
-      }))
+      ...section,
+      // 只保留用户自定义的标题，不设置默认值
+      title: section.title || '',
+    }))
     : target.sections;
 
   return {
@@ -89,7 +89,7 @@ const initialResume: ResumeData = {
   ],
   theme: {
     primaryColor: '#3b82f6',
-    fontFamily: 'Inter',
+    fontFamily: 'Noto Sans SC',
     fontSize: 11,
     spacing: 8,
     lineHeight: 1.5,
@@ -353,11 +353,11 @@ export const useResumeStore = create<ResumeStore>()(
             customSections: state.resume.customSections.map((section) =>
               section.id === sectionId
                 ? {
-                    ...section,
-                    items: section.items.map((i) =>
-                      i.id === itemId ? { ...i, ...item } : i
-                    ),
-                  }
+                  ...section,
+                  items: section.items.map((i) =>
+                    i.id === itemId ? { ...i, ...item } : i
+                  ),
+                }
                 : section
             ),
           },

@@ -3,17 +3,7 @@
 import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
-const fontFamilies = [
-  { value: 'Inter', label: 'Inter' },
-  { value: 'system-ui', labelKey: 'System Default' },
-  { value: 'Georgia', label: 'Georgia' },
-  { value: 'Times New Roman', label: 'Times New Roman' },
-  { value: 'Arial', label: 'Arial' },
-  { value: 'Helvetica', label: 'Helvetica' },
-  { value: 'Noto Sans SC', label: 'Noto Sans SC' },
-  { value: 'Noto Serif SC', label: 'Noto Serif SC' },
-];
+import { getFontOptions } from '@/lib/fonts';
 
 const presetColors = [
   '#3b82f6', // blue
@@ -80,11 +70,10 @@ export function ThemeEditor() {
                 key={color}
                 type="button"
                 onClick={() => updateTheme({ primaryColor: color })}
-                className={`w-8 h-8 rounded-full border-2 transition ${
-                  theme.primaryColor === color
-                    ? 'border-gray-900 dark:border-white scale-110'
-                    : 'border-transparent hover:scale-105'
-                }`}
+                className={`w-8 h-8 rounded-full border-2 transition ${theme.primaryColor === color
+                  ? 'border-gray-900 dark:border-white scale-110'
+                  : 'border-transparent hover:scale-105'
+                  }`}
                 style={{ backgroundColor: color }}
               />
             ))}
@@ -108,11 +97,34 @@ export function ThemeEditor() {
             onChange={(e) => updateTheme({ fontFamily: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            {fontFamilies.map((font) => (
-              <option key={font.value} value={font.value}>
-                {font.label || font.labelKey}
-              </option>
-            ))}
+            {(() => {
+              const { enSansSerif, enSerif, zhFonts } = getFontOptions();
+              return (
+                <>
+                  <optgroup label="中文字体">
+                    {zhFonts.map((font) => (
+                      <option key={font.family} value={font.family}>
+                        {font.displayName} ({font.family})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Sans-serif">
+                    {enSansSerif.map((font) => (
+                      <option key={font.family} value={font.family}>
+                        {font.displayName}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Serif">
+                    {enSerif.map((font) => (
+                      <option key={font.family} value={font.family}>
+                        {font.displayName}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              );
+            })()}
           </select>
         </div>
 
@@ -189,14 +201,12 @@ export function ThemeEditor() {
           <button
             type="button"
             onClick={() => updateTheme({ enableLinks: !theme.enableLinks })}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              theme.enableLinks !== false ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${theme.enableLinks !== false ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                theme.enableLinks !== false ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme.enableLinks !== false ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>

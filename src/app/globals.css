@@ -1,3 +1,5 @@
+/* 字体通过 layout.tsx 的 <link> 标签加载，不再使用 @import */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

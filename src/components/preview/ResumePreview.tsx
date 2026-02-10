@@ -159,7 +159,7 @@ export function ResumePreview() {
       style={{
         width: '595px',
         minHeight: '842px',
-        fontFamily: theme.fontFamily,
+        fontFamily: `"${theme.fontFamily}", "Noto Sans SC", system-ui, sans-serif`,
         fontSize: `${theme.fontSize}pt`,
         lineHeight: theme.lineHeight,
       }}

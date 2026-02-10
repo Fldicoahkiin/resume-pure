@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
-import { exportToJSON, downloadFile } from '@/lib/export';
+import { exportToJSON, exportToYAML, downloadFile } from '@/lib/export';
 import { exportToPDF, PDFTranslations } from '@/lib/pdf';
 import { exportToPNG } from '@/lib/image';
 import { Download } from 'lucide-react';
@@ -18,6 +18,15 @@ export function ExportButtons() {
     try {
       const json = exportToJSON(resume);
       downloadFile(json, 'resume.json', 'application/json');
+    } catch (error) {
+      alert(t('export.exportFailed') + (error as Error).message);
+    }
+  };
+
+  const handleExportYAML = () => {
+    try {
+      const yaml = exportToYAML(resume);
+      downloadFile(yaml, 'resume.yaml', 'text/yaml');
     } catch (error) {
       alert(t('export.exportFailed') + (error as Error).message);
     }
@@ -57,16 +66,10 @@ export function ExportButtons() {
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={handleExportJSON}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-      >
-        <Download size={16} />
-        {t('export.json')}
-      </button>
-      <button
         onClick={handleExportPNG}
         disabled={loadingPNG}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50"
+        className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition disabled:opacity-50"
+        title={t('export.png')}
       >
         <Download size={16} />
         {loadingPNG ? '...' : t('export.png')}
@@ -74,7 +77,7 @@ export function ExportButtons() {
       <button
         onClick={handleExportPDF}
         disabled={loadingPDF}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded transition disabled:opacity-50"
+        className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition disabled:opacity-50"
       >
         <Download size={16} />
         {loadingPDF ? t('export.exporting') : t('export.pdf')}

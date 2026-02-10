@@ -17,6 +17,7 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
       quality: 1,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
+      skipFonts: true, // 跳过字体嵌入，避免 font is undefined 错误
     });
 
     const link = document.createElement('a');
