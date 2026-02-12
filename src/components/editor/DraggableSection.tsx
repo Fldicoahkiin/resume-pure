@@ -66,16 +66,18 @@ export function DraggableSection({
 
   return (
     <section
-      draggable
-      onDragStart={onDragStart}
       onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
       className={`rounded-lg bg-white dark:bg-gray-800 shadow transition ${
         isDragging ? 'opacity-50 ring-2 ring-blue-300' : ''
       } ${!section.visible ? 'opacity-60' : ''}`}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-gray-200 dark:border-gray-700 cursor-grab select-none">
+      <div
+        draggable
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        className="flex items-center gap-2 p-4 border-b border-gray-200 dark:border-gray-700 cursor-grab select-none"
+      >
         <div className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <GripVertical size={18} />
         </div>
