@@ -88,10 +88,10 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
               {t('editor.education.date')}
               <input
                 type="text"
-                value={`${edu.startDate}${edu.endDate ? ' - ' + edu.endDate : ''}`}
+                value={edu.startDate || edu.endDate ? `${edu.startDate}${edu.startDate && edu.endDate ? ' - ' : ''}${edu.endDate}` : ''}
                 onChange={(e) => {
-                  const [start, end] = e.target.value.split(' - ');
-                  updateEducation(edu.id, { startDate: start || '', endDate: end || '' });
+                  const parts = e.target.value.split(' - ');
+                  updateEducation(edu.id, { startDate: parts[0] || '', endDate: parts[1] || '' });
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""

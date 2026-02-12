@@ -190,7 +190,9 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                           </Text>
                         </View>
                         <Text style={styles.itemDate}>
-                          {exp.startDate} - {exp.current ? t.present : exp.endDate}
+                          {exp.startDate || exp.endDate || exp.current ? (
+                            `${exp.startDate}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? t.present : exp.endDate}`
+                          ) : ''}
                         </Text>
                       </View>
                       {exp.description.map((desc, idx) => (
@@ -217,7 +219,9 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                           </Text>
                         </View>
                         <Text style={styles.itemDate}>
-                          {edu.startDate} - {edu.endDate}
+                          {edu.startDate || edu.endDate ? (
+                            `${edu.startDate}${edu.startDate && edu.endDate ? ' - ' : ''}${edu.endDate}`
+                          ) : ''}
                         </Text>
                       </View>
                       {edu.description?.map((desc, idx) => (
@@ -243,7 +247,9 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                           )}
                         </View>
                         <Text style={styles.itemDate}>
-                          {proj.startDate} - {proj.current ? t.present : proj.endDate}
+                          {proj.startDate || proj.endDate || proj.current ? (
+                            `${proj.startDate}${proj.startDate && (proj.endDate || proj.current) ? ' - ' : ''}${proj.current ? t.present : proj.endDate}`
+                          ) : ''}
                         </Text>
                       </View>
                       {proj.description.map((desc, idx) => (

@@ -114,14 +114,30 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
               {t('editor.projects.date')}
               <input
                 type="text"
-                value={proj.current ? `${proj.startDate} - Present` : `${proj.startDate}${proj.endDate ? ' - ' + proj.endDate : ''}`}
+                value={proj.current
+                  ? (proj.startDate ? `${proj.startDate} - ${t('preview.present')}` : t('preview.present'))
+                  : (proj.startDate || proj.endDate ? `${proj.startDate}${proj.startDate && proj.endDate ? ' - ' : ''}${proj.endDate}` : '')
+                }
                 onChange={(e) => {
-                  const [start, end] = e.target.value.split(' - ');
-                  updateProject(proj.id, {
-                    startDate: start || '',
-                    endDate: end === 'Present' || end === '至今' ? '' : (end || ''),
-                    current: end === 'Present' || end === '至今'
-                  });
+                  const val = e.target.value;
+                  const presentText = t('preview.present');
+                  const isPresent = val.includes(presentText) || val.toLowerCase().includes('present');
+
+                  if (isPresent) {
+                    const start = val.replace(presentText, '').replace(/-/g, '').trim();
+                    updateProject(proj.id, {
+                      startDate: start,
+                      endDate: '',
+                      current: true
+                    });
+                  } else {
+                    const parts = val.split(' - ');
+                    updateProject(proj.id, {
+                      startDate: parts[0] || '',
+                      endDate: parts[1] || '',
+                      current: false
+                    });
+                  }
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""

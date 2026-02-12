@@ -108,14 +108,30 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
               {t('editor.experience.date')}
               <input
                 type="text"
-                value={exp.current ? `${exp.startDate} - Present` : `${exp.startDate} - ${exp.endDate}`}
+                value={exp.current
+                  ? (exp.startDate ? `${exp.startDate} - ${t('preview.present')}` : t('preview.present'))
+                  : (exp.startDate || exp.endDate ? `${exp.startDate}${exp.startDate && exp.endDate ? ' - ' : ''}${exp.endDate}` : '')
+                }
                 onChange={(e) => {
-                  const [start, end] = e.target.value.split(' - ');
-                  updateExperience(exp.id, {
-                    startDate: start || '',
-                    endDate: end === 'Present' || end === '至今' ? '' : (end || ''),
-                    current: end === 'Present' || end === '至今'
-                  });
+                  const val = e.target.value;
+                  const presentText = t('preview.present');
+                  const isPresent = val.includes(presentText) || val.toLowerCase().includes('present');
+
+                  if (isPresent) {
+                    const start = val.replace(presentText, '').replace(/-/g, '').trim();
+                    updateExperience(exp.id, {
+                      startDate: start,
+                      endDate: '',
+                      current: true
+                    });
+                  } else {
+                    const parts = val.split(' - ');
+                    updateExperience(exp.id, {
+                      startDate: parts[0] || '',
+                      endDate: parts[1] || '',
+                      current: false
+                    });
+                  }
                 }}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder=""

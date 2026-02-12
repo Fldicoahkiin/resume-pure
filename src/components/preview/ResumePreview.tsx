@@ -251,7 +251,13 @@ export function ResumePreview() {
                               {exp.location && <span className="text-gray-500"> · {exp.location}</span>}
                             </span>
                             <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
-                              {exp.startDate}{exp.current ? t('preview.present') : exp.endDate}
+                              {exp.startDate || exp.endDate || exp.current ? (
+                                <>
+                                  {exp.startDate}
+                                  {(exp.startDate && (exp.endDate || exp.current)) && ' - '}
+                                  {exp.current ? t('preview.present') : exp.endDate}
+                                </>
+                              ) : null}
                             </span>
                           </div>
                           <BulletList items={exp.description} fontSize={fs} />
@@ -285,7 +291,13 @@ export function ResumePreview() {
                               {edu.gpa && <span className="text-gray-500"> · GPA: {edu.gpa}</span>}
                             </span>
                             <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
-                              {edu.startDate}{edu.endDate}
+                              {edu.startDate || edu.endDate ? (
+                                <>
+                                  {edu.startDate}
+                                  {edu.startDate && edu.endDate && ' - '}
+                                  {edu.endDate}
+                                </>
+                              ) : null}
                             </span>
                           </div>
                           {edu.description && <BulletList items={edu.description} fontSize={fs} />}
@@ -312,7 +324,13 @@ export function ResumePreview() {
                             )}
                           </h3>
                           <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
-                            {proj.startDate}{proj.current ? t('preview.present') : proj.endDate}
+                            {proj.startDate || proj.endDate || proj.current ? (
+                              <>
+                                {proj.startDate}
+                                {(proj.startDate && (proj.endDate || proj.current)) && ' - '}
+                                {proj.current ? t('preview.present') : proj.endDate}
+                              </>
+                            ) : null}
                           </span>
                         </div>
                         <BulletList items={proj.description} fontSize={fs} />
