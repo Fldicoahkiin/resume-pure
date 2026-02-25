@@ -3,7 +3,7 @@
 import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getFontOptions } from '@/lib/fonts';
+import { FontSelector } from './FontSelector';
 
 const presetColors = [
   '#3b82f6', // blue
@@ -92,40 +92,10 @@ export function ThemeEditor() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('editor.theme.fontFamily')}
           </label>
-          <select
+          <FontSelector
             value={theme.fontFamily}
-            onChange={(e) => updateTheme({ fontFamily: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            {(() => {
-              const { enSansSerif, enSerif, zhFonts } = getFontOptions();
-              return (
-                <>
-                  <optgroup label="中文字体">
-                    {zhFonts.map((font) => (
-                      <option key={font.family} value={font.family}>
-                        {font.displayName} ({font.family})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Sans-serif">
-                    {enSansSerif.map((font) => (
-                      <option key={font.family} value={font.family}>
-                        {font.displayName}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Serif">
-                    {enSerif.map((font) => (
-                      <option key={font.family} value={font.family}>
-                        {font.displayName}
-                      </option>
-                    ))}
-                  </optgroup>
-                </>
-              );
-            })()}
-          </select>
+            onChange={(fontFamily) => updateTheme({ fontFamily })}
+          />
         </div>
 
         {/* 字号 */}
