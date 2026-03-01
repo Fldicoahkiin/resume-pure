@@ -12,50 +12,62 @@ type Format = 'json' | 'yaml';
 export function RawEditor() {
   const { t } = useTranslation();
   const { resume, importData } = useResumeStore();
-  const [format, setFormat] = useState<Format>('json');
-  const [content, setContent] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState('');
-  const [hasChanges, setHasChanges] = useState(false);
+  const [ui, setUi] = useState({
+    format: 'json' as Format,
+    content: '',
+    copied: false,
+    error: '',
+    hasChanges: false,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const updateUi = (patch: Partial<typeof ui>) => {
+    setUi((prev) => ({ ...prev, ...patch }));
+  };
 
   // 当 resume 或 format 变化时更新内容
   useEffect(() => {
-    const newContent = format === 'json'
+    const newContent = ui.format === 'json'
       ? exportToJSON(resume)
       : exportToYAML(resume);
-    setContent(newContent);
-    setHasChanges(false);
-    setError('');
-  }, [resume, format]);
+    updateUi({
+      content: newContent,
+      hasChanges: false,
+      error: '',
+    });
+  }, [resume, ui.format]);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(ui.content);
+      updateUi({ copied: true });
+      setTimeout(() => updateUi({ copied: false }), 2000);
     } catch {
-      setError(t('rawEditor.copyFailed'));
+      updateUi({ error: t('rawEditor.copyFailed') });
     }
   };
 
   const handleSave = () => {
     try {
-      const data = format === 'json'
-        ? importFromJSON(content)
-        : importFromYAML(content);
+      const data = ui.format === 'json'
+        ? importFromJSON(ui.content)
+        : importFromYAML(ui.content);
       importData(data);
-      setHasChanges(false);
-      setError('');
+      updateUi({
+        hasChanges: false,
+        error: '',
+      });
     } catch {
-      setError(format === 'json' ? t('rawEditor.jsonError') : t('rawEditor.yamlError'));
+      updateUi({
+        error: ui.format === 'json' ? t('rawEditor.jsonError') : t('rawEditor.yamlError'),
+      });
     }
   };
 
   const handleDownload = () => {
-    const filename = format === 'json' ? 'resume.json' : 'resume.yaml';
-    const type = format === 'json' ? 'application/json' : 'text/yaml';
-    downloadFile(content, filename, type);
+    const filename = ui.format === 'json' ? 'resume.json' : 'resume.yaml';
+    const type = ui.format === 'json' ? 'application/json' : 'text/yaml';
+    downloadFile(ui.content, filename, type);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,19 +80,19 @@ export function RawEditor() {
 
       if (file.name.endsWith('.json')) {
         data = importFromJSON(text);
-        setFormat('json');
+        updateUi({ format: 'json' });
       } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
         data = importFromYAML(text);
-        setFormat('yaml');
+        updateUi({ format: 'yaml' });
       } else {
-        setError(t('rawEditor.unsupportedFormat'));
+        updateUi({ error: t('rawEditor.unsupportedFormat') });
         return;
       }
 
       importData(data);
-      setError('');
+      updateUi({ error: '' });
     } catch {
-      setError(t('rawEditor.parseFailed'));
+      updateUi({ error: t('rawEditor.parseFailed') });
     }
 
     if (fileInputRef.current) {
@@ -89,9 +101,11 @@ export function RawEditor() {
   };
 
   const handleContentChange = (value: string) => {
-    setContent(value);
-    setHasChanges(true);
-    setError('');
+    updateUi({
+      content: value,
+      hasChanges: true,
+      error: '',
+    });
   };
 
   return (
@@ -100,9 +114,9 @@ export function RawEditor() {
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setFormat('json')}
+            onClick={() => updateUi({ format: 'json' })}
             className={`px-3 py-1 text-sm rounded ${
-              format === 'json'
+              ui.format === 'json'
                 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
@@ -110,9 +124,9 @@ export function RawEditor() {
             JSON
           </button>
           <button
-            onClick={() => setFormat('yaml')}
+            onClick={() => updateUi({ format: 'yaml' })}
             className={`px-3 py-1 text-sm rounded ${
-              format === 'yaml'
+              ui.format === 'yaml'
                 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
@@ -148,9 +162,9 @@ export function RawEditor() {
             className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
             title={t('rawEditor.copy')}
           >
-            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+            {ui.copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
           </button>
-          {hasChanges && (
+          {ui.hasChanges && (
             <button
               onClick={handleSave}
               className="flex items-center gap-1 px-2 py-1 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded"
@@ -163,15 +177,15 @@ export function RawEditor() {
       </div>
 
       {/* 错误提示 */}
-      {error && (
+      {ui.error && (
         <div className="px-4 py-2 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-900/30">
-          {error}
+          {ui.error}
         </div>
       )}
 
       {/* 编辑区 */}
       <textarea
-        value={content}
+        value={ui.content}
         onChange={(e) => handleContentChange(e.target.value)}
         className="flex-1 p-4 text-sm font-mono bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:outline-none"
         spellCheck={false}

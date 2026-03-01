@@ -1,5 +1,4 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { ResumeData } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/fonts';
 
@@ -26,12 +25,29 @@ const defaultTranslations: PDFTranslations = {
   present: '至今',
 };
 
-// 定义样式
-const createStyles = (theme: ResumeData['theme']) => {
-  // 通过字体配置系统获取 PDF 字体（自动注册 + 回退）
+type PDFRenderer = typeof import('@react-pdf/renderer');
+
+function withStableStringKey(items: string[], prefix: string) {
+  const seen = new Map<string, number>();
+
+  return items.map((item) => {
+    const count = (seen.get(item) || 0) + 1;
+    seen.set(item, count);
+
+    return {
+      key: `${prefix}-${item}-${count}`,
+      value: item,
+    };
+  });
+}
+
+function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: PDFTranslations) {
+  const { Document, Page, Text, View, StyleSheet } = renderer;
+
+  const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
 
-  return StyleSheet.create({
+  const styles = StyleSheet.create({
     page: {
       padding: 40,
       fontSize: theme.fontSize,
@@ -116,16 +132,7 @@ const createStyles = (theme: ResumeData['theme']) => {
       marginBottom: theme.spacing,
     },
   });
-};
 
-interface ResumePDFProps {
-  data: ResumeData;
-  translations?: PDFTranslations;
-}
-
-export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defaultTranslations }) => {
-  const t = translations;
-  const styles = createStyles(data.theme);
   const visibleSections = data.sections
     .filter(s => s.visible)
     .sort((a, b) => a.order - b.order);
@@ -141,24 +148,30 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
           )}
 
           <View style={styles.contactInfo}>
-            {[
-              data.personalInfo.email,
-              data.personalInfo.phone,
-              data.personalInfo.location,
-              data.personalInfo.website,
-            ].filter(Boolean).map((info, idx) => (
-              <Text key={idx} style={styles.contactItem}>{info}</Text>
+            {withStableStringKey(
+              [
+                data.personalInfo.email,
+                data.personalInfo.phone,
+                data.personalInfo.location,
+                data.personalInfo.website,
+              ].filter(Boolean) as string[],
+              'pdf-contact-basic'
+            ).map((info) => (
+              <Text key={info.key} style={styles.contactItem}>{info.value}</Text>
             ))}
           </View>
 
           {(data.personalInfo.linkedin || data.personalInfo.github || (data.personalInfo.contacts && data.personalInfo.contacts.length > 0)) && (
             <View style={styles.contactInfo}>
-              {[
-                data.personalInfo.linkedin,
-                data.personalInfo.github,
-                ...(data.personalInfo.contacts || []).map(c => c.value)
-              ].filter(Boolean).map((info, idx) => (
-                <Text key={idx} style={styles.contactItem}>{info}</Text>
+              {withStableStringKey(
+                [
+                  data.personalInfo.linkedin,
+                  data.personalInfo.github,
+                  ...(data.personalInfo.contacts || []).map(c => c.value),
+                ].filter(Boolean) as string[],
+                'pdf-contact-extra'
+              ).map((info) => (
+                <Text key={info.key} style={styles.contactItem}>{info.value}</Text>
               ))}
             </View>
           )}
@@ -170,7 +183,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               if (!data.personalInfo.summary) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t.summary}</Text>
+                  <Text style={styles.sectionTitle}>{translations.summary}</Text>
                   <Text style={styles.summary}>{data.personalInfo.summary}</Text>
                 </View>
               );
@@ -179,7 +192,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               if (data.experience.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t.experience}</Text>
+                  <Text style={styles.sectionTitle}>{translations.experience}</Text>
                   {data.experience.map(exp => (
                     <View key={exp.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -191,12 +204,12 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                         </View>
                         <Text style={styles.itemDate}>
                           {exp.startDate || exp.endDate || exp.current ? (
-                            `${exp.startDate}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? t.present : exp.endDate}`
+                            `${exp.startDate}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? translations.present : exp.endDate}`
                           ) : ''}
                         </Text>
                       </View>
-                      {exp.description.map((desc, idx) => (
-                        <Text key={idx} style={styles.bulletPoint}>• {desc}</Text>
+                      {withStableStringKey(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
+                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
                       ))}
                     </View>
                   ))}
@@ -207,7 +220,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               if (data.education.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t.education}</Text>
+                  <Text style={styles.sectionTitle}>{translations.education}</Text>
                   {data.education.map(edu => (
                     <View key={edu.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -224,8 +237,8 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                           ) : ''}
                         </Text>
                       </View>
-                      {edu.description?.map((desc, idx) => (
-                        <Text key={idx} style={styles.bulletPoint}>• {desc}</Text>
+                      {withStableStringKey(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
+                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
                       ))}
                     </View>
                   ))}
@@ -236,7 +249,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               if (data.projects.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t.projects}</Text>
+                  <Text style={styles.sectionTitle}>{translations.projects}</Text>
                   {data.projects.map(proj => (
                     <View key={proj.id} style={styles.itemContainer}>
                       <View style={styles.itemHeader}>
@@ -248,16 +261,16 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                         </View>
                         <Text style={styles.itemDate}>
                           {proj.startDate || proj.endDate || proj.current ? (
-                            `${proj.startDate}${proj.startDate && (proj.endDate || proj.current) ? ' - ' : ''}${proj.current ? t.present : proj.endDate}`
+                            `${proj.startDate}${proj.startDate && (proj.endDate || proj.current) ? ' - ' : ''}${proj.current ? translations.present : proj.endDate}`
                           ) : ''}
                         </Text>
                       </View>
-                      {proj.description.map((desc, idx) => (
-                        <Text key={idx} style={styles.bulletPoint}>• {desc}</Text>
+                      {withStableStringKey(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
+                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
                       ))}
                       {proj.technologies && proj.technologies.length > 0 && (
                         <Text style={styles.itemSubtitle}>
-                          {t.technologies}: {proj.technologies.join(', ')}
+                          {translations.technologies}: {proj.technologies.join(', ')}
                         </Text>
                       )}
                     </View>
@@ -269,7 +282,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
               if (data.skills.length === 0) return null;
               return (
                 <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t.skills}</Text>
+                  <Text style={styles.sectionTitle}>{translations.skills}</Text>
                   {data.skills.map(skill => (
                     <View key={skill.id} style={styles.itemContainer}>
                       <Text style={styles.skillCategory}>{skill.category}</Text>
@@ -297,8 +310,8 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
                           </View>
                           {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
                         </View>
-                        {item.description.map((desc, idx) => (
-                          <Text key={idx} style={styles.bulletPoint}>• {desc}</Text>
+                        {withStableStringKey(item.description, `pdf-custom-${item.id}`).map((desc) => (
+                          <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
                         ))}
                       </View>
                     ))}
@@ -311,7 +324,7 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
       </Page>
     </Document>
   );
-};
+}
 
 /**
  * Export to PDF
@@ -319,12 +332,13 @@ export const ResumePDF: React.FC<ResumePDFProps> = ({ data, translations = defau
 export async function exportToPDF(
   data: ResumeData,
   filename: string = 'resume.pdf',
-  translations?: PDFTranslations
+  translations: PDFTranslations = defaultTranslations
 ): Promise<void> {
-  const { pdf } = await import('@react-pdf/renderer');
+  const renderer = await import('@react-pdf/renderer');
+  const { pdf } = renderer;
 
   try {
-    const blob = await pdf(<ResumePDF data={data} translations={translations} />).toBlob();
+    const blob = await pdf(createResumePDF(renderer, data, translations)).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
