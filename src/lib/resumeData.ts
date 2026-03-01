@@ -46,7 +46,7 @@ const CONTACT_ICON_TYPES: ContactIconType[] = [
 
 const CONTACT_ICON_TYPE_SET = new Set<ContactIconType>(CONTACT_ICON_TYPES);
 
-export const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 1;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

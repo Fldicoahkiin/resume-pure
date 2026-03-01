@@ -26,7 +26,7 @@ export interface FontConfig {
 //   1. 统一使用 fonts.gstatic.com CDN 的 TTF 格式（fontkit 兼容性最佳）
 //   2. 霞鹜文楷使用 jsdelivr GitHub CDN（Google Fonts 未收录）
 //   3. 避免 woff2（fontkit 不支持）和不稳定的第三方 CDN
-export const FONT_FAMILIES: FontConfig[] = [
+const FONT_FAMILIES: FontConfig[] = [
     // === 无衬线英文字体 ===
     {
         family: 'Roboto',
