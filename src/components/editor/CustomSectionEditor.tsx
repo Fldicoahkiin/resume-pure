@@ -4,6 +4,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { CustomSectionItem } from '@/types';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { customItemAnchor } from '@/lib/previewAnchor';
 
 interface CustomSectionEditorProps {
   sectionId: string;
@@ -78,7 +79,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
         </div>
       ) : (
         customSection.items.map((item, idx) => (
-          <div key={item.id}>
+          <div key={item.id} data-editor-anchor={customItemAnchor(sectionId, item.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
             <div className="relative grid grid-cols-6 gap-3">

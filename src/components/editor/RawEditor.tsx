@@ -6,10 +6,48 @@ import { exportToJSON, exportToYAML, importFromJSON, importFromYAML, downloadFil
 import { Copy, Check, Save, Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getRawSearchPatterns } from '@/lib/previewAnchor';
 
 type Format = 'json' | 'yaml';
 
-export function RawEditor() {
+interface RawJumpRequest {
+  id: number;
+  anchor: string;
+}
+
+interface RawEditorProps {
+  jumpRequest?: RawJumpRequest | null;
+}
+
+interface LineRange {
+  lineNumber: number;
+  selectionStart: number;
+  selectionEnd: number;
+}
+
+function findLineRange(content: string, patterns: string[]): LineRange | null {
+  if (!content) return null;
+
+  for (const pattern of patterns) {
+    const index = content.indexOf(pattern);
+    if (index === -1) continue;
+
+    const lineStart = content.lastIndexOf('\n', index - 1) + 1;
+    const lineEndRaw = content.indexOf('\n', index);
+    const lineEnd = lineEndRaw === -1 ? content.length : lineEndRaw;
+    const lineNumber = content.slice(0, lineStart).split('\n').length;
+
+    return {
+      lineNumber,
+      selectionStart: lineStart,
+      selectionEnd: lineEnd,
+    };
+  }
+
+  return null;
+}
+
+export function RawEditor({ jumpRequest }: RawEditorProps) {
   const { t } = useTranslation();
   const { resume, importData } = useResumeStore();
   const [ui, setUi] = useState({
@@ -18,8 +56,10 @@ export function RawEditor() {
     copied: false,
     error: '',
     hasChanges: false,
+    jumpedLine: null as number | null,
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const updateUi = (patch: Partial<typeof ui>) => {
     setUi((prev) => ({ ...prev, ...patch }));
@@ -36,6 +76,31 @@ export function RawEditor() {
       error: '',
     });
   }, [resume, ui.format]);
+
+  useEffect(() => {
+    if (!jumpRequest) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const patterns = getRawSearchPatterns(jumpRequest.anchor);
+    const lineRange = findLineRange(ui.content, patterns);
+
+    if (!lineRange) return;
+
+    textarea.focus();
+    textarea.setSelectionRange(lineRange.selectionStart, lineRange.selectionEnd);
+
+    const computedLineHeight = Number.parseFloat(window.getComputedStyle(textarea).lineHeight);
+    const lineHeight = Number.isFinite(computedLineHeight) ? computedLineHeight : 22;
+    textarea.scrollTop = Math.max(0, (lineRange.lineNumber - 3) * lineHeight);
+
+    updateUi({ jumpedLine: lineRange.lineNumber });
+    const timerId = window.setTimeout(() => {
+      updateUi({ jumpedLine: null });
+    }, 2200);
+
+    return () => window.clearTimeout(timerId);
+  }, [jumpRequest?.id]);
 
   const handleCopy = async () => {
     try {
@@ -135,7 +200,13 @@ export function RawEditor() {
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {ui.jumpedLine !== null && (
+            <span className="hidden sm:inline text-xs text-blue-600 dark:text-blue-400">
+              {t('rawEditor.jumpedToLine', { line: ui.jumpedLine })}
+            </span>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -185,6 +256,7 @@ export function RawEditor() {
 
       {/* 编辑区 */}
       <textarea
+        ref={textareaRef}
         value={ui.content}
         onChange={(e) => handleContentChange(e.target.value)}
         className="flex-1 p-4 text-sm font-mono bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:outline-none"

@@ -171,6 +171,7 @@
     "downloadFile": "下载文件",
     "copy": "复制",
     "save": "保存",
+    "jumpedToLine": "已定位到第 {{line}} 行",
     "copyFailed": "复制失败",
     "jsonError": "JSON 格式错误",
     "yamlError": "YAML 格式错误",

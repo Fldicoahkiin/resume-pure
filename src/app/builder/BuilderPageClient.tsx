@@ -18,6 +18,7 @@ import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wren
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
+import { getEditorAnchorCandidates, getSectionIdFromPreviewAnchor } from '@/lib/previewAnchor';
 
 type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
@@ -28,6 +29,15 @@ const PREVIEW_SCALE_MIN = 0.45;
 const PREVIEW_SCALE_MAX = 1.25;
 const PREVIEW_SCALE_STEP = 0.05;
 const PREVIEW_HORIZONTAL_PADDING = 40;
+const PREVIEW_FEEDBACK_DURATION = 1500;
+const EDITOR_FLASH_DURATION = 1400;
+const EDITOR_FLASH_CLASSES = [
+  'ring-2',
+  'ring-blue-400',
+  'ring-offset-2',
+  'ring-offset-white',
+  'dark:ring-offset-gray-900',
+];
 
 const sectionIcons: Record<string, React.ReactNode> = {
   experience: <Briefcase size={18} />,
@@ -45,6 +55,8 @@ const sectionEditors: Record<string, React.ReactNode> = {
 
 export default function BuilderPage() {
   const { t } = useTranslation();
+  const [activePreviewAnchor, setActivePreviewAnchor] = useState<string | null>(null);
+  const [rawJumpRequest, setRawJumpRequest] = useState<{ id: number; anchor: string } | null>(null);
   const [ui, setUi] = useState({
     scale: 0.8,
     previewScaleMode: 'fit' as PreviewScaleMode,
@@ -54,6 +66,11 @@ export default function BuilderPage() {
     collapsedSections: new Set<string>(),
   });
   const previewViewportRef = useRef<HTMLDivElement>(null);
+  const editorViewportRef = useRef<HTMLDivElement>(null);
+  const previewFeedbackTimerRef = useRef<number | null>(null);
+  const editorFlashTimerRef = useRef<number | null>(null);
+  const rawJumpCounterRef = useRef(0);
+  const activeEditorElementRef = useRef<HTMLElement | null>(null);
 
   const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
 
@@ -172,6 +189,117 @@ export default function BuilderPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleFitScale, handleZoom]);
+
+  const clearEditorFlash = useCallback(() => {
+    if (!activeEditorElementRef.current) return;
+
+    activeEditorElementRef.current.classList.remove(...EDITOR_FLASH_CLASSES);
+    activeEditorElementRef.current = null;
+  }, []);
+
+  const flashEditorElement = useCallback((element: HTMLElement) => {
+    clearEditorFlash();
+    element.classList.add(...EDITOR_FLASH_CLASSES);
+    activeEditorElementRef.current = element;
+
+    if (editorFlashTimerRef.current !== null) {
+      window.clearTimeout(editorFlashTimerRef.current);
+    }
+
+    editorFlashTimerRef.current = window.setTimeout(() => {
+      clearEditorFlash();
+    }, EDITOR_FLASH_DURATION);
+  }, [clearEditorFlash]);
+
+  const findEditorElement = useCallback((anchor: string): HTMLElement | null => {
+    const container = editorViewportRef.current;
+    if (!container) return null;
+
+    const candidates = getEditorAnchorCandidates(anchor);
+    for (const candidate of candidates) {
+      const target = container.querySelector<HTMLElement>(`[data-editor-anchor="${candidate}"]`);
+      if (target) {
+        return target;
+      }
+    }
+
+    return null;
+  }, []);
+
+  const scrollToEditorAnchor = useCallback((anchor: string) => {
+    let tries = 0;
+    const maxTries = 8;
+
+    const locateAndScroll = () => {
+      tries += 1;
+      const target = findEditorElement(anchor);
+
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        flashEditorElement(target);
+
+        const firstInput = target.querySelector<HTMLElement>('input, textarea, select, [contenteditable="true"]');
+        if (firstInput) {
+          firstInput.focus({ preventScroll: true });
+        }
+        return;
+      }
+
+      if (tries < maxTries) {
+        window.setTimeout(locateAndScroll, 60);
+      }
+    };
+
+    locateAndScroll();
+  }, [findEditorElement, flashEditorElement]);
+
+  const handlePreviewSelect = useCallback((anchor: string) => {
+    setActivePreviewAnchor(anchor);
+    if (previewFeedbackTimerRef.current !== null) {
+      window.clearTimeout(previewFeedbackTimerRef.current);
+    }
+    previewFeedbackTimerRef.current = window.setTimeout(() => {
+      setActivePreviewAnchor(null);
+    }, PREVIEW_FEEDBACK_DURATION);
+
+    const sectionId = getSectionIdFromPreviewAnchor(anchor);
+    setUi((prev) => {
+      const nextCollapsed = new Set(prev.collapsedSections);
+      if (sectionId) {
+        nextCollapsed.delete(sectionId);
+      }
+      return {
+        ...prev,
+        mobileView: prev.mobileView === 'preview' ? 'edit' : prev.mobileView,
+        collapsedSections: nextCollapsed,
+      };
+    });
+
+    if (ui.editorMode === 'raw') {
+      rawJumpCounterRef.current += 1;
+      setRawJumpRequest({
+        id: rawJumpCounterRef.current,
+        anchor,
+      });
+      return;
+    }
+
+    window.setTimeout(() => {
+      scrollToEditorAnchor(anchor);
+    }, 90);
+  }, [scrollToEditorAnchor, ui.editorMode]);
+
+  useEffect(() => {
+    return () => {
+      if (previewFeedbackTimerRef.current !== null) {
+        window.clearTimeout(previewFeedbackTimerRef.current);
+      }
+      if (editorFlashTimerRef.current !== null) {
+        window.clearTimeout(editorFlashTimerRef.current);
+      }
+      clearEditorFlash();
+    };
+  }, [clearEditorFlash]);
 
   // 排除 summary（个人简介在头部显示）
   const sortableSections = hasHydrated
@@ -310,7 +438,7 @@ export default function BuilderPage() {
 
           {/* 编辑内容 */}
           {ui.editorMode === 'form' ? (
-            <div className="flex-1 overflow-y-auto">
+            <div ref={editorViewportRef} className="flex-1 overflow-y-auto">
               <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto lg:mr-0">
                 {/* 个人信息 - 固定在顶部 */}
                 <PersonalInfoEditor />
@@ -358,7 +486,7 @@ export default function BuilderPage() {
               </div>
             </div>
           ) : (
-            <RawEditor />
+            <RawEditor jumpRequest={rawJumpRequest} />
           )}
         </div>
 
@@ -440,7 +568,10 @@ export default function BuilderPage() {
                   transformOrigin: 'top center',
                 }}
               >
-                <ResumePreview />
+                <ResumePreview
+                  onSelectAnchor={handlePreviewSelect}
+                  activeAnchor={activePreviewAnchor}
+                />
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Experience } from '@/types';
 import { Briefcase, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { experienceAnchor } from '@/lib/previewAnchor';
 
 interface ExperienceEditorProps {
   embedded?: boolean;
@@ -70,7 +71,7 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
         </div>
       ) : (
         resume.experience.map((exp, idx) => (
-          <div key={exp.id}>
+          <div key={exp.id} data-editor-anchor={experienceAnchor(exp.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
             <div className="relative grid grid-cols-6 gap-3">

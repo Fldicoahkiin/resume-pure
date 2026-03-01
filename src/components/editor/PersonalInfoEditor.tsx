@@ -6,6 +6,7 @@ import { IconPicker } from './IconPicker';
 import { ContactIconType, ContactItem } from '@/types';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PERSONAL_INFO_ANCHOR } from '@/lib/previewAnchor';
 
 const SKELETON_ROW_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'];
 
@@ -61,7 +62,10 @@ export function PersonalInfoEditor() {
   };
 
   return (
-    <section className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+    <section
+      data-editor-anchor={PERSONAL_INFO_ANCHOR}
+      className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow"
+    >
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
         <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />

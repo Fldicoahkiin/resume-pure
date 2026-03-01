@@ -4,6 +4,7 @@ import { ReactNode, useState } from 'react';
 import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { SectionConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { sectionAnchor } from '@/lib/previewAnchor';
 
 interface DraggableSectionProps {
   section: SectionConfig;
@@ -66,6 +67,7 @@ export function DraggableSection({
 
   return (
     <section
+      data-editor-anchor={sectionAnchor(section.id)}
       onDragOver={onDragOver}
       className={`rounded-lg bg-white dark:bg-gray-800 shadow transition ${
         isDragging ? 'opacity-50 ring-2 ring-blue-300' : ''

@@ -4,6 +4,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Education } from '@/types';
 import { GraduationCap, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { educationAnchor } from '@/lib/previewAnchor';
 
 interface EducationEditorProps {
   embedded?: boolean;
@@ -47,7 +48,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
         </div>
       ) : (
         resume.education.map((edu, idx) => (
-          <div key={edu.id}>
+          <div key={edu.id} data-editor-anchor={educationAnchor(edu.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
             <div className="relative grid grid-cols-6 gap-3">

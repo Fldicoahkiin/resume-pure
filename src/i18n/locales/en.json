@@ -171,6 +171,7 @@
     "downloadFile": "Download file",
     "copy": "Copy",
     "save": "Save",
+    "jumpedToLine": "Jumped to line {{line}}",
     "copyFailed": "Copy failed",
     "jsonError": "JSON format error",
     "yamlError": "YAML format error",

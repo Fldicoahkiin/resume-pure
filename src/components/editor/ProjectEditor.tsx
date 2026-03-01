@@ -4,6 +4,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Project } from '@/types';
 import { Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { projectAnchor } from '@/lib/previewAnchor';
 
 interface ProjectEditorProps {
   embedded?: boolean;
@@ -76,7 +77,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
         </div>
       ) : (
         resume.projects.map((proj, idx) => (
-          <div key={proj.id}>
+          <div key={proj.id} data-editor-anchor={projectAnchor(proj.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
             <div className="relative grid grid-cols-6 gap-3">

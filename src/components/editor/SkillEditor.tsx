@@ -4,6 +4,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Skill } from '@/types';
 import { Wrench, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { skillAnchor } from '@/lib/previewAnchor';
 
 interface SkillEditorProps {
   embedded?: boolean;
@@ -47,6 +48,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
           {resume.skills.map((skill) => (
             <div
               key={skill.id}
+              data-editor-anchor={skillAnchor(skill.id)}
               className="group flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
             >
               <input

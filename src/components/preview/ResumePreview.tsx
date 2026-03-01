@@ -1,11 +1,73 @@
 'use client';
 
+import { ReactNode } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
 import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, ThemeConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
+import {
+  customItemAnchor,
+  educationAnchor,
+  experienceAnchor,
+  PERSONAL_INFO_ANCHOR,
+  projectAnchor,
+  sectionAnchor,
+  skillAnchor,
+} from '@/lib/previewAnchor';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
+
+interface ResumePreviewProps {
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
+}
+
+interface SelectableBlockProps {
+  anchor: string;
+  activeAnchor?: string | null;
+  onSelectAnchor?: (anchor: string) => void;
+  className?: string;
+  children: ReactNode;
+}
+
+function SelectableBlock({
+  anchor,
+  activeAnchor,
+  onSelectAnchor,
+  className,
+  children,
+}: SelectableBlockProps) {
+  const isSelectable = typeof onSelectAnchor === 'function';
+  const isActive = activeAnchor === anchor;
+
+  const handleActivate = () => {
+    onSelectAnchor?.(anchor);
+  };
+
+  const interactiveClass = isSelectable
+    ? 'cursor-pointer rounded-sm transition hover:bg-blue-50/70 dark:hover:bg-blue-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400'
+    : '';
+  const activeClass = isActive
+    ? 'ring-2 ring-blue-400 bg-blue-50/70 dark:bg-blue-900/25'
+    : '';
+
+  return (
+    <div
+      role={isSelectable ? 'button' : undefined}
+      tabIndex={isSelectable ? 0 : undefined}
+      onClick={isSelectable ? handleActivate : undefined}
+      onKeyDown={isSelectable ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleActivate();
+        }
+      } : undefined}
+      className={`${className || ''} ${interactiveClass} ${activeClass}`.trim()}
+    >
+      {children}
+    </div>
+  );
+}
 
 function withStableStringKey(items: string[], prefix: string) {
   const seen = new Map<string, number>();
@@ -112,20 +174,41 @@ function ContactIcon({ type, className }: { type: string | ContactIconType; clas
 }
 
 // Section 标题组件
-function SectionTitle({ title, themeColor, fontSize }: { title: string; themeColor: string; fontSize: number }) {
+function SectionTitle({
+  title,
+  themeColor,
+  fontSize,
+  anchor,
+  activeAnchor,
+  onSelectAnchor,
+}: {
+  title: string;
+  themeColor: string;
+  fontSize: number;
+  anchor: string;
+  activeAnchor?: string | null;
+  onSelectAnchor?: (anchor: string) => void;
+}) {
   return (
-    <div className="flex items-center gap-3 mb-2">
-      <div
-        className="h-1 w-8 rounded-full"
-        style={{ backgroundColor: themeColor }}
-      />
-      <h2
-        className="font-bold tracking-wide uppercase"
-        style={{ color: '#374151', fontSize: `${fontSize + 2}pt` }}
-      >
-        {title}
-      </h2>
-    </div>
+    <SelectableBlock
+      anchor={anchor}
+      activeAnchor={activeAnchor}
+      onSelectAnchor={onSelectAnchor}
+      className="mb-2 -mx-1 px-1"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="h-1 w-8 rounded-full"
+          style={{ backgroundColor: themeColor }}
+        />
+        <h2
+          className="font-bold tracking-wide uppercase"
+          style={{ color: '#374151', fontSize: `${fontSize + 2}pt` }}
+        >
+          {title}
+        </h2>
+      </div>
+    </SelectableBlock>
   );
 }
 
@@ -157,6 +240,8 @@ interface ResumeSectionsProps {
   theme: ThemeConfig;
   fs: number;
   t: (key: string) => string;
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
 }
 
 function ResumeSections({
@@ -169,10 +254,14 @@ function ResumeSections({
   theme,
   fs,
   t,
+  onSelectAnchor,
+  activeAnchor,
 }: ResumeSectionsProps) {
   return (
     <>
       {visibleSections.map(section => {
+        const sectionTitleAnchor = sectionAnchor(section.id);
+
         switch (section.id) {
           case 'summary':
             // 简介已经在头部显示，这里不重复
@@ -182,13 +271,27 @@ function ResumeSections({
             if (experience.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                <SectionTitle title={getSectionTitle(section.id, section.title, t)} themeColor={theme.primaryColor} fontSize={fs} />
+                <SectionTitle
+                  title={getSectionTitle(section.id, section.title, t)}
+                  themeColor={theme.primaryColor}
+                  fontSize={fs}
+                  anchor={sectionTitleAnchor}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                />
                 <div className="space-y-3">
                   {experience.map((exp, idx) => {
                     const hideCompany = idx > 0 && exp.company === experience[idx - 1].company;
+                    const itemAnchor = experienceAnchor(exp.id);
 
                     return (
-                      <div key={exp.id}>
+                      <SelectableBlock
+                        key={exp.id}
+                        anchor={itemAnchor}
+                        activeAnchor={activeAnchor}
+                        onSelectAnchor={onSelectAnchor}
+                        className="-mx-1 px-1 py-0.5"
+                      >
                         {!hideCompany && (
                           <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                             {exp.company}
@@ -210,7 +313,7 @@ function ResumeSections({
                           </span>
                         </div>
                         <BulletList items={exp.description} fontSize={fs} />
-                      </div>
+                      </SelectableBlock>
                     );
                   })}
                 </div>
@@ -221,13 +324,27 @@ function ResumeSections({
             if (education.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                <SectionTitle title={getSectionTitle(section.id, section.title, t)} themeColor={theme.primaryColor} fontSize={fs} />
+                <SectionTitle
+                  title={getSectionTitle(section.id, section.title, t)}
+                  themeColor={theme.primaryColor}
+                  fontSize={fs}
+                  anchor={sectionTitleAnchor}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                />
                 <div className="space-y-3">
                   {education.map((edu, idx) => {
                     const hideSchool = idx > 0 && edu.school === education[idx - 1].school;
+                    const itemAnchor = educationAnchor(edu.id);
 
                     return (
-                      <div key={edu.id}>
+                      <SelectableBlock
+                        key={edu.id}
+                        anchor={itemAnchor}
+                        activeAnchor={activeAnchor}
+                        onSelectAnchor={onSelectAnchor}
+                        className="-mx-1 px-1 py-0.5"
+                      >
                         {!hideSchool && (
                           <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
                             {edu.school}
@@ -250,7 +367,7 @@ function ResumeSections({
                           </span>
                         </div>
                         {edu.description && <BulletList items={edu.description} fontSize={fs} />}
-                      </div>
+                      </SelectableBlock>
                     );
                   })}
                 </div>
@@ -261,36 +378,53 @@ function ResumeSections({
             if (projects.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                <SectionTitle title={getSectionTitle(section.id, section.title, t)} themeColor={theme.primaryColor} fontSize={fs} />
+                <SectionTitle
+                  title={getSectionTitle(section.id, section.title, t)}
+                  themeColor={theme.primaryColor}
+                  fontSize={fs}
+                  anchor={sectionTitleAnchor}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                />
                 <div className="space-y-3">
-                  {projects.map(proj => (
-                    <div key={proj.id}>
-                      <div className="flex justify-between items-baseline">
-                        <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
-                          {proj.name}
-                          {proj.role && (
-                            <span className="font-normal text-gray-600"> · {proj.role}</span>
-                          )}
-                        </h3>
-                        <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
-                          {proj.startDate || proj.endDate || proj.current ? (
-                            <>
-                              {proj.startDate}
-                              {(proj.startDate && (proj.endDate || proj.current)) && ' - '}
-                              {proj.current ? t('preview.present') : proj.endDate}
-                            </>
-                          ) : null}
-                        </span>
-                      </div>
-                      <BulletList items={proj.description} fontSize={fs} />
-                      {proj.technologies && proj.technologies.length > 0 && (
-                        <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
-                          <span className="font-medium">{t('preview.technologies')}</span>
-                          {proj.technologies.join(' · ')}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {projects.map(proj => {
+                    const itemAnchor = projectAnchor(proj.id);
+
+                    return (
+                      <SelectableBlock
+                        key={proj.id}
+                        anchor={itemAnchor}
+                        activeAnchor={activeAnchor}
+                        onSelectAnchor={onSelectAnchor}
+                        className="-mx-1 px-1 py-0.5"
+                      >
+                        <div className="flex justify-between items-baseline">
+                          <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
+                            {proj.name}
+                            {proj.role && (
+                              <span className="font-normal text-gray-600"> · {proj.role}</span>
+                            )}
+                          </h3>
+                          <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
+                            {proj.startDate || proj.endDate || proj.current ? (
+                              <>
+                                {proj.startDate}
+                                {(proj.startDate && (proj.endDate || proj.current)) && ' - '}
+                                {proj.current ? t('preview.present') : proj.endDate}
+                              </>
+                            ) : null}
+                          </span>
+                        </div>
+                        <BulletList items={proj.description} fontSize={fs} />
+                        {proj.technologies && proj.technologies.length > 0 && (
+                          <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
+                            <span className="font-medium">{t('preview.technologies')}</span>
+                            {proj.technologies.join(' · ')}
+                          </p>
+                        )}
+                      </SelectableBlock>
+                    );
+                  })}
                 </div>
               </section>
             );
@@ -299,25 +433,44 @@ function ResumeSections({
             if (skills.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                <SectionTitle title={getSectionTitle(section.id, section.title, t)} themeColor={theme.primaryColor} fontSize={fs} />
+                <SectionTitle
+                  title={getSectionTitle(section.id, section.title, t)}
+                  themeColor={theme.primaryColor}
+                  fontSize={fs}
+                  anchor={sectionTitleAnchor}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                />
                 <div className="space-y-2">
-                  {skills.map(skill => (
-                    <div key={skill.id} style={{ fontSize: `${fs - 1}pt` }}>
-                      {skill.category && (
-                        <span className="font-semibold text-gray-800 mr-2">
-                          {skill.category}:
-                        </span>
-                      )}
-                      <span className="text-gray-700">
-                        {withStableStringKey(skill.items, 'skill-item').map((item, idx) => (
-                          <span key={item.key}>
-                            {idx > 0 && <span className="mx-1.5 text-gray-400">•</span>}
-                            {item.value}
+                  {skills.map(skill => {
+                    const itemAnchor = skillAnchor(skill.id);
+
+                    return (
+                      <SelectableBlock
+                        key={skill.id}
+                        anchor={itemAnchor}
+                        activeAnchor={activeAnchor}
+                        onSelectAnchor={onSelectAnchor}
+                        className="-mx-1 px-1 py-0.5"
+                      >
+                        <div style={{ fontSize: `${fs - 1}pt` }}>
+                          {skill.category && (
+                            <span className="font-semibold text-gray-800 mr-2">
+                              {skill.category}:
+                            </span>
+                          )}
+                          <span className="text-gray-700">
+                            {withStableStringKey(skill.items, 'skill-item').map((item, idx) => (
+                              <span key={item.key}>
+                                {idx > 0 && <span className="mx-1.5 text-gray-400">•</span>}
+                                {item.value}
+                              </span>
+                            ))}
                           </span>
-                        ))}
-                      </span>
-                    </div>
-                  ))}
+                        </div>
+                      </SelectableBlock>
+                    );
+                  })}
                 </div>
               </section>
             );
@@ -330,26 +483,43 @@ function ResumeSections({
 
               return (
                 <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                  <SectionTitle title={section.title} themeColor={theme.primaryColor} fontSize={fs} />
+                  <SectionTitle
+                    title={section.title}
+                    themeColor={theme.primaryColor}
+                    fontSize={fs}
+                    anchor={sectionTitleAnchor}
+                    activeAnchor={activeAnchor}
+                    onSelectAnchor={onSelectAnchor}
+                  />
                   <div className="space-y-3">
-                    {customSection.items.map(item => (
-                      <div key={item.id}>
-                        <div className="flex justify-between items-baseline">
-                          {item.title && (
-                            <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
-                              {item.title}
-                            </h3>
+                    {customSection.items.map(item => {
+                      const itemAnchor = customItemAnchor(section.id, item.id);
+
+                      return (
+                        <SelectableBlock
+                          key={item.id}
+                          anchor={itemAnchor}
+                          activeAnchor={activeAnchor}
+                          onSelectAnchor={onSelectAnchor}
+                          className="-mx-1 px-1 py-0.5"
+                        >
+                          <div className="flex justify-between items-baseline">
+                            {item.title && (
+                              <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
+                                {item.title}
+                              </h3>
+                            )}
+                            {item.date && (
+                              <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
+                            )}
+                          </div>
+                          {item.subtitle && (
+                            <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
                           )}
-                          {item.date && (
-                            <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
-                          )}
-                        </div>
-                        {item.subtitle && (
-                          <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
-                        )}
-                        <BulletList items={item.description} fontSize={fs} />
-                      </div>
-                    ))}
+                          <BulletList items={item.description} fontSize={fs} />
+                        </SelectableBlock>
+                      );
+                    })}
                   </div>
                 </section>
               );
@@ -361,7 +531,7 @@ function ResumeSections({
   );
 }
 
-export function ResumePreview() {
+export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewProps) {
   const { t } = useTranslation();
   const { resume, hasHydrated } = useResumeStore();
 
@@ -416,6 +586,7 @@ export function ResumePreview() {
   ).map((item, index) => ({ key: item.key, ...allContactItems[index] }));
 
   const fs = theme.fontSize;
+  const hasHeaderInfo = Boolean(personalInfo.name || personalInfo.title || personalInfo.summary);
 
   return (
     <div
@@ -433,23 +604,32 @@ export function ResumePreview() {
 
       <div className="px-12 py-8">
         <header style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-          {personalInfo.name && (
-            <h1
-              className="font-bold tracking-wide"
-              style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
+          {hasHeaderInfo && (
+            <SelectableBlock
+              anchor={PERSONAL_INFO_ANCHOR}
+              activeAnchor={activeAnchor}
+              onSelectAnchor={onSelectAnchor}
+              className="-mx-1 px-1 py-0.5"
             >
-              {personalInfo.name}
-            </h1>
-          )}
+              {personalInfo.name && (
+                <h1
+                  className="font-bold tracking-wide"
+                  style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
+                >
+                  {personalInfo.name}
+                </h1>
+              )}
 
-          {personalInfo.title && (
-            <p className="text-gray-600 mt-1" style={{ fontSize: `${fs + 2}pt` }}>{personalInfo.title}</p>
-          )}
+              {personalInfo.title && (
+                <p className="text-gray-600 mt-1" style={{ fontSize: `${fs + 2}pt` }}>{personalInfo.title}</p>
+              )}
 
-          {personalInfo.summary && (
-            <p className="text-gray-600 mt-2" style={{ fontSize: `${fs}pt` }}>
-              {personalInfo.summary}
-            </p>
+              {personalInfo.summary && (
+                <p className="text-gray-600 mt-2" style={{ fontSize: `${fs}pt` }}>
+                  {personalInfo.summary}
+                </p>
+              )}
+            </SelectableBlock>
           )}
 
           {allContactItems.length > 0 && (
@@ -485,6 +665,8 @@ export function ResumePreview() {
           theme={theme}
           fs={fs}
           t={t}
+          onSelectAnchor={onSelectAnchor}
+          activeAnchor={activeAnchor}
         />
       </div>
     </div>
