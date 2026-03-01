@@ -142,6 +142,8 @@ export function ResumePreview() {
     { type: iconConfig.phoneIcon || 'phone', value: personalInfo.phone, href: sanitizeUrl(personalInfo.phone) },
     { type: iconConfig.locationIcon || 'map-pin', value: personalInfo.location, href: undefined },
     { type: iconConfig.websiteIcon || 'globe', value: personalInfo.website, href: sanitizeUrl(personalInfo.website) },
+    { type: iconConfig.linkedinIcon || 'linkedin', value: personalInfo.linkedin, href: sanitizeUrl(personalInfo.linkedin) },
+    { type: iconConfig.githubIcon || 'github', value: personalInfo.github, href: sanitizeUrl(personalInfo.github) },
   ].filter(item => item.value);
 
   // 自定义联系方式
