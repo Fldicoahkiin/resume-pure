@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PersonalInfoEditor } from '@/components/editor/PersonalInfoEditor';
 import { ExperienceEditor } from '@/components/editor/ExperienceEditor';
 import { EducationEditor } from '@/components/editor/EducationEditor';
@@ -21,6 +21,13 @@ import { useTranslation } from 'react-i18next';
 
 type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
+type PreviewScaleMode = 'fit' | 'manual';
+
+const PREVIEW_BASE_WIDTH = 595;
+const PREVIEW_SCALE_MIN = 0.45;
+const PREVIEW_SCALE_MAX = 1.25;
+const PREVIEW_SCALE_STEP = 0.05;
+const PREVIEW_HORIZONTAL_PADDING = 40;
 
 const sectionIcons: Record<string, React.ReactNode> = {
   experience: <Briefcase size={18} />,
@@ -39,14 +46,132 @@ const sectionEditors: Record<string, React.ReactNode> = {
 export default function BuilderPage() {
   const { t } = useTranslation();
   const [ui, setUi] = useState({
-    scale: 0.6,
+    scale: 0.8,
+    previewScaleMode: 'fit' as PreviewScaleMode,
     editorMode: 'form' as EditorMode,
     mobileView: 'edit' as MobileView,
     draggedIdx: null as number | null,
     collapsedSections: new Set<string>(),
   });
+  const previewViewportRef = useRef<HTMLDivElement>(null);
 
   const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
+
+  const clampScale = useCallback((value: number) => {
+    return Math.min(PREVIEW_SCALE_MAX, Math.max(PREVIEW_SCALE_MIN, value));
+  }, []);
+
+  const getFitScale = useCallback(() => {
+    const viewport = previewViewportRef.current;
+    if (!viewport) return 0.8;
+
+    const availableWidth = Math.max(viewport.clientWidth - PREVIEW_HORIZONTAL_PADDING, 280);
+    return clampScale(availableWidth / PREVIEW_BASE_WIDTH);
+  }, [clampScale]);
+
+  const syncFitScale = useCallback(() => {
+    const fitScale = getFitScale();
+    setUi((prev) => {
+      if (prev.previewScaleMode !== 'fit' || Math.abs(prev.scale - fitScale) < 0.001) {
+        return prev;
+      }
+      return {
+        ...prev,
+        scale: fitScale,
+      };
+    });
+  }, [getFitScale]);
+
+  const handleZoom = useCallback((delta: number) => {
+    setUi((prev) => ({
+      ...prev,
+      previewScaleMode: 'manual',
+      scale: clampScale(prev.scale + delta),
+    }));
+  }, [clampScale]);
+
+  const handleScaleChange = useCallback((nextScale: number) => {
+    setUi((prev) => ({
+      ...prev,
+      previewScaleMode: 'manual',
+      scale: clampScale(nextScale),
+    }));
+  }, [clampScale]);
+
+  const handleFitScale = useCallback(() => {
+    const fitScale = getFitScale();
+    setUi((prev) => ({
+      ...prev,
+      previewScaleMode: 'fit',
+      scale: fitScale,
+    }));
+  }, [getFitScale]);
+
+  const handleActualScale = useCallback(() => {
+    setUi((prev) => ({
+      ...prev,
+      previewScaleMode: 'manual',
+      scale: 1,
+    }));
+  }, []);
+
+  const handlePreviewWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (!(event.ctrlKey || event.metaKey)) {
+      return;
+    }
+
+    event.preventDefault();
+    handleZoom(event.deltaY > 0 ? -PREVIEW_SCALE_STEP : PREVIEW_SCALE_STEP);
+  }, [handleZoom]);
+
+  useEffect(() => {
+    syncFitScale();
+  }, [syncFitScale, ui.mobileView]);
+
+  useEffect(() => {
+    const viewport = previewViewportRef.current;
+    if (!viewport) return;
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(syncFitScale);
+      observer.observe(viewport);
+      return () => observer.disconnect();
+    }
+
+    const handleResize = () => syncFitScale();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [syncFitScale]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        handleZoom(PREVIEW_SCALE_STEP);
+        return;
+      }
+
+      if (event.key === '-') {
+        event.preventDefault();
+        handleZoom(-PREVIEW_SCALE_STEP);
+        return;
+      }
+
+      if (event.key === '0') {
+        event.preventDefault();
+        handleFitScale();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleFitScale, handleZoom]);
 
   // 排除 summary（个人简介在头部显示）
   const sortableSections = hasHydrated
@@ -238,35 +363,85 @@ export default function BuilderPage() {
         </div>
 
         {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
-        <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
+        <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 py-3 bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 z-10">
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, scale: Math.max(0.3, prev.scale - 0.1) }))}
-              className="px-3 py-1 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-            >
-              −
-            </button>
-            <span className="text-sm font-medium w-12 text-center text-gray-600 dark:text-gray-300">
-              {Math.round(ui.scale * 100)}%
-            </span>
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, scale: Math.min(1, prev.scale + 0.1) }))}
-              className="px-3 py-1 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-            >
-              +
-            </button>
+          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
+                aria-label={t('builder.previewZoomOut')}
+                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+              >
+                −
+              </button>
+
+              <span className="text-sm font-medium w-14 text-center tabular-nums text-gray-700 dark:text-gray-300">
+                {Math.round(ui.scale * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
+                aria-label={t('builder.previewZoomIn')}
+                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+              >
+                +
+              </button>
+
+              <input
+                type="range"
+                min={PREVIEW_SCALE_MIN}
+                max={PREVIEW_SCALE_MAX}
+                step={PREVIEW_SCALE_STEP}
+                value={ui.scale}
+                onChange={(event) => handleScaleChange(Number(event.target.value))}
+                aria-label={t('builder.preview')}
+                className="w-24 sm:w-32 accent-gray-900 dark:accent-gray-100"
+              />
+
+              <button
+                type="button"
+                onClick={handleFitScale}
+                className={`px-3 py-1.5 rounded border text-xs sm:text-sm transition ${
+                  ui.previewScaleMode === 'fit'
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                }`}
+              >
+                {t('builder.previewFitWidth')}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleActualScale}
+                className="px-3 py-1.5 rounded border text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+              >
+                {t('builder.previewActualSize')}
+              </button>
+            </div>
+
+            <p className="hidden sm:block text-[11px] text-center mt-1 text-gray-500 dark:text-gray-400">
+              {t('builder.previewHelp')}
+            </p>
           </div>
 
           {/* 预览内容 */}
-          <div className="h-[calc(100%-52px)] overflow-auto p-6 flex justify-center">
-            <div
-              style={{
-                transform: `scale(${ui.scale})`,
-                transformOrigin: 'top center',
-              }}
-            >
-              <ResumePreview />
+          <div
+            ref={previewViewportRef}
+            onWheel={handlePreviewWheel}
+            className="flex-1 overflow-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-5"
+          >
+            <div className="flex justify-center">
+              <div
+                className="will-change-transform"
+                style={{
+                  transform: `scale(${ui.scale})`,
+                  transformOrigin: 'top center',
+                }}
+              >
+                <ResumePreview />
+              </div>
             </div>
           </div>
         </div>

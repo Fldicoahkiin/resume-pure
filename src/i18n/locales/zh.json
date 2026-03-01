@@ -39,6 +39,11 @@
     "raw": "Raw",
     "edit": "编辑",
     "preview": "预览",
+    "previewZoomOut": "缩小预览",
+    "previewZoomIn": "放大预览",
+    "previewFitWidth": "适配宽度",
+    "previewActualSize": "实际尺寸",
+    "previewHelp": "快捷键：Ctrl/Cmd + 滚轮 或 +/-，Ctrl/Cmd + 0 适配宽度",
     "sections": {
       "experience": "工作经历",
       "education": "教育背景",

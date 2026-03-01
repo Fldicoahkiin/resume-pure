@@ -39,6 +39,11 @@
     "raw": "Raw",
     "edit": "Edit",
     "preview": "Preview",
+    "previewZoomOut": "Zoom out preview",
+    "previewZoomIn": "Zoom in preview",
+    "previewFitWidth": "Fit width",
+    "previewActualSize": "Actual size",
+    "previewHelp": "Shortcuts: Ctrl/Cmd + wheel or +/-, Ctrl/Cmd + 0 to fit width",
     "sections": {
       "experience": "Work Experience",
       "education": "Education",
