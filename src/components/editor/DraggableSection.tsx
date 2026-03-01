@@ -86,23 +86,26 @@ export function DraggableSection({
           <span className="text-gray-600 dark:text-gray-400">{icon}</span>
           {isEditing ? (
             <input
+              ref={(node) => {
+                if (node) node.focus();
+              }}
               type="text"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleTitleBlur}
               onKeyDown={handleTitleKeyDown}
               className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-blue-500 outline-none px-1"
-              autoFocus
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <h2
-              className="text-lg font-semibold text-gray-900 dark:text-white cursor-text hover:text-blue-600 dark:hover:text-blue-400"
+            <button
+              type="button"
+              className="text-left text-lg font-semibold text-gray-900 dark:text-white cursor-text hover:text-blue-600 dark:hover:text-blue-400"
               onClick={handleTitleClick}
               title={t('draggableSection.clickToEdit') || 'Click to edit'}
             >
               {displayTitle}
-            </h2>
+            </button>
           )}
         </div>
 

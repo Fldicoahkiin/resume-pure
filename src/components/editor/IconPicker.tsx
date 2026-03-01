@@ -36,7 +36,7 @@ const iconOptions: IconOption[] = [
   { type: 'at-sign', icon: <AtSign size={16} />, labelKey: '@' },
 ];
 
-export function getIconComponent(type: ContactIconType, className?: string) {
+function getIconComponent(type: ContactIconType, className?: string) {
   const iconClass = className || "w-3 h-3 text-gray-500";
   switch (type) {
     case 'mail': return <Mail className={iconClass} />;
@@ -91,9 +91,11 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 
       {isOpen && (
         <>
-          <div
+          <button
+            type="button"
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
+            aria-label="close icon picker"
           />
           <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 grid grid-cols-6 gap-1 w-[200px]">
             {iconOptions.map((option) => (

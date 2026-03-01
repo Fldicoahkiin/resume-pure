@@ -18,6 +18,8 @@ const presetColors = [
   '#374151', // gray
 ];
 
+const THEME_SKELETON_KEYS = ['theme-1', 'theme-2', 'theme-3', 'theme-4'];
+
 export function ThemeEditor() {
   const { t } = useTranslation();
   const { resume, hasHydrated, updateTheme, reset } = useResumeStore();
@@ -27,8 +29,8 @@ export function ThemeEditor() {
       <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow animate-pulse">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
         <div className="space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          {THEME_SKELETON_KEYS.map((key) => (
+            <div key={key} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
       </div>

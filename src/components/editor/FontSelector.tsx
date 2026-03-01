@@ -47,9 +47,11 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 
             {isOpen && (
                 <>
-                    <div
+                    <button
+                        type="button"
                         className="fixed inset-0 z-10"
                         onClick={() => { setIsOpen(false); setSearchQuery(''); }}
+                        aria-label="close font selector"
                     />
                     <div className="absolute bottom-full left-0 mb-1 w-full sm:w-[320px] max-h-[400px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 flex flex-col origin-bottom">
 

@@ -7,6 +7,8 @@ import { ContactIconType, ContactItem } from '@/types';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+const SKELETON_ROW_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'];
+
 export function PersonalInfoEditor() {
   const { t } = useTranslation();
   const { resume, hasHydrated, updatePersonalInfo, updateIconConfig, addContact, updateContact, deleteContact, reorderContacts } = useResumeStore();
@@ -17,8 +19,8 @@ export function PersonalInfoEditor() {
       <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow animate-pulse">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
         <div className="grid grid-cols-2 gap-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          {SKELETON_ROW_KEYS.map((key) => (
+            <div key={key} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
       </div>
