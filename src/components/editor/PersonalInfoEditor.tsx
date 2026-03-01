@@ -6,7 +6,7 @@ import { IconPicker } from './IconPicker';
 import { ContactIconType, ContactItem } from '@/types';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PERSONAL_INFO_ANCHOR } from '@/lib/previewAnchor';
+import { customContactAnchor, PERSONAL_INFO_ANCHOR, personalInfoFieldAnchor } from '@/lib/previewAnchor';
 
 const SKELETON_ROW_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'];
 
@@ -74,7 +74,10 @@ export function PersonalInfoEditor() {
 
       {/* 表单 */}
       <div className="grid grid-cols-6 gap-3">
-        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          data-editor-anchor={personalInfoFieldAnchor('name')}
+          className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           {t('editor.personalInfo.name')}
           <input
             type="text"
@@ -85,7 +88,10 @@ export function PersonalInfoEditor() {
           />
         </label>
 
-        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          data-editor-anchor={personalInfoFieldAnchor('title')}
+          className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           {t('editor.personalInfo.title_field')}
           <input
             type="text"
@@ -96,7 +102,10 @@ export function PersonalInfoEditor() {
           />
         </label>
 
-        <label className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          data-editor-anchor={personalInfoFieldAnchor('summary')}
+          className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           {t('editor.personalInfo.summary')}
           <textarea
             value={personalInfo.summary}
@@ -108,7 +117,7 @@ export function PersonalInfoEditor() {
         </label>
 
         {/* 邮箱 - 带图标选择 */}
-        <div className="col-span-full">
+        <div data-editor-anchor={personalInfoFieldAnchor('email')} className="col-span-full">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.email')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
@@ -126,7 +135,7 @@ export function PersonalInfoEditor() {
         </div>
 
         {/* 电话 - 带图标选择 */}
-        <div className="col-span-full">
+        <div data-editor-anchor={personalInfoFieldAnchor('phone')} className="col-span-full">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.phone')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
@@ -144,7 +153,7 @@ export function PersonalInfoEditor() {
         </div>
 
         {/* 个人网站 - 带图标选择 */}
-        <div className="col-span-full">
+        <div data-editor-anchor={personalInfoFieldAnchor('website')} className="col-span-full">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.website')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
@@ -161,8 +170,44 @@ export function PersonalInfoEditor() {
           </div>
         </div>
 
+        {/* LinkedIn - 带图标选择 */}
+        <div data-editor-anchor={personalInfoFieldAnchor('linkedin')} className="col-span-full">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.linkedin')}</span>
+          <div className="flex items-center gap-2 mt-1">
+            <IconPicker
+              value={iconConfig.linkedinIcon || 'linkedin'}
+              onChange={(type: ContactIconType) => updateIconConfig({ linkedinIcon: type })}
+            />
+            <input
+              type="url"
+              value={personalInfo.linkedin || ''}
+              onChange={(e) => updatePersonalInfo({ linkedin: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder=""
+            />
+          </div>
+        </div>
+
+        {/* GitHub - 带图标选择 */}
+        <div data-editor-anchor={personalInfoFieldAnchor('github')} className="col-span-full">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.github')}</span>
+          <div className="flex items-center gap-2 mt-1">
+            <IconPicker
+              value={iconConfig.githubIcon || 'github'}
+              onChange={(type: ContactIconType) => updateIconConfig({ githubIcon: type })}
+            />
+            <input
+              type="url"
+              value={personalInfo.github || ''}
+              onChange={(e) => updatePersonalInfo({ github: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder=""
+            />
+          </div>
+        </div>
+
         {/* 地点 - 带图标选择 */}
-        <div className="col-span-full">
+        <div data-editor-anchor={personalInfoFieldAnchor('location')} className="col-span-full">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.location')}</span>
           <div className="flex items-center gap-2 mt-1">
             <IconPicker
@@ -203,6 +248,7 @@ export function PersonalInfoEditor() {
             {contacts.map((contact, idx) => (
               <div
                 key={contact.id}
+                data-editor-anchor={customContactAnchor(contact.id)}
                 draggable
                 onDragStart={() => handleDragStart(idx)}
                 onDragOver={(e) => handleDragOver(e, idx)}

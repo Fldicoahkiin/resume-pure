@@ -6,10 +6,11 @@ import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Faceb
 import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, ThemeConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
 import {
+  customContactAnchor,
   customItemAnchor,
   educationAnchor,
   experienceAnchor,
-  PERSONAL_INFO_ANCHOR,
+  personalInfoFieldAnchor,
   projectAnchor,
   sectionAnchor,
   skillAnchor,
@@ -53,15 +54,15 @@ function SelectableBlock({
 
   return (
     <div
-      role={isSelectable ? 'button' : undefined}
-      tabIndex={isSelectable ? 0 : undefined}
-      onClick={isSelectable ? handleActivate : undefined}
-      onKeyDown={isSelectable ? (event) => {
+      role="button"
+      tabIndex={0}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           handleActivate();
         }
-      } : undefined}
+      }}
       className={`${className || ''} ${interactiveClass} ${activeClass}`.trim()}
     >
       {children}
@@ -566,18 +567,18 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
   const iconConfig = personalInfo.iconConfig || {};
 
   const baseContactItems = [
-    { type: iconConfig.emailIcon || 'mail', value: personalInfo.email, href: sanitizeUrl(personalInfo.email) },
-    { type: iconConfig.phoneIcon || 'phone', value: personalInfo.phone, href: sanitizeUrl(personalInfo.phone) },
-    { type: iconConfig.locationIcon || 'map-pin', value: personalInfo.location, href: undefined },
-    { type: iconConfig.websiteIcon || 'globe', value: personalInfo.website, href: sanitizeUrl(personalInfo.website) },
-    { type: iconConfig.linkedinIcon || 'linkedin', value: personalInfo.linkedin, href: sanitizeUrl(personalInfo.linkedin) },
-    { type: iconConfig.githubIcon || 'github', value: personalInfo.github, href: sanitizeUrl(personalInfo.github) },
+    { anchor: personalInfoFieldAnchor('email'), type: iconConfig.emailIcon || 'mail', value: personalInfo.email, href: sanitizeUrl(personalInfo.email) },
+    { anchor: personalInfoFieldAnchor('phone'), type: iconConfig.phoneIcon || 'phone', value: personalInfo.phone, href: sanitizeUrl(personalInfo.phone) },
+    { anchor: personalInfoFieldAnchor('location'), type: iconConfig.locationIcon || 'map-pin', value: personalInfo.location, href: undefined },
+    { anchor: personalInfoFieldAnchor('website'), type: iconConfig.websiteIcon || 'globe', value: personalInfo.website, href: sanitizeUrl(personalInfo.website) },
+    { anchor: personalInfoFieldAnchor('linkedin'), type: iconConfig.linkedinIcon || 'linkedin', value: personalInfo.linkedin, href: sanitizeUrl(personalInfo.linkedin) },
+    { anchor: personalInfoFieldAnchor('github'), type: iconConfig.githubIcon || 'github', value: personalInfo.github, href: sanitizeUrl(personalInfo.github) },
   ].filter(item => item.value);
 
   const customContacts = (personalInfo.contacts || [])
     .filter(c => c.value)
     .sort((a, b) => a.order - b.order)
-    .map(c => ({ type: c.type, value: c.value, href: c.href ? sanitizeUrl(c.href) : sanitizeUrl(c.value) }));
+    .map(c => ({ anchor: customContactAnchor(c.id), type: c.type, value: c.value, href: c.href ? sanitizeUrl(c.href) : sanitizeUrl(c.value) }));
 
   const allContactItems = [...baseContactItems, ...customContacts];
   const keyedContactItems = withStableStringKey(
@@ -605,51 +606,75 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
       <div className="px-12 py-8">
         <header style={{ marginBottom: `${theme.spacing * 2}pt` }}>
           {hasHeaderInfo && (
-            <SelectableBlock
-              anchor={PERSONAL_INFO_ANCHOR}
-              activeAnchor={activeAnchor}
-              onSelectAnchor={onSelectAnchor}
-              className="-mx-1 px-1 py-0.5"
-            >
+            <>
               {personalInfo.name && (
-                <h1
-                  className="font-bold tracking-wide"
-                  style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
+                <SelectableBlock
+                  anchor={personalInfoFieldAnchor('name')}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                  className="-mx-1 px-1 py-0.5"
                 >
-                  {personalInfo.name}
-                </h1>
+                  <h1
+                    className="font-bold tracking-wide"
+                    style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
+                  >
+                    {personalInfo.name}
+                  </h1>
+                </SelectableBlock>
               )}
 
               {personalInfo.title && (
-                <p className="text-gray-600 mt-1" style={{ fontSize: `${fs + 2}pt` }}>{personalInfo.title}</p>
+                <SelectableBlock
+                  anchor={personalInfoFieldAnchor('title')}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                  className="-mx-1 px-1 py-0.5 mt-1"
+                >
+                  <p className="text-gray-600" style={{ fontSize: `${fs + 2}pt` }}>{personalInfo.title}</p>
+                </SelectableBlock>
               )}
 
               {personalInfo.summary && (
-                <p className="text-gray-600 mt-2" style={{ fontSize: `${fs}pt` }}>
-                  {personalInfo.summary}
-                </p>
+                <SelectableBlock
+                  anchor={personalInfoFieldAnchor('summary')}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                  className="-mx-1 px-1 py-0.5 mt-2"
+                >
+                  <p className="text-gray-600" style={{ fontSize: `${fs}pt` }}>
+                    {personalInfo.summary}
+                  </p>
+                </SelectableBlock>
               )}
-            </SelectableBlock>
+            </>
           )}
 
           {allContactItems.length > 0 && (
             <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
-              {keyedContactItems.map(({ key, type, value, href }) => (
-                <div key={key} className="flex items-center gap-1.5" style={{ fontSize: `${fs - 1}pt` }}>
-                  <ContactIcon type={type} />
-                  {href && theme.enableLinks !== false ? (
-                    <a
-                      href={href}
-                      className="text-gray-600 hover:text-gray-900 hover:underline"
-                      target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
-                      rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    >
-                      {value}
-                    </a>
-                  ) : (
-                    <span className="text-gray-600">{value}</span>
-                  )}
-                </div>
+              {keyedContactItems.map(({ key, anchor, type, value, href }) => (
+                <SelectableBlock
+                  key={key}
+                  anchor={anchor}
+                  activeAnchor={activeAnchor}
+                  onSelectAnchor={onSelectAnchor}
+                  className="-mx-1 px-1 py-0.5"
+                >
+                  <div className="flex items-center gap-1.5" style={{ fontSize: `${fs - 1}pt` }}>
+                    <ContactIcon type={type} />
+                    {!onSelectAnchor && href && theme.enableLinks !== false ? (
+                      <a
+                        href={href}
+                        className="text-gray-600 hover:text-gray-900 hover:underline"
+                        target={href.startsWith('mailto:') || href.startsWith('tel:') ? undefined : '_blank'}
+                        rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <span className="text-gray-600">{value}</span>
+                    )}
+                  </div>
+                </SelectableBlock>
               ))}
             </div>
           )}

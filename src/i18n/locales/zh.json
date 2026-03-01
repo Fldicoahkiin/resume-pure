@@ -63,6 +63,8 @@
       "email": "邮箱",
       "phone": "电话",
       "website": "个人网站",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
       "location": "地点",
       "customContacts": "自定义联系方式",
       "add": "添加",

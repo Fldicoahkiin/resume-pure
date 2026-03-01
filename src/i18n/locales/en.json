@@ -63,6 +63,8 @@
       "email": "Email",
       "phone": "Phone",
       "website": "Website",
+      "linkedin": "LinkedIn",
+      "github": "GitHub",
       "location": "Location",
       "customContacts": "Custom Contacts",
       "add": "Add",

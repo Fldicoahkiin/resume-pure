@@ -1,4 +1,6 @@
 export const PERSONAL_INFO_ANCHOR = 'personalInfo';
+const PERSONAL_INFO_FIELD_PREFIX = 'personalInfo:';
+const CUSTOM_CONTACT_PREFIX = 'contact:';
 const SECTION_PREFIX = 'section:';
 const EXPERIENCE_PREFIX = 'experience:';
 const EDUCATION_PREFIX = 'education:';
@@ -8,6 +10,16 @@ const CUSTOM_PREFIX = 'custom:';
 
 export function sectionAnchor(sectionId: string): string {
   return `${SECTION_PREFIX}${sectionId}`;
+}
+
+export function personalInfoFieldAnchor(
+  field: 'name' | 'title' | 'summary' | 'email' | 'phone' | 'website' | 'linkedin' | 'github' | 'location'
+): string {
+  return `${PERSONAL_INFO_FIELD_PREFIX}${field}`;
+}
+
+export function customContactAnchor(contactId: string): string {
+  return `${CUSTOM_CONTACT_PREFIX}${contactId}`;
 }
 
 export function experienceAnchor(id: string): string {
@@ -31,14 +43,32 @@ export function customItemAnchor(sectionId: string, itemId: string): string {
 }
 
 export interface ParsedPreviewAnchor {
-  kind: 'personalInfo' | 'section' | 'experience' | 'education' | 'projects' | 'skills' | 'custom' | 'unknown';
+  kind: 'personalInfo' | 'personalField' | 'contact' | 'section' | 'experience' | 'education' | 'projects' | 'skills' | 'custom' | 'unknown';
   sectionId?: string;
+  field?: string;
+  contactId?: string;
   itemId?: string;
 }
 
 export function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
   if (anchor === PERSONAL_INFO_ANCHOR) {
-    return { kind: 'personalInfo' };
+    return { kind: 'personalInfo', sectionId: 'personalInfo' };
+  }
+
+  if (anchor.startsWith(PERSONAL_INFO_FIELD_PREFIX)) {
+    return {
+      kind: 'personalField',
+      sectionId: 'personalInfo',
+      field: anchor.slice(PERSONAL_INFO_FIELD_PREFIX.length),
+    };
+  }
+
+  if (anchor.startsWith(CUSTOM_CONTACT_PREFIX)) {
+    return {
+      kind: 'contact',
+      sectionId: 'personalInfo',
+      contactId: anchor.slice(CUSTOM_CONTACT_PREFIX.length),
+    };
   }
 
   if (anchor.startsWith(SECTION_PREFIX)) {
@@ -103,8 +133,12 @@ export function getEditorAnchorCandidates(anchor: string): string[] {
   const parsed = parsePreviewAnchor(anchor);
   const candidates = [anchor];
 
-  if (parsed.sectionId && parsed.kind !== 'section') {
+  if (parsed.sectionId && parsed.kind !== 'section' && parsed.sectionId !== 'personalInfo') {
     candidates.push(sectionAnchor(parsed.sectionId));
+  }
+
+  if (parsed.sectionId === 'personalInfo') {
+    candidates.push(PERSONAL_INFO_ANCHOR);
   }
 
   return Array.from(new Set(candidates));
@@ -115,6 +149,28 @@ export function getRawSearchPatterns(anchor: string): string[] {
 
   if (parsed.kind === 'personalInfo') {
     return ['"personalInfo"', 'personalInfo:'];
+  }
+
+  if (parsed.kind === 'personalField' && parsed.field) {
+    const field = parsed.field;
+    return [
+      `"${field}":`,
+      `${field}:`,
+      `"personalInfo"`,
+      'personalInfo:',
+    ];
+  }
+
+  if (parsed.kind === 'contact' && parsed.contactId) {
+    return [
+      `"id": "${parsed.contactId}"`,
+      `id: ${parsed.contactId}`,
+      `id: "${parsed.contactId}"`,
+      '"contacts"',
+      'contacts:',
+      '"personalInfo"',
+      'personalInfo:',
+    ];
   }
 
   if (parsed.kind === 'section' && parsed.sectionId) {
