@@ -1,5 +1,6 @@
 import { ResumeData } from '@/types';
 import yaml from 'js-yaml';
+import { normalizeResumeData } from '@/lib/resumeData';
 
 export const exportToJSON = (data: ResumeData): string => {
   return JSON.stringify(data, null, 2);
@@ -14,11 +15,16 @@ export const exportToYAML = (data: ResumeData): string => {
 };
 
 export const importFromJSON = (content: string): ResumeData => {
-  return JSON.parse(content);
+  return normalizeResumeData(JSON.parse(content));
 };
 
 export const importFromYAML = (content: string): ResumeData => {
-  return yaml.load(content) as ResumeData;
+  return normalizeResumeData(
+    yaml.load(content, {
+      json: true,
+      schema: yaml.JSON_SCHEMA,
+    })
+  );
 };
 
 export const downloadFile = (content: string, filename: string, type: string) => {

@@ -113,6 +113,7 @@ export interface ThemeConfig {
 }
 
 export interface ResumeData {
+  schemaVersion: number; // 数据结构版本号，用于迁移与兼容
   personalInfo: PersonalInfo;
   experience: Experience[];
   education: Education[];

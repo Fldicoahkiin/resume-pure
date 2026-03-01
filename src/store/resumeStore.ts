@@ -1,35 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSection, CustomSectionItem } from '@/types';
-
-// 深度合并函数，确保嵌套对象正确合并
-function deepMerge(target: ResumeData, source: Partial<ResumeData>): ResumeData {
-  // 合并 sections，不设置默认标题（让组件使用 i18n）
-  const mergedSections = source.sections
-    ? source.sections.map(section => ({
-      ...section,
-      // 只保留用户自定义的标题，不设置默认值
-      title: section.title || '',
-    }))
-    : target.sections;
-
-  return {
-    personalInfo: {
-      ...target.personalInfo,
-      ...(source.personalInfo || {}),
-    },
-    experience: source.experience ?? target.experience,
-    education: source.education ?? target.education,
-    projects: source.projects ?? target.projects,
-    skills: source.skills ?? target.skills,
-    customSections: source.customSections ?? target.customSections,
-    sections: mergedSections,
-    theme: {
-      ...target.theme,
-      ...(source.theme || {}),
-    },
-  };
-}
+import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionItem } from '@/types';
+import { createInitialResume, normalizeResumeData } from '@/lib/resumeData';
 
 interface ResumeStore {
   resume: ResumeData;
@@ -63,39 +35,11 @@ interface ResumeStore {
   addCustomSectionItem: (sectionId: string, item: CustomSectionItem) => void;
   updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<CustomSectionItem>) => void;
   deleteCustomSectionItem: (sectionId: string, itemId: string) => void;
-  importData: (data: ResumeData) => void;
+  importData: (data: unknown) => void;
   reset: () => void;
 }
 
-const initialResume: ResumeData = {
-  personalInfo: {
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    summary: '',
-  },
-  experience: [],
-  education: [],
-  projects: [],
-  skills: [],
-  customSections: [],
-  sections: [
-    { id: 'summary', title: '', visible: true, order: 1 },
-    { id: 'experience', title: '', visible: true, order: 2 },
-    { id: 'education', title: '', visible: true, order: 3 },
-    { id: 'projects', title: '', visible: true, order: 4 },
-    { id: 'skills', title: '', visible: true, order: 5 },
-  ],
-  theme: {
-    primaryColor: '#3b82f6',
-    fontFamily: 'Noto Sans SC',
-    fontSize: 11,
-    spacing: 8,
-    lineHeight: 1.5,
-    enableLinks: true,
-  },
-};
+const initialResume: ResumeData = createInitialResume();
 
 export const useResumeStore = create<ResumeStore>()(
   persist(
@@ -375,26 +319,19 @@ export const useResumeStore = create<ResumeStore>()(
           },
         })),
 
-      importData: (data) => set({ resume: data }),
+      importData: (data) => set({ resume: normalizeResumeData(data) }),
 
-      reset: () => set({ resume: initialResume }),
+      reset: () => set({ resume: createInitialResume() }),
     }),
     {
       name: 'resume-storage',
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ResumeStore> | undefined;
 
-        if (!persisted || !persisted.resume) {
-          return {
-            ...currentState,
-            hasHydrated: true,
-          };
-        }
-
         return {
           ...currentState,
           hasHydrated: true,
-          resume: deepMerge(initialResume, persisted.resume) as ResumeData,
+          resume: normalizeResumeData(persisted?.resume),
         };
       },
     }
