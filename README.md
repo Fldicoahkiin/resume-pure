@@ -86,7 +86,7 @@ docker run -p 3000:80 resume-pure
 ## 2) 设计原则（当前版本）
 
 - 数据会在导入时经过归一化（字段类型修正、缺失默认值补齐）
-- 数据包含 `schemaVersion`，当前仅支持 `schemaVersion: 2`
+- Raw 始终按最新结构处理，不要求 `schemaVersion`
 - Raw 采用纯数据结构，不暴露内部渲染 `id`
 - 未识别字段不会进入当前渲染管线（避免污染状态）
 
@@ -94,7 +94,6 @@ docker run -p 3000:80 resume-pure
 
 ```json
 {
-  "schemaVersion": 2,
   "personalInfo": {
     "name": "张三",
     "title": "前端开发工程师",
@@ -135,17 +134,15 @@ docker run -p 3000:80 resume-pure
 
 ```text
 请输出 Resume Pure 可导入的 JSON（不要 Markdown 代码块）：
-1. 必须包含 schemaVersion=2
-2. 必须包含 personalInfo/experience/education/projects/skills/customSections/sections/theme
-3. 所有日期字段输出字符串
-4. sections 使用 key 字段，至少包含 summary/experience/education/projects/skills
-5. 只输出合法 JSON
+1. 必须包含 personalInfo/experience/education/projects/skills/customSections/sections/theme
+2. 所有日期字段输出字符串
+3. sections 使用 key 字段，至少包含 summary/experience/education/projects/skills
+4. 只输出合法 JSON
 ```
 
 ## 6) 当前兼容边界
 
 - 支持：字段缺失、字段类型偏差、模块映射不完整的自动修正
-- 不支持：`schemaVersion` 非 2 的 Raw 数据
 - 不支持：任意未知结构的渲染（未知字段会被忽略）
 
 ## 项目结构

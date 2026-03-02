@@ -1,7 +1,6 @@
 import { ResumeData, ContactItem, Experience, Education, Project, Skill, CustomSectionItem, SectionConfig } from '@/types';
 
-const RAW_SCHEMA_VERSION = 2;
-export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw schema version. Expected schemaVersion 2.';
+export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw format. Expected latest raw structure.';
 
 interface RawContactItem {
   type: ContactItem['type'];
@@ -64,8 +63,7 @@ interface RawSectionConfig {
   visible: boolean;
 }
 
-export interface RawResumeDataV2 {
-  schemaVersion: typeof RAW_SCHEMA_VERSION;
+export interface RawResumeData {
   personalInfo: {
     name: string;
     title?: string;
@@ -87,6 +85,17 @@ export interface RawResumeDataV2 {
   sections: RawSectionConfig[];
   theme: ResumeData['theme'];
 }
+
+const REQUIRED_RAW_ROOT_KEYS = [
+  'personalInfo',
+  'experience',
+  'education',
+  'projects',
+  'skills',
+  'customSections',
+  'sections',
+  'theme',
+] as const;
 
 const BUILTIN_SECTION_IDS = new Set(['summary', 'experience', 'education', 'projects', 'skills']);
 
@@ -244,11 +253,10 @@ export function getRawSectionKeyMap(data: ResumeData): Map<string, string> {
   return result;
 }
 
-export function exportRawResumeData(data: ResumeData): RawResumeDataV2 {
+export function exportRawResumeData(data: ResumeData): RawResumeData {
   const keyMap = buildCustomSectionKeyMap(data);
 
   return {
-    schemaVersion: RAW_SCHEMA_VERSION,
     personalInfo: {
       name: data.personalInfo.name,
       title: data.personalInfo.title,
@@ -276,18 +284,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isRawV2(value: unknown): value is RawResumeDataV2 {
+function isLatestRawData(value: unknown): value is Record<string, unknown> {
   if (!isRecord(value)) {
     return false;
   }
 
-  const version = typeof value.schemaVersion === 'number'
-    ? value.schemaVersion
-    : typeof value.schemaVersion === 'string'
-      ? Number.parseInt(value.schemaVersion, 10)
-      : Number.NaN;
-
-  return Number.isFinite(version) && version === RAW_SCHEMA_VERSION;
+  return REQUIRED_RAW_ROOT_KEYS.every((key) => key in value);
 }
 
 function normalizeCustomKey(key: string, index: number): string {
@@ -316,9 +318,11 @@ function ensureUniqueId(base: string, used: Set<string>): string {
   return next;
 }
 
-function createSectionKeyMap(raw: RawResumeDataV2): Map<string, string> {
+function createSectionKeyMap(raw: Record<string, unknown>): Map<string, string> {
   const map = new Map<string, string>();
   const usedIds = new Set<string>(Array.from(BUILTIN_SECTION_IDS));
+  const rawCustomSections = Array.isArray(raw.customSections) ? raw.customSections : [];
+  const rawSections = Array.isArray(raw.sections) ? raw.sections : [];
 
   const addCustomKey = (rawKey: string, indexHint: number) => {
     if (map.has(rawKey)) return;
@@ -328,11 +332,13 @@ function createSectionKeyMap(raw: RawResumeDataV2): Map<string, string> {
     map.set(rawKey, internalId);
   };
 
-  raw.customSections.forEach((section, index) => {
-    addCustomKey(section.key, index);
+  rawCustomSections.forEach((section, index) => {
+    if (!isRecord(section)) return;
+    addCustomKey(typeof section.key === 'string' ? section.key : '', index);
   });
 
-  raw.sections.forEach((section, index) => {
+  rawSections.forEach((section, index) => {
+    if (!isRecord(section)) return;
     if (typeof section.key !== 'string') return;
     if (!section.key.startsWith('custom:')) return;
 
@@ -344,14 +350,26 @@ function createSectionKeyMap(raw: RawResumeDataV2): Map<string, string> {
 }
 
 export function prepareImportedResumeData(input: unknown): unknown {
-  if (!isRawV2(input)) {
+  if (!isLatestRawData(input)) {
     throw new Error(RAW_SCHEMA_ERROR_MESSAGE);
   }
 
-  const raw = input;
+  const raw = input as Record<string, unknown>;
   const customKeyMap = createSectionKeyMap(raw);
+  const rawSections = Array.isArray(raw.sections) ? raw.sections : [];
+  const rawCustomSections = Array.isArray(raw.customSections) ? raw.customSections : [];
+  const rawExperience = Array.isArray(raw.experience) ? raw.experience : [];
+  const rawEducation = Array.isArray(raw.education) ? raw.education : [];
+  const rawProjects = Array.isArray(raw.projects) ? raw.projects : [];
+  const rawSkills = Array.isArray(raw.skills) ? raw.skills : [];
+  const personalInfo = isRecord(raw.personalInfo) ? raw.personalInfo : {};
+  const contacts = Array.isArray(personalInfo.contacts) ? personalInfo.contacts : [];
 
-  const sections = raw.sections.map((section, index) => {
+  const sections = rawSections.map((section, index) => {
+    if (!isRecord(section)) {
+      return null;
+    }
+
     if (typeof section.key !== 'string' || section.key.length === 0) {
       return null;
     }
@@ -382,47 +400,93 @@ export function prepareImportedResumeData(input: unknown): unknown {
     return null;
   }).filter(Boolean);
 
-  const customSections = raw.customSections.map((section, sectionIndex) => {
+  const customSections = rawCustomSections.map((section, sectionIndex) => {
+    if (!isRecord(section) || typeof section.key !== 'string') {
+      return null;
+    }
+
     const internalId = customKeyMap.get(section.key);
     if (!internalId) return null;
 
+    const items = Array.isArray(section.items) ? section.items : [];
+
     return {
       id: internalId,
-      items: (Array.isArray(section.items) ? section.items : []).map((item, itemIndex) => ({
-        ...item,
-        id: `custom-item-${sectionIndex + 1}-${itemIndex + 1}`,
-      })),
+      items: items.reduce<Record<string, unknown>[]>((acc, item, itemIndex) => {
+        if (!isRecord(item)) return acc;
+
+        acc.push({
+          ...item,
+          id: `custom-item-${sectionIndex + 1}-${itemIndex + 1}`,
+        });
+        return acc;
+      }, []),
     };
   }).filter(Boolean);
+
+  const mappedContacts = contacts.reduce<Record<string, unknown>[]>((acc, contact, index) => {
+    if (!isRecord(contact)) return acc;
+
+    acc.push({
+      ...contact,
+      id: `contact-${index + 1}`,
+      order: index,
+    });
+    return acc;
+  }, []);
+
+  const mappedExperience = rawExperience.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `exp-${index + 1}`,
+    });
+    return acc;
+  }, []);
+
+  const mappedEducation = rawEducation.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `edu-${index + 1}`,
+    });
+    return acc;
+  }, []);
+
+  const mappedProjects = rawProjects.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `proj-${index + 1}`,
+    });
+    return acc;
+  }, []);
+
+  const mappedSkills = rawSkills.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `skill-${index + 1}`,
+    });
+    return acc;
+  }, []);
 
   return {
     schemaVersion: 1,
     personalInfo: {
-      ...raw.personalInfo,
-      contacts: (Array.isArray(raw.personalInfo.contacts) ? raw.personalInfo.contacts : []).map((contact, index) => ({
-        ...contact,
-        id: `contact-${index + 1}`,
-        order: index,
-      })),
+      ...personalInfo,
+      contacts: mappedContacts,
     },
-    experience: (Array.isArray(raw.experience) ? raw.experience : []).map((item, index) => ({
-      ...item,
-      id: `exp-${index + 1}`,
-    })),
-    education: (Array.isArray(raw.education) ? raw.education : []).map((item, index) => ({
-      ...item,
-      id: `edu-${index + 1}`,
-    })),
-    projects: (Array.isArray(raw.projects) ? raw.projects : []).map((item, index) => ({
-      ...item,
-      id: `proj-${index + 1}`,
-    })),
-    skills: (Array.isArray(raw.skills) ? raw.skills : []).map((item, index) => ({
-      ...item,
-      id: `skill-${index + 1}`,
-    })),
+    experience: mappedExperience,
+    education: mappedEducation,
+    projects: mappedProjects,
+    skills: mappedSkills,
     customSections,
     sections,
-    theme: raw.theme,
+    theme: isRecord(raw.theme) ? raw.theme : {},
   };
 }

@@ -80,7 +80,7 @@ Trigger rules:
 ## 2) Current Data Rules
 
 - Imported data goes through normalization (type fix + defaults)
-- Data includes `schemaVersion`, currently only `schemaVersion: 2` is supported
+- Raw data is always parsed as the latest structure without requiring `schemaVersion`
 - Raw keeps pure domain data and does not expose internal render `id`
 - Unknown fields are ignored by the current rendering pipeline
 
@@ -88,7 +88,6 @@ Trigger rules:
 
 ```json
 {
-  "schemaVersion": 2,
   "personalInfo": {
     "name": "John Doe",
     "title": "Frontend Engineer",
@@ -129,17 +128,15 @@ Trigger rules:
 
 ```text
 Generate valid JSON for Resume Pure import (no markdown code block):
-1. schemaVersion must be 2
-2. include personalInfo/experience/education/projects/skills/customSections/sections/theme
-3. all date fields must be strings
-4. sections should use `key` and include summary/experience/education/projects/skills
-5. output valid JSON only
+1. include personalInfo/experience/education/projects/skills/customSections/sections/theme
+2. all date fields must be strings
+3. sections should use `key` and include summary/experience/education/projects/skills
+4. output valid JSON only
 ```
 
 ## 6) Compatibility Boundary
 
 - Supported: missing fields, minor type drift, partial section mapping (auto-normalized)
-- Not supported: raw data where `schemaVersion` is not 2
 - Not supported: arbitrary unknown structures for rendering
 
 ## Project Structure
