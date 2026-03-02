@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
-import { exportToJSON, exportToYAML, downloadFile } from '@/lib/export';
-import { exportToPDF, PDFTranslations } from '@/lib/pdf';
-import { exportToPNG } from '@/lib/image';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+interface PDFTranslations {
+  summary: string;
+  experience: string;
+  education: string;
+  projects: string;
+  skills: string;
+  technologies: string;
+  present: string;
+}
 
 export function ExportButtons() {
   const { t } = useTranslation();
@@ -14,27 +21,10 @@ export function ExportButtons() {
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [loadingPNG, setLoadingPNG] = useState(false);
 
-  const handleExportJSON = () => {
-    try {
-      const json = exportToJSON(resume);
-      downloadFile(json, 'resume.json', 'application/json');
-    } catch (error) {
-      alert(t('export.exportFailed') + (error as Error).message);
-    }
-  };
-
-  const handleExportYAML = () => {
-    try {
-      const yaml = exportToYAML(resume);
-      downloadFile(yaml, 'resume.yaml', 'text/yaml');
-    } catch (error) {
-      alert(t('export.exportFailed') + (error as Error).message);
-    }
-  };
-
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
+      const { exportToPDF } = await import('@/lib/pdf');
       const pdfTranslations: PDFTranslations = {
         summary: t('pdf.summary'),
         experience: t('pdf.experience'),
@@ -55,6 +45,7 @@ export function ExportButtons() {
   const handleExportPNG = async () => {
     setLoadingPNG(true);
     try {
+      const { exportToPNG } = await import('@/lib/image');
       await exportToPNG('resume-preview', 'resume.png');
     } catch (error) {
       alert(t('export.pngExportFailed') + (error as Error).message);
