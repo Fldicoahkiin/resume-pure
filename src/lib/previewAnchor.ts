@@ -147,6 +147,157 @@ export function getEditorAnchorCandidates(anchor: string): string[] {
   return Array.from(new Set(candidates));
 }
 
+export interface RawJumpDescriptor {
+  fieldPath?: string[];
+  arrayPath?: string[];
+  itemIndex?: number;
+  nestedArrayPath?: string[];
+  nestedItemIndex?: number;
+  focusKey?: string;
+  fallbackFocusKey?: string;
+}
+
+function getOrderedSections(resume: ResumeData) {
+  return [...resume.sections].sort((a, b) => a.order - b.order);
+}
+
+function getOrderedContacts(resume: ResumeData) {
+  return [...(resume.personalInfo.contacts || [])].sort((a, b) => a.order - b.order);
+}
+
+function getOrderedCustomSections(resume: ResumeData) {
+  const sectionOrder = new Map<string, number>();
+  getOrderedSections(resume).forEach((section, index) => {
+    sectionOrder.set(section.id, index);
+  });
+
+  return [...resume.customSections].sort(
+    (a, b) => (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+  );
+}
+
+export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJumpDescriptor | null {
+  const parsed = parsePreviewAnchor(anchor);
+
+  if (parsed.kind === 'personalInfo') {
+    return {
+      fieldPath: ['personalInfo'],
+    };
+  }
+
+  if (parsed.kind === 'personalField' && parsed.field) {
+    return {
+      fieldPath: ['personalInfo', parsed.field],
+      focusKey: parsed.field,
+    };
+  }
+
+  if (parsed.kind === 'contact' && parsed.contactId && resume) {
+    const orderedContacts = getOrderedContacts(resume);
+    const contactIndex = orderedContacts.findIndex((item) => item.id === parsed.contactId);
+
+    if (contactIndex >= 0) {
+      return {
+        arrayPath: ['personalInfo', 'contacts'],
+        itemIndex: contactIndex,
+        focusKey: 'type',
+        fallbackFocusKey: 'value',
+      };
+    }
+  }
+
+  if (parsed.kind === 'section' && parsed.sectionId && resume) {
+    const orderedSections = getOrderedSections(resume);
+    const sectionIndex = orderedSections.findIndex((item) => item.id === parsed.sectionId);
+
+    if (sectionIndex >= 0) {
+      return {
+        arrayPath: ['sections'],
+        itemIndex: sectionIndex,
+        focusKey: 'key',
+      };
+    }
+  }
+
+  if (parsed.kind === 'experience' && parsed.itemId && resume) {
+    const itemIndex = resume.experience.findIndex((item) => item.id === parsed.itemId);
+    if (itemIndex >= 0) {
+      return {
+        arrayPath: ['experience'],
+        itemIndex,
+        focusKey: 'company',
+        fallbackFocusKey: 'position',
+      };
+    }
+  }
+
+  if (parsed.kind === 'education' && parsed.itemId && resume) {
+    const itemIndex = resume.education.findIndex((item) => item.id === parsed.itemId);
+    if (itemIndex >= 0) {
+      return {
+        arrayPath: ['education'],
+        itemIndex,
+        focusKey: 'school',
+        fallbackFocusKey: 'degree',
+      };
+    }
+  }
+
+  if (parsed.kind === 'projects' && parsed.itemId && resume) {
+    const itemIndex = resume.projects.findIndex((item) => item.id === parsed.itemId);
+    if (itemIndex >= 0) {
+      return {
+        arrayPath: ['projects'],
+        itemIndex,
+        focusKey: 'name',
+        fallbackFocusKey: 'role',
+      };
+    }
+  }
+
+  if (parsed.kind === 'skills' && parsed.itemId && resume) {
+    const itemIndex = resume.skills.findIndex((item) => item.id === parsed.itemId);
+    if (itemIndex >= 0) {
+      return {
+        arrayPath: ['skills'],
+        itemIndex,
+        focusKey: 'category',
+      };
+    }
+  }
+
+  if (parsed.kind === 'custom' && parsed.sectionId && parsed.itemId && resume) {
+    const orderedCustomSections = getOrderedCustomSections(resume);
+    const sectionIndex = orderedCustomSections.findIndex((section) => section.id === parsed.sectionId);
+    if (sectionIndex < 0) return null;
+
+    const section = orderedCustomSections[sectionIndex];
+    const itemIndex = section.items.findIndex((item) => item.id === parsed.itemId);
+    if (itemIndex < 0) return null;
+
+    return {
+      arrayPath: ['customSections'],
+      itemIndex: sectionIndex,
+      nestedArrayPath: ['items'],
+      nestedItemIndex: itemIndex,
+      focusKey: 'title',
+      fallbackFocusKey: 'description',
+    };
+  }
+
+  if (parsed.kind === 'section' && parsed.sectionId && resume) {
+    const rawKeyMap = getRawSectionKeyMap(resume);
+    const rawSectionKey = rawKeyMap.get(parsed.sectionId);
+    if (rawSectionKey) {
+      return {
+        focusKey: rawSectionKey,
+      };
+    }
+  }
+
+  return null;
+}
+
 function getValueSearchPatterns(value: string | undefined): string[] {
   if (!value) return [];
   const trimmed = value.trim();
