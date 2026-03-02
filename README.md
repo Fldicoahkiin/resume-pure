@@ -61,6 +61,21 @@ docker run -p 3000:80 resume-pure
 
 项目已适配静态导出，可通过 GitHub Actions 自动部署。
 
+### Vercel
+
+仓库已新增 Vercel 自动部署工作流：`/.github/workflows/vercel-deploy.yml`
+
+在 GitHub 仓库中配置以下 Actions Secrets：
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+触发策略：
+
+- `pull_request` 到 `master`：部署 Preview
+- `push` 到 `master`：部署 Production
+
 ## Raw 数据与 AI 工作流
 
 ## 1) 支持格式

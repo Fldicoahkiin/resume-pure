@@ -55,6 +55,21 @@ Then open <http://localhost:3000>
 
 The project supports static export and can be deployed with GitHub Actions.
 
+### Vercel
+
+The repository now includes a Vercel deployment workflow: `/.github/workflows/vercel-deploy.yml`
+
+Configure these GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+Trigger rules:
+
+- `pull_request` to `master`: deploy Preview
+- `push` to `master`: deploy Production
+
 ## Raw Data and AI Workflow
 
 ## 1) Supported Formats
