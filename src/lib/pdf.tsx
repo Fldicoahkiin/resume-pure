@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResumeData } from '@/types';
-import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/fonts';
+import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 
 // 注册中文断词回调
 registerCJKHyphenation();
