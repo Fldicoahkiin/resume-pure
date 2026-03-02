@@ -5,6 +5,7 @@ import { CustomSectionItem } from '@/types';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { customItemAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 interface CustomSectionEditorProps {
   sectionId: string;
@@ -34,7 +35,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
 
   const handleAdd = () => {
     const newItem: CustomSectionItem = {
-      id: Date.now().toString(),
+      id: createEntityId('custom-item'),
       title: '',
       subtitle: '',
       date: '',

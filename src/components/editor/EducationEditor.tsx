@@ -5,6 +5,7 @@ import { Education } from '@/types';
 import { GraduationCap, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { educationAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 interface EducationEditorProps {
   embedded?: boolean;
@@ -25,7 +26,7 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
 
   const handleAdd = () => {
     const newEdu: Education = {
-      id: Date.now().toString(),
+      id: createEntityId('edu'),
       school: '',
       degree: '',
       major: '',

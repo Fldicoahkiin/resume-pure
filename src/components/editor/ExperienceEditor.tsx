@@ -5,6 +5,7 @@ import { Experience } from '@/types';
 import { Briefcase, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { experienceAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 interface ExperienceEditorProps {
   embedded?: boolean;
@@ -25,7 +26,7 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
 
   const handleAdd = () => {
     const newExp: Experience = {
-      id: Date.now().toString(),
+      id: createEntityId('exp'),
       company: '',
       position: '',
       location: '',

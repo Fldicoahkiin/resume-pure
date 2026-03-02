@@ -5,6 +5,7 @@ import { Skill } from '@/types';
 import { Wrench, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { skillAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 interface SkillEditorProps {
   embedded?: boolean;
@@ -25,7 +26,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
 
   const handleAdd = () => {
     const newSkill: Skill = {
-      id: Date.now().toString(),
+      id: createEntityId('skill'),
       category: '',
       items: [],
     };

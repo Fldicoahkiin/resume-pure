@@ -7,6 +7,7 @@ import { ContactIconType, ContactItem } from '@/types';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { customContactAnchor, PERSONAL_INFO_ANCHOR, personalInfoFieldAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 const SKELETON_ROW_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'];
 
@@ -34,7 +35,7 @@ export function PersonalInfoEditor() {
 
   const handleAddContact = () => {
     const newContact: ContactItem = {
-      id: `contact-${Date.now()}`,
+      id: createEntityId('contact'),
       type: 'link',
       value: '',
       order: contacts.length,

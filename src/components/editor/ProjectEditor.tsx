@@ -5,6 +5,7 @@ import { Project } from '@/types';
 import { Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { projectAnchor } from '@/lib/previewAnchor';
+import { createEntityId } from '@/lib/id';
 
 interface ProjectEditorProps {
   embedded?: boolean;
@@ -25,7 +26,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
 
   const handleAdd = () => {
     const newProj: Project = {
-      id: Date.now().toString(),
+      id: createEntityId('proj'),
       name: '',
       role: '',
       startDate: '',

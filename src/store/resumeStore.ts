@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionItem } from '@/types';
 import { createInitialResume, normalizeResumeData } from '@/lib/resumeData';
+import { createEntityId } from '@/lib/id';
 
 interface ResumeStore {
   resume: ResumeData;
@@ -246,7 +247,7 @@ export const useResumeStore = create<ResumeStore>()(
 
       // 自定义模块相关
       addCustomSection: (title) => {
-        const sectionId = `custom-${Date.now()}`;
+        const sectionId = createEntityId('custom');
         set((state) => ({
           resume: {
             ...state.resume,
