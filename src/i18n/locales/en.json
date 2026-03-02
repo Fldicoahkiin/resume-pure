@@ -136,6 +136,13 @@
       "primaryColor": "Primary Color",
       "customColor": "Custom color",
       "fontFamily": "Font",
+      "paperSize": "Document Size",
+      "paperSizeHint": {
+        "a4": "International standard",
+        "letter": "US, Canada",
+        "legal": "US legal documents",
+        "a3": "Large layout"
+      },
       "fontSize": "Font Size",
       "lineHeight": "Line Height",
       "spacing": "Section Spacing",

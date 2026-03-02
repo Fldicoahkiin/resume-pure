@@ -12,6 +12,7 @@ import {
   Skill,
   ThemeConfig,
 } from '@/types';
+import { normalizePaperSize } from '@/lib/paper';
 
 const BUILTIN_SECTIONS: SectionConfig[] = [
   { id: 'summary', title: '', visible: true, order: 1 },
@@ -330,6 +331,7 @@ function normalizeTheme(input: unknown, fallback: ThemeConfig): ThemeConfig {
     spacing: asNumber(theme.spacing, fallback.spacing, 4, 16),
     lineHeight: asNumber(theme.lineHeight, fallback.lineHeight, 1.2, 2),
     enableLinks: asBoolean(theme.enableLinks, fallback.enableLinks !== false),
+    paperSize: normalizePaperSize(theme.paperSize, fallback.paperSize),
   };
 }
 
@@ -438,6 +440,7 @@ export function createInitialResume(): ResumeData {
       spacing: 8,
       lineHeight: 1.5,
       enableLinks: true,
+      paperSize: 'A4',
     },
   };
 }

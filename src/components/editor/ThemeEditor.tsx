@@ -4,6 +4,8 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FontSelector } from './FontSelector';
+import { PAPER_SIZE_OPTIONS } from '@/lib/paper';
+import type { PaperSize } from '@/types';
 
 const presetColors = [
   '#3b82f6', // blue
@@ -98,6 +100,32 @@ export function ThemeEditor() {
             value={theme.fontFamily}
             onChange={(fontFamily) => updateTheme({ fontFamily })}
           />
+        </div>
+
+        {/* 纸张尺寸 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('editor.theme.paperSize')}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {PAPER_SIZE_OPTIONS.map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => updateTheme({ paperSize: size })}
+                className={`rounded-lg border px-3 py-2 text-left transition ${
+                  theme.paperSize === size
+                    ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <p className="text-sm font-semibold">{size}</p>
+                <p className={`text-xs ${theme.paperSize === size ? 'text-gray-100 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
+                  {t(`editor.theme.paperSizeHint.${size.toLowerCase() as Lowercase<PaperSize>}`)}
+                </p>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 字号 */}

@@ -5,6 +5,7 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
 import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, ThemeConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { getPaperDimensions } from '@/lib/paper';
 import {
   customContactAnchor,
   customItemAnchor,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/previewAnchor';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
+const DEFAULT_PAPER_DIMENSIONS = getPaperDimensions('A4');
 
 interface ResumePreviewProps {
   onSelectAnchor?: (anchor: string) => void;
@@ -540,7 +542,11 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
     return (
       <div
         className="bg-white shadow-lg mx-auto animate-pulse"
-        style={{ width: '595px', minHeight: '842px', padding: '50px' }}
+        style={{
+          width: `${DEFAULT_PAPER_DIMENSIONS.width}px`,
+          minHeight: `${DEFAULT_PAPER_DIMENSIONS.height}px`,
+          padding: '50px',
+        }}
       >
         <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-5 bg-gray-200 rounded w-1/4 mb-2"></div>
@@ -587,6 +593,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
   ).map((item, index) => ({ key: item.key, ...allContactItems[index] }));
 
   const fs = theme.fontSize;
+  const paper = getPaperDimensions(theme.paperSize);
   const hasHeaderInfo = Boolean(personalInfo.name || personalInfo.title || personalInfo.summary);
 
   return (
@@ -594,8 +601,8 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
       id="resume-preview"
       className="bg-white shadow-lg mx-auto"
       style={{
-        width: '595px',
-        minHeight: '842px',
+        width: `${paper.width}px`,
+        minHeight: `${paper.height}px`,
         fontFamily: `"${theme.fontFamily}", "Noto Sans SC", system-ui, sans-serif`,
         fontSize: `${fs}pt`,
         lineHeight: theme.lineHeight,

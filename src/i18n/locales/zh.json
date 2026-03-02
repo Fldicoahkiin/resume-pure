@@ -136,6 +136,13 @@
       "primaryColor": "主题颜色",
       "customColor": "自定义颜色",
       "fontFamily": "字体",
+      "paperSize": "纸张尺寸",
+      "paperSizeHint": {
+        "a4": "国际标准（多数国家）",
+        "letter": "美加常用",
+        "legal": "美国法律文书",
+        "a3": "大幅内容"
+      },
       "fontSize": "基础字号",
       "lineHeight": "行高",
       "spacing": "模块间距",

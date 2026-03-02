@@ -1,6 +1,7 @@
 import React from 'react';
 import { ResumeData } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
+import { getPaperDimensions } from '@/lib/paper';
 
 // 注册中文断词回调
 registerCJKHyphenation();
@@ -46,6 +47,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
+  const paper = getPaperDimensions(theme.paperSize);
 
   const styles = StyleSheet.create({
     page: {
@@ -139,7 +141,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size={{ width: paper.width, height: paper.height }} style={styles.page}>
         {/* 个人信息 */}
         <View style={styles.header}>
           <Text style={styles.name}>{data.personalInfo.name}</Text>

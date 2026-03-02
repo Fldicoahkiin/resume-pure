@@ -19,12 +19,12 @@ import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
 import { getEditorAnchorCandidates, getSectionIdFromPreviewAnchor } from '@/lib/previewAnchor';
+import { getPaperDimensions } from '@/lib/paper';
 
 type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
 type PreviewScaleMode = 'fit' | 'manual';
 
-const PREVIEW_BASE_WIDTH = 595;
 const PREVIEW_SCALE_MIN = 0.45;
 const PREVIEW_SCALE_MAX = 1.25;
 const PREVIEW_SCALE_STEP = 0.05;
@@ -73,6 +73,7 @@ export default function BuilderPage() {
   const activeEditorElementRef = useRef<HTMLElement | null>(null);
 
   const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
+  const previewBaseWidth = getPaperDimensions(resume.theme.paperSize).width;
 
   const clampScale = useCallback((value: number) => {
     return Math.min(PREVIEW_SCALE_MAX, Math.max(PREVIEW_SCALE_MIN, value));
@@ -83,8 +84,8 @@ export default function BuilderPage() {
     if (!viewport) return 0.8;
 
     const availableWidth = Math.max(viewport.clientWidth - PREVIEW_HORIZONTAL_PADDING, 280);
-    return clampScale(availableWidth / PREVIEW_BASE_WIDTH);
-  }, [clampScale]);
+    return clampScale(availableWidth / previewBaseWidth);
+  }, [clampScale, previewBaseWidth]);
 
   const syncFitScale = useCallback(() => {
     const fitScale = getFitScale();

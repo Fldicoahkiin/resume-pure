@@ -110,7 +110,10 @@ export interface ThemeConfig {
   spacing: number;
   lineHeight: number;
   enableLinks?: boolean; // 是否启用超链接，默认 true
+  paperSize: PaperSize;
 }
+
+export type PaperSize = 'A4' | 'Letter' | 'Legal' | 'A3';
 
 export interface ResumeData {
   schemaVersion: number; // 数据结构版本号，用于迁移与兼容
