@@ -36,30 +36,6 @@ const iconOptions: IconOption[] = [
   { type: 'at-sign', icon: <AtSign size={16} />, labelKey: '@' },
 ];
 
-function getIconComponent(type: ContactIconType, className?: string) {
-  const iconClass = className || "w-3 h-3 text-gray-500";
-  switch (type) {
-    case 'mail': return <Mail className={iconClass} />;
-    case 'phone': return <Phone className={iconClass} />;
-    case 'map-pin': return <MapPin className={iconClass} />;
-    case 'globe': return <Globe className={iconClass} />;
-    case 'linkedin': return <Linkedin className={iconClass} />;
-    case 'github': return <Github className={iconClass} />;
-    case 'twitter': return <Twitter className={iconClass} />;
-    case 'instagram': return <Instagram className={iconClass} />;
-    case 'facebook': return <Facebook className={iconClass} />;
-    case 'youtube': return <Youtube className={iconClass} />;
-    case 'dribbble': return <Dribbble className={iconClass} />;
-    case 'link': return <Link className={iconClass} />;
-    case 'user': return <User className={iconClass} />;
-    case 'briefcase': return <Briefcase className={iconClass} />;
-    case 'calendar': return <Calendar className={iconClass} />;
-    case 'message-circle': return <MessageCircle className={iconClass} />;
-    case 'at-sign': return <AtSign className={iconClass} />;
-    default: return <Globe className={iconClass} />;
-  }
-}
-
 interface IconPickerProps {
   value: ContactIconType;
   onChange: (type: ContactIconType) => void;

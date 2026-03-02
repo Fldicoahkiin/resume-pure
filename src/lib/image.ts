@@ -1,5 +1,3 @@
-import { ResumeData } from '@/types';
-
 /**
  * 导出为 PNG 图片
  */
