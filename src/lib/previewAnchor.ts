@@ -1,3 +1,6 @@
+import type { ResumeData } from '@/types';
+import { getRawSectionKeyMap } from '@/lib/rawData';
+
 export const PERSONAL_INFO_ANCHOR = 'personalInfo';
 const PERSONAL_INFO_FIELD_PREFIX = 'personalInfo:';
 const CUSTOM_CONTACT_PREFIX = 'contact:';
@@ -144,25 +147,82 @@ export function getEditorAnchorCandidates(anchor: string): string[] {
   return Array.from(new Set(candidates));
 }
 
-export function getRawSearchPatterns(anchor: string): string[] {
+function getValueSearchPatterns(value: string | undefined): string[] {
+  if (!value) return [];
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  return [
+    `"${trimmed}"`,
+    `: ${trimmed}`,
+    `: "${trimmed}"`,
+  ];
+}
+
+function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): string[] {
   const parsed = parsePreviewAnchor(anchor);
+  const patterns: string[] = [];
+
+  const push = (...values: string[]) => {
+    values.forEach((value) => {
+      if (!value) return;
+      patterns.push(value);
+    });
+  };
 
   if (parsed.kind === 'personalInfo') {
-    return ['"personalInfo"', 'personalInfo:'];
+    push('"personalInfo"', 'personalInfo:');
+    return Array.from(new Set(patterns));
   }
 
   if (parsed.kind === 'personalField' && parsed.field) {
     const field = parsed.field;
-    return [
+    push(
       `"${field}":`,
       `${field}:`,
       `"personalInfo"`,
       'personalInfo:',
-    ];
+    );
+
+    if (resume) {
+      switch (field) {
+        case 'name':
+          push(...getValueSearchPatterns(resume.personalInfo.name));
+          break;
+        case 'title':
+          push(...getValueSearchPatterns(resume.personalInfo.title));
+          break;
+        case 'summary':
+          push(...getValueSearchPatterns(resume.personalInfo.summary));
+          break;
+        case 'email':
+          push(...getValueSearchPatterns(resume.personalInfo.email));
+          break;
+        case 'phone':
+          push(...getValueSearchPatterns(resume.personalInfo.phone));
+          break;
+        case 'website':
+          push(...getValueSearchPatterns(resume.personalInfo.website));
+          break;
+        case 'linkedin':
+          push(...getValueSearchPatterns(resume.personalInfo.linkedin));
+          break;
+        case 'github':
+          push(...getValueSearchPatterns(resume.personalInfo.github));
+          break;
+        case 'location':
+          push(...getValueSearchPatterns(resume.personalInfo.location));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return Array.from(new Set(patterns));
   }
 
   if (parsed.kind === 'contact' && parsed.contactId) {
-    return [
+    push(
       `"id": "${parsed.contactId}"`,
       `id: ${parsed.contactId}`,
       `id: "${parsed.contactId}"`,
@@ -170,29 +230,104 @@ export function getRawSearchPatterns(anchor: string): string[] {
       'contacts:',
       '"personalInfo"',
       'personalInfo:',
-    ];
+    );
+
+    if (resume) {
+      const contact = (resume.personalInfo.contacts || []).find((item) => item.id === parsed.contactId);
+      if (contact) {
+        push(...getValueSearchPatterns(contact.value));
+        push(...getValueSearchPatterns(contact.href));
+        push(`"${contact.type}"`, `type: ${contact.type}`, `type: "${contact.type}"`);
+      }
+    }
+
+    return Array.from(new Set(patterns));
   }
 
   if (parsed.kind === 'section' && parsed.sectionId) {
-    return [
-      `"${parsed.sectionId}"`,
-      `${parsed.sectionId}:`,
+    let sectionToken = parsed.sectionId;
+    if (resume) {
+      sectionToken = getRawSectionKeyMap(resume).get(parsed.sectionId) || parsed.sectionId;
+    }
+
+    push(
+      `"key": "${sectionToken}"`,
+      `key: ${sectionToken}`,
+      `key: "${sectionToken}"`,
+      `"${sectionToken}"`,
+      `${sectionToken}:`,
       `"id": "${parsed.sectionId}"`,
       `id: ${parsed.sectionId}`,
       `id: "${parsed.sectionId}"`,
-    ];
+    );
+
+    if (resume) {
+      const section = resume.sections.find((item) => item.id === parsed.sectionId);
+      if (section?.isCustom) {
+        push(...getValueSearchPatterns(section.title));
+      }
+    }
+
+    return Array.from(new Set(patterns));
   }
 
   if (parsed.itemId) {
-    const sectionToken = parsed.sectionId || '';
-    return [
+    let sectionToken = parsed.sectionId || '';
+    if (resume && parsed.sectionId) {
+      sectionToken = getRawSectionKeyMap(resume).get(parsed.sectionId) || parsed.sectionId;
+    }
+
+    push(
       `"id": "${parsed.itemId}"`,
       `id: ${parsed.itemId}`,
       `id: "${parsed.itemId}"`,
       `"${sectionToken}"`,
       `${sectionToken}:`,
-    ].filter(Boolean);
+      `"key": "${sectionToken}"`,
+      `key: ${sectionToken}`,
+      `key: "${sectionToken}"`,
+    );
+
+    if (resume) {
+      if (parsed.kind === 'experience') {
+        const item = resume.experience.find((record) => record.id === parsed.itemId);
+        if (item) {
+          push(...getValueSearchPatterns(item.company), ...getValueSearchPatterns(item.position));
+        }
+      } else if (parsed.kind === 'education') {
+        const item = resume.education.find((record) => record.id === parsed.itemId);
+        if (item) {
+          push(...getValueSearchPatterns(item.school), ...getValueSearchPatterns(item.degree), ...getValueSearchPatterns(item.major));
+        }
+      } else if (parsed.kind === 'projects') {
+        const item = resume.projects.find((record) => record.id === parsed.itemId);
+        if (item) {
+          push(...getValueSearchPatterns(item.name), ...getValueSearchPatterns(item.role));
+        }
+      } else if (parsed.kind === 'skills') {
+        const item = resume.skills.find((record) => record.id === parsed.itemId);
+        if (item) {
+          push(...getValueSearchPatterns(item.category));
+          if (item.items.length > 0) {
+            push(...getValueSearchPatterns(item.items[0]));
+          }
+        }
+      } else if (parsed.kind === 'custom' && parsed.sectionId) {
+        const section = resume.customSections.find((record) => record.id === parsed.sectionId);
+        const item = section?.items.find((record) => record.id === parsed.itemId);
+        if (item) {
+          push(...getValueSearchPatterns(item.title), ...getValueSearchPatterns(item.subtitle), ...getValueSearchPatterns(item.date));
+        }
+      }
+    }
+
+    return Array.from(new Set(patterns));
   }
 
-  return [anchor];
+  push(anchor);
+  return Array.from(new Set(patterns));
+}
+
+export function getRawSearchPatterns(anchor: string, resume?: ResumeData): string[] {
+  return getRawSearchPatternsWithResume(anchor, resume);
 }

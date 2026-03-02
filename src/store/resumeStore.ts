@@ -324,7 +324,7 @@ export const useResumeStore = create<ResumeStore>()(
       reset: () => set({ resume: createInitialResume() }),
     }),
     {
-      name: 'resume-storage',
+      name: 'resume-storage-v2',
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ResumeStore> | undefined;
 

@@ -7,6 +7,7 @@ import { Copy, Check, Save, Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRawSearchPatterns } from '@/lib/previewAnchor';
+import { RAW_SCHEMA_ERROR_MESSAGE } from '@/lib/rawData';
 
 type Format = 'json' | 'yaml';
 
@@ -82,7 +83,7 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const patterns = getRawSearchPatterns(jumpRequest.anchor);
+    const patterns = getRawSearchPatterns(jumpRequest.anchor, resume);
     const lineRange = findLineRange(ui.content, patterns);
 
     if (!lineRange) return;
@@ -122,7 +123,12 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
         hasChanges: false,
         error: '',
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === RAW_SCHEMA_ERROR_MESSAGE) {
+        updateUi({ error: t('rawEditor.schemaVersionError') });
+        return;
+      }
+
       updateUi({
         error: ui.format === 'json' ? t('rawEditor.jsonError') : t('rawEditor.yamlError'),
       });
@@ -156,7 +162,12 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
 
       importData(data);
       updateUi({ error: '' });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === RAW_SCHEMA_ERROR_MESSAGE) {
+        updateUi({ error: t('rawEditor.schemaVersionError') });
+        return;
+      }
+
       updateUi({ error: t('rawEditor.parseFailed') });
     }
 

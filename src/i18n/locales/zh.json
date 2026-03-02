@@ -177,6 +177,7 @@
     "copyFailed": "复制失败",
     "jsonError": "JSON 格式错误",
     "yamlError": "YAML 格式错误",
+    "schemaVersionError": "仅支持 schemaVersion: 2 的 Raw 数据",
     "unsupportedFormat": "不支持的文件格式",
     "parseFailed": "文件解析失败"
   },

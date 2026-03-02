@@ -1,13 +1,14 @@
 import { ResumeData } from '@/types';
 import yaml from 'js-yaml';
 import { normalizeResumeData } from '@/lib/resumeData';
+import { exportRawResumeData, prepareImportedResumeData } from '@/lib/rawData';
 
 export const exportToJSON = (data: ResumeData): string => {
-  return JSON.stringify(data, null, 2);
+  return JSON.stringify(exportRawResumeData(data), null, 2);
 };
 
 export const exportToYAML = (data: ResumeData): string => {
-  return yaml.dump(data, {
+  return yaml.dump(exportRawResumeData(data), {
     indent: 2,
     lineWidth: 120,
     noRefs: true,
@@ -15,15 +16,15 @@ export const exportToYAML = (data: ResumeData): string => {
 };
 
 export const importFromJSON = (content: string): ResumeData => {
-  return normalizeResumeData(JSON.parse(content));
+  return normalizeResumeData(prepareImportedResumeData(JSON.parse(content)));
 };
 
 export const importFromYAML = (content: string): ResumeData => {
   return normalizeResumeData(
-    yaml.load(content, {
+    prepareImportedResumeData(yaml.load(content, {
       json: true,
       schema: yaml.JSON_SCHEMA,
-    })
+    }))
   );
 };
 

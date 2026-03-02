@@ -177,6 +177,7 @@
     "copyFailed": "Copy failed",
     "jsonError": "JSON format error",
     "yamlError": "YAML format error",
+    "schemaVersionError": "Only raw data with schemaVersion: 2 is supported",
     "unsupportedFormat": "Unsupported file format",
     "parseFailed": "File parse failed"
   },
