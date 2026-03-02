@@ -71,14 +71,15 @@ docker run -p 3000:80 resume-pure
 ## 2) 设计原则（当前版本）
 
 - 数据会在导入时经过归一化（字段类型修正、缺失默认值补齐）
-- 数据包含 `schemaVersion`，用于后续迁移与兼容
+- 数据包含 `schemaVersion`，当前仅支持 `schemaVersion: 2`
+- Raw 采用纯数据结构，不暴露内部渲染 `id`
 - 未识别字段不会进入当前渲染管线（避免污染状态）
 
 ## 3) 最小可用 JSON 示例
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "personalInfo": {
     "name": "张三",
     "title": "前端开发工程师",
@@ -93,11 +94,11 @@ docker run -p 3000:80 resume-pure
   "skills": [],
   "customSections": [],
   "sections": [
-    { "id": "summary", "title": "", "visible": true, "order": 1 },
-    { "id": "experience", "title": "", "visible": true, "order": 2 },
-    { "id": "education", "title": "", "visible": true, "order": 3 },
-    { "id": "projects", "title": "", "visible": true, "order": 4 },
-    { "id": "skills", "title": "", "visible": true, "order": 5 }
+    { "key": "summary", "title": "", "visible": true },
+    { "key": "experience", "title": "", "visible": true },
+    { "key": "education", "title": "", "visible": true },
+    { "key": "projects", "title": "", "visible": true },
+    { "key": "skills", "title": "", "visible": true }
   ],
   "theme": {
     "primaryColor": "#3b82f6",
@@ -119,16 +120,17 @@ docker run -p 3000:80 resume-pure
 
 ```text
 请输出 Resume Pure 可导入的 JSON（不要 Markdown 代码块）：
-1. 必须包含 schemaVersion=1
+1. 必须包含 schemaVersion=2
 2. 必须包含 personalInfo/experience/education/projects/skills/customSections/sections/theme
 3. 所有日期字段输出字符串
-4. sections 必须包含 summary/experience/education/projects/skills，order 从 1 开始
+4. sections 使用 key 字段，至少包含 summary/experience/education/projects/skills
 5. 只输出合法 JSON
 ```
 
 ## 6) 当前兼容边界
 
 - 支持：字段缺失、字段类型偏差、模块映射不完整的自动修正
+- 不支持：`schemaVersion` 非 2 的 Raw 数据
 - 不支持：任意未知结构的渲染（未知字段会被忽略）
 
 ## 项目结构
@@ -165,7 +167,7 @@ src/
 
 ## 想重置所有本地数据
 
-在应用内使用重置按钮，或手动清理浏览器 localStorage 中的 `resume-storage`。
+在应用内使用重置按钮，或手动清理浏览器 localStorage 中的 `resume-storage-v2`。
 
 ## 致谢
 

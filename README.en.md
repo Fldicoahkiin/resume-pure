@@ -65,14 +65,15 @@ The project supports static export and can be deployed with GitHub Actions.
 ## 2) Current Data Rules
 
 - Imported data goes through normalization (type fix + defaults)
-- Data includes `schemaVersion` for migration and compatibility
+- Data includes `schemaVersion`, currently only `schemaVersion: 2` is supported
+- Raw keeps pure domain data and does not expose internal render `id`
 - Unknown fields are ignored by the current rendering pipeline
 
 ## 3) Minimal JSON Example
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "personalInfo": {
     "name": "John Doe",
     "title": "Frontend Engineer",
@@ -87,11 +88,11 @@ The project supports static export and can be deployed with GitHub Actions.
   "skills": [],
   "customSections": [],
   "sections": [
-    { "id": "summary", "title": "", "visible": true, "order": 1 },
-    { "id": "experience", "title": "", "visible": true, "order": 2 },
-    { "id": "education", "title": "", "visible": true, "order": 3 },
-    { "id": "projects", "title": "", "visible": true, "order": 4 },
-    { "id": "skills", "title": "", "visible": true, "order": 5 }
+    { "key": "summary", "title": "", "visible": true },
+    { "key": "experience", "title": "", "visible": true },
+    { "key": "education", "title": "", "visible": true },
+    { "key": "projects", "title": "", "visible": true },
+    { "key": "skills", "title": "", "visible": true }
   ],
   "theme": {
     "primaryColor": "#3b82f6",
@@ -113,16 +114,17 @@ The project supports static export and can be deployed with GitHub Actions.
 
 ```text
 Generate valid JSON for Resume Pure import (no markdown code block):
-1. schemaVersion must be 1
+1. schemaVersion must be 2
 2. include personalInfo/experience/education/projects/skills/customSections/sections/theme
 3. all date fields must be strings
-4. sections must include summary/experience/education/projects/skills with order from 1
+4. sections should use `key` and include summary/experience/education/projects/skills
 5. output valid JSON only
 ```
 
 ## 6) Compatibility Boundary
 
 - Supported: missing fields, minor type drift, partial section mapping (auto-normalized)
+- Not supported: raw data where `schemaVersion` is not 2
 - Not supported: arbitrary unknown structures for rendering
 
 ## Project Structure
@@ -159,7 +161,7 @@ Check the following first:
 
 ## Reset all local data
 
-Use the reset action in UI, or clear `resume-storage` in browser localStorage.
+Use the reset action in UI, or clear `resume-storage-v2` in browser localStorage.
 
 ## Credits
 
