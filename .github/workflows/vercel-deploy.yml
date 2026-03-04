@@ -17,8 +17,11 @@ env:
 
 jobs:
   deploy-preview:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+    environment: preview
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,18 +37,27 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
 
+      - name: Validate Vercel Secrets
+        run: |
+          [ -n "$VERCEL_TOKEN" ] || (echo "::error::Missing secret VERCEL_TOKEN" && exit 1)
+          [ -n "$VERCEL_ORG_ID" ] || (echo "::error::Missing secret VERCEL_ORG_ID" && exit 1)
+          [ -n "$VERCEL_PROJECT_ID" ] || (echo "::error::Missing secret VERCEL_PROJECT_ID" && exit 1)
+
       - name: Pull Vercel Environment
-        run: pnpm dlx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: pnpm dlx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel build --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Preview
-        run: pnpm dlx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel deploy --prebuilt --token="$VERCEL_TOKEN"
 
   deploy-production:
     if: github.event_name != 'pull_request'
+    environment: production
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -61,11 +73,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
 
+      - name: Validate Vercel Secrets
+        run: |
+          [ -n "$VERCEL_TOKEN" ] || (echo "::error::Missing secret VERCEL_TOKEN" && exit 1)
+          [ -n "$VERCEL_ORG_ID" ] || (echo "::error::Missing secret VERCEL_ORG_ID" && exit 1)
+          [ -n "$VERCEL_PROJECT_ID" ] || (echo "::error::Missing secret VERCEL_PROJECT_ID" && exit 1)
+
       - name: Pull Vercel Environment
-        run: pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Production
-        run: pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
