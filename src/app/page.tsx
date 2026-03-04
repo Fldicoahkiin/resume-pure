@@ -3,7 +3,7 @@ import HomePageClient from './HomePageClient';
 
 export const metadata: Metadata = {
   title: 'Resume Pure',
-  description: 'Free online resume editor with live preview and PDF export',
+  description: 'Local-first resume editor with live preview, raw JSON/YAML editing, and free multi-format export',
 };
 
 export default function HomePage() {

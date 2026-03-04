@@ -2,7 +2,7 @@
   "common": {
     "appName": "Resume Pure",
     "startEditing": "开始编辑",
-    "createResume": "立即制作简历"
+    "createResume": "立即制作"
   },
   "home": {
     "hero": {
@@ -13,7 +13,7 @@
     "features": {
       "livePreview": {
         "title": "实时预览",
-        "description": "A4 尺寸 1:1 渲染，左边编辑右边看，不用反复导出。"
+        "description": "页面按所选纸张尺寸实时渲染，左边编辑右边看，不用反复导出。"
       },
       "localStorage": {
         "title": "本地存储",
@@ -22,11 +22,24 @@
       "multiFormat": {
         "title": "多格式导出",
         "description": "PDF / PNG / JSON / YAML，投简历、备份、换设备都方便。"
+      },
+      "paperSize": {
+        "title": "多纸张尺寸",
+        "description": "支持 A4 / Letter / Legal / A3，默认 A4，适配不同国家投递习惯。"
+      },
+      "rawData": {
+        "title": "Raw 数据驱动",
+        "description": "支持 JSON / YAML 直接编辑，适合 AI 生成简历数据后快速导入。"
+      },
+      "editingFlow": {
+        "title": "编辑交互更顺手",
+        "description": "描述支持多行输入与项目符号切换，预览与导出保持一致。"
       }
     },
     "why": {
       "title": "为什么要用 Resume Pure",
       "reasons": {
+        "pureFocus": "Pure 代表边界清晰：只做简历编辑与导出",
         "noAccount": "不用注册账号，打开即用",
         "free": "没有付费墙，所有功能免费",
         "professional": "排版简洁专业，不用自己调格式",

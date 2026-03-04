@@ -2,7 +2,7 @@
   "common": {
     "appName": "Resume Pure",
     "startEditing": "Start Editing",
-    "createResume": "Create Resume Now"
+    "createResume": "Create Now"
   },
   "home": {
     "hero": {
@@ -13,7 +13,7 @@
     "features": {
       "livePreview": {
         "title": "Live Preview",
-        "description": "A4 size 1:1 rendering, edit on the left and preview on the right, no need to export repeatedly."
+        "description": "The page renders in real time based on the selected paper size, so you can edit on the left and preview on the right."
       },
       "localStorage": {
         "title": "Local Storage",
@@ -22,11 +22,24 @@
       "multiFormat": {
         "title": "Multi-format Export",
         "description": "PDF / PNG / JSON / YAML, convenient for job applications, backups, and device switching."
+      },
+      "paperSize": {
+        "title": "Multiple Paper Sizes",
+        "description": "Supports A4 / Letter / Legal / A3 with A4 as default for different regions."
+      },
+      "rawData": {
+        "title": "Raw Data Driven",
+        "description": "Edit in JSON / YAML directly and import AI-generated resume data quickly."
+      },
+      "editingFlow": {
+        "title": "Smoother Editing Flow",
+        "description": "Description fields support multiline input and bullet toggle with preview/export consistency."
       }
     },
     "why": {
       "title": "Why Use Resume Pure",
       "reasons": {
+        "pureFocus": "Pure means clear scope: resume editing and export only",
         "noAccount": "No account registration required, ready to use",
         "free": "No paywall, all features are free",
         "professional": "Clean and professional layout, no manual formatting",
