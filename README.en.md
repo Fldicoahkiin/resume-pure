@@ -57,7 +57,15 @@ The project supports static export and can be deployed with GitHub Actions.
 
 ### Vercel
 
-The repository now includes a Vercel deployment workflow: `/.github/workflows/vercel-deploy.yml`
+#### One-Click Deploy (Recommended)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
+
+Click the button and follow the import wizard. No manual project creation is required.
+
+#### GitHub Actions Auto Deploy (Advanced)
+
+The repository includes a Vercel deployment workflow: `/.github/workflows/vercel-deploy.yml`
 
 Configure these GitHub Actions secrets:
 

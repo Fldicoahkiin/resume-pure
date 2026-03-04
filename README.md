@@ -63,7 +63,15 @@ docker run -p 3000:80 resume-pure
 
 ### Vercel
 
-仓库已新增 Vercel 自动部署工作流：`/.github/workflows/vercel-deploy.yml`
+#### 一键部署（推荐）
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
+
+点击按钮后按向导完成 Import 即可，无需手动创建项目。
+
+#### GitHub Actions 自动部署（进阶）
+
+仓库已提供 Vercel 自动部署工作流：`/.github/workflows/vercel-deploy.yml`
 
 在 GitHub 仓库中配置以下 Actions Secrets：
 
