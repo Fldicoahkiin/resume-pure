@@ -2,7 +2,7 @@
 
 import { useResumeStore } from '@/store/resumeStore';
 import { CustomSectionItem } from '@/types';
-import { Plus, Trash2, FileText } from 'lucide-react';
+import { Plus, Trash2, FileText, List } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { customItemAnchor } from '@/lib/previewAnchor';
 import { createEntityId } from '@/lib/id';
@@ -10,6 +10,19 @@ import { createEntityId } from '@/lib/id';
 interface CustomSectionEditorProps {
   sectionId: string;
   embedded?: boolean;
+}
+
+function joinDescriptionLines(lines: string[]): string {
+  return lines.filter((line) => line.trim().length > 0).join('\n');
+}
+
+function splitDescriptionLines(value: string): string[] {
+  const lines = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return lines.length > 0 ? lines : [''];
 }
 
 export function CustomSectionEditor({ sectionId, embedded = false }: CustomSectionEditorProps) {
@@ -40,33 +53,24 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
       subtitle: '',
       date: '',
       description: [''],
+      showBulletPoints: true,
     };
     addCustomSectionItem(sectionId, newItem);
   };
 
-  const handleUpdateDescription = (itemId: string, index: number, value: string) => {
+  const handleUpdateDescription = (itemId: string, value: string) => {
     const item = customSection?.items.find((i) => i.id === itemId);
     if (item) {
-      const newDesc = [...item.description];
-      newDesc[index] = value;
-      updateCustomSectionItem(sectionId, itemId, { description: newDesc });
+      updateCustomSectionItem(sectionId, itemId, { description: splitDescriptionLines(value) });
     }
   };
 
-  const handleAddDescription = (itemId: string) => {
+  const handleToggleBulletPoints = (itemId: string) => {
     const item = customSection?.items.find((i) => i.id === itemId);
     if (item) {
       updateCustomSectionItem(sectionId, itemId, {
-        description: [...item.description, ''],
+        showBulletPoints: item.showBulletPoints === false,
       });
-    }
-  };
-
-  const handleRemoveDescription = (itemId: string, index: number) => {
-    const item = customSection?.items.find((i) => i.id === itemId);
-    if (item && item.description.length > 1) {
-      const newDesc = item.description.filter((_, i) => i !== index);
-      updateCustomSectionItem(sectionId, itemId, { description: newDesc });
     }
   };
 
@@ -126,35 +130,37 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
               </label>
 
               <div className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('editor.customSection.description')}
-                <div className="mt-1 space-y-2">
-                  {item.description.map((desc, descIdx) => (
-                    <div key={descIdx} className="flex gap-2">
-                      <span className="mt-2.5 text-gray-400">•</span>
-                      <input
-                        type="text"
-                        value={desc}
-                        onChange={(e) => handleUpdateDescription(item.id, descIdx, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        placeholder=""
-                      />
-                      {item.description.length > 1 && (
-                        <button
-                          onClick={() => handleRemoveDescription(item.id, descIdx)}
-                          className="p-2 text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <span>{t('editor.customSection.description')}</span>
                   <button
-                    onClick={() => handleAddDescription(item.id)}
-                    className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    type="button"
+                    onClick={() => handleToggleBulletPoints(item.id)}
+                    title={
+                      item.showBulletPoints === false
+                        ? t('editor.customSection.showBulletPoints')
+                        : t('editor.customSection.hideBulletPoints')
+                    }
+                    aria-label={
+                      item.showBulletPoints === false
+                        ? t('editor.customSection.showBulletPoints')
+                        : t('editor.customSection.hideBulletPoints')
+                    }
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition ${
+                      item.showBulletPoints === false
+                        ? 'border-gray-300 text-gray-500 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                        : 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
+                    }`}
+                    aria-pressed={item.showBulletPoints !== false}
                   >
-                    {t('editor.customSection.addDescription')}
+                    <List size={16} />
                   </button>
                 </div>
+                <textarea
+                  value={joinDescriptionLines(item.description)}
+                  onChange={(e) => handleUpdateDescription(item.id, e.target.value)}
+                  className="mt-1 block w-full min-h-[96px] resize-y px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder={t('editor.customSection.descriptionPlaceholder')}
+                />
               </div>
             </div>
           </div>

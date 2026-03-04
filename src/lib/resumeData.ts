@@ -305,6 +305,7 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
           subtitle: asOptionalString(item.subtitle),
           date: asOptionalString(item.date),
           description: asStringArray(item.description),
+          showBulletPoints: asBoolean(item.showBulletPoints, true),
         });
 
         return itemAcc;

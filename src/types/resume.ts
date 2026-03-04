@@ -95,6 +95,7 @@ export interface CustomSectionItem {
   subtitle?: string;   // 可选副标题（如：颁发机构）
   date?: string;       // 可选日期
   description: string[]; // 描述列表
+  showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
 }
 
 // 自定义模块

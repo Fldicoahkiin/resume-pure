@@ -125,7 +125,9 @@
       "subtitle": "副标题",
       "date": "日期",
       "description": "描述",
-      "addDescription": "+ 添加描述",
+      "descriptionPlaceholder": "每行一个要点",
+      "showBulletPoints": "显示项目符号",
+      "hideBulletPoints": "隐藏项目符号",
       "addItem": "添加条目",
       "deleteTitle": "删除此条目"
     },

@@ -215,11 +215,34 @@ function SectionTitle({
   );
 }
 
-// 项目符号列表组件
-function BulletList({ items, fontSize }: { items: string[]; fontSize: number }) {
-  const filteredItems = items.filter(item => item && item.trim());
+// 描述列表组件
+function DescriptionList({
+  items,
+  fontSize,
+  showBulletPoints = true,
+}: {
+  items: string[];
+  fontSize: number;
+  showBulletPoints?: boolean;
+}) {
+  const filteredItems = items
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
   if (filteredItems.length === 0) return null;
   const keyedItems = withStableStringKey(filteredItems, 'bullet');
+
+  if (!showBulletPoints) {
+    return (
+      <div className="mt-1.5 space-y-1">
+        {keyedItems.map((item) => (
+          <p key={item.key} className="text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${fontSize - 1}pt` }}>
+            {item.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <ul className="mt-1.5 space-y-1">
@@ -315,7 +338,7 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        <BulletList items={exp.description} fontSize={fs} />
+                        <DescriptionList items={exp.description} fontSize={fs} />
                       </SelectableBlock>
                     );
                   })}
@@ -369,7 +392,7 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        {edu.description && <BulletList items={edu.description} fontSize={fs} />}
+                        {edu.description && <DescriptionList items={edu.description} fontSize={fs} />}
                       </SelectableBlock>
                     );
                   })}
@@ -418,7 +441,7 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        <BulletList items={proj.description} fontSize={fs} />
+                        <DescriptionList items={proj.description} fontSize={fs} />
                         {proj.technologies && proj.technologies.length > 0 && (
                           <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
                             <span className="font-medium">{t('preview.technologies')}</span>
@@ -519,7 +542,11 @@ function ResumeSections({
                           {item.subtitle && (
                             <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
                           )}
-                          <BulletList items={item.description} fontSize={fs} />
+                          <DescriptionList
+                            items={item.description}
+                            fontSize={fs}
+                            showBulletPoints={item.showBulletPoints !== false}
+                          />
                         </SelectableBlock>
                       );
                     })}

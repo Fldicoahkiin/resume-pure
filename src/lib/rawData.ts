@@ -50,6 +50,7 @@ interface RawCustomSectionItem {
   subtitle?: string;
   date?: string;
   description: string[];
+  showBulletPoints?: boolean;
 }
 
 interface RawCustomSection {
@@ -200,6 +201,7 @@ function toRawCustomItems(items: CustomSectionItem[]): RawCustomSectionItem[] {
     subtitle: item.subtitle,
     date: item.date,
     description: item.description,
+    showBulletPoints: item.showBulletPoints,
   }));
 }
 

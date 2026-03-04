@@ -125,7 +125,9 @@
       "subtitle": "Subtitle",
       "date": "Date",
       "description": "Description",
-      "addDescription": "+ Add description",
+      "descriptionPlaceholder": "One line per point",
+      "showBulletPoints": "Show bullet points",
+      "hideBulletPoints": "Hide bullet points",
       "addItem": "Add Item",
       "deleteTitle": "Delete this item"
     },

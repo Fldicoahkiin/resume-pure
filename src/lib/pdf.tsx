@@ -123,6 +123,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
       marginLeft: 12,
       marginBottom: 2,
     },
+    descriptionLine: {
+      fontSize: theme.fontSize - 1,
+      marginBottom: 2,
+    },
     skillCategory: {
       fontSize: theme.fontSize,
       fontWeight: 'bold',
@@ -303,20 +307,31 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                 return (
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{section.title}</Text>
-                    {customSection.items.map(item => (
-                      <View key={item.id} style={styles.itemContainer}>
-                        <View style={styles.itemHeader}>
-                          <View>
-                            {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
-                            {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
+                    {customSection.items.map((item) => {
+                      const descriptions = withStableStringKey(
+                        item.description.filter((desc) => desc && desc.trim()),
+                        `pdf-custom-${item.id}`
+                      );
+
+                      return (
+                        <View key={item.id} style={styles.itemContainer}>
+                          <View style={styles.itemHeader}>
+                            <View>
+                              {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
+                              {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
+                            </View>
+                            {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
                           </View>
-                          {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
+                          {item.showBulletPoints === false
+                            ? descriptions.map((desc) => (
+                                <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                              ))
+                            : descriptions.map((desc) => (
+                                <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                              ))}
                         </View>
-                        {withStableStringKey(item.description, `pdf-custom-${item.id}`).map((desc) => (
-                          <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                        ))}
-                      </View>
-                    ))}
+                      );
+                    })}
                   </View>
                 );
               }
