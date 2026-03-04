@@ -16,6 +16,7 @@ interface RawExperienceItem {
   endDate: string;
   current?: boolean;
   description: string[];
+  showBulletPoints?: boolean;
 }
 
 interface RawEducationItem {
@@ -27,6 +28,7 @@ interface RawEducationItem {
   endDate: string;
   gpa?: string;
   description?: string[];
+  showBulletPoints?: boolean;
 }
 
 interface RawProjectItem {
@@ -38,6 +40,7 @@ interface RawProjectItem {
   url?: string;
   description: string[];
   technologies?: string[];
+  showBulletPoints?: boolean;
 }
 
 interface RawSkillItem {
@@ -159,6 +162,7 @@ function toRawExperience(items: Experience[]): RawExperienceItem[] {
     endDate: item.endDate,
     current: item.current,
     description: item.description,
+    showBulletPoints: item.showBulletPoints,
   }));
 }
 
@@ -172,6 +176,7 @@ function toRawEducation(items: Education[]): RawEducationItem[] {
     endDate: item.endDate,
     gpa: item.gpa,
     description: item.description,
+    showBulletPoints: item.showBulletPoints,
   }));
 }
 
@@ -185,6 +190,7 @@ function toRawProjects(items: Project[]): RawProjectItem[] {
     url: item.url,
     description: item.description,
     technologies: item.technologies,
+    showBulletPoints: item.showBulletPoints,
   }));
 }
 

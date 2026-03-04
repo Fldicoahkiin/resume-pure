@@ -42,6 +42,13 @@ function withStableStringKey(items: string[], prefix: string) {
   });
 }
 
+function getDescriptionLines(items: string[], prefix: string) {
+  return withStableStringKey(
+    items.filter((desc) => desc && desc.trim()),
+    prefix
+  );
+}
+
 function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: PDFTranslations) {
   const { Document, Page, Text, View, StyleSheet } = renderer;
 
@@ -214,9 +221,13 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                           ) : ''}
                         </Text>
                       </View>
-                      {withStableStringKey(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
-                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                      ))}
+                      {exp.showBulletPoints === false
+                        ? getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                          ))
+                        : getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                          ))}
                     </View>
                   ))}
                 </View>
@@ -243,9 +254,13 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                           ) : ''}
                         </Text>
                       </View>
-                      {withStableStringKey(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
-                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                      ))}
+                      {edu.showBulletPoints === false
+                        ? getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                          ))
+                        : getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                          ))}
                     </View>
                   ))}
                 </View>
@@ -271,9 +286,13 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                           ) : ''}
                         </Text>
                       </View>
-                      {withStableStringKey(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
-                        <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                      ))}
+                      {proj.showBulletPoints === false
+                        ? getDescriptionLines(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                          ))
+                        : getDescriptionLines(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
+                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                          ))}
                       {proj.technologies && proj.technologies.length > 0 && (
                         <Text style={styles.itemSubtitle}>
                           {translations.technologies}: {proj.technologies.join(', ')}
@@ -308,10 +327,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{section.title}</Text>
                     {customSection.items.map((item) => {
-                      const descriptions = withStableStringKey(
-                        item.description.filter((desc) => desc && desc.trim()),
-                        `pdf-custom-${item.id}`
-                      );
+                      const descriptions = getDescriptionLines(item.description, `pdf-custom-${item.id}`);
 
                       return (
                         <View key={item.id} style={styles.itemContainer}>

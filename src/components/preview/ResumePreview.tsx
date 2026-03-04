@@ -338,7 +338,11 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        <DescriptionList items={exp.description} fontSize={fs} />
+                        <DescriptionList
+                          items={exp.description}
+                          fontSize={fs}
+                          showBulletPoints={exp.showBulletPoints !== false}
+                        />
                       </SelectableBlock>
                     );
                   })}
@@ -392,7 +396,13 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        {edu.description && <DescriptionList items={edu.description} fontSize={fs} />}
+                        {edu.description && (
+                          <DescriptionList
+                            items={edu.description}
+                            fontSize={fs}
+                            showBulletPoints={edu.showBulletPoints !== false}
+                          />
+                        )}
                       </SelectableBlock>
                     );
                   })}
@@ -441,7 +451,11 @@ function ResumeSections({
                             ) : null}
                           </span>
                         </div>
-                        <DescriptionList items={proj.description} fontSize={fs} />
+                        <DescriptionList
+                          items={proj.description}
+                          fontSize={fs}
+                          showBulletPoints={proj.showBulletPoints !== false}
+                        />
                         {proj.technologies && proj.technologies.length > 0 && (
                           <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
                             <span className="font-medium">{t('preview.technologies')}</span>

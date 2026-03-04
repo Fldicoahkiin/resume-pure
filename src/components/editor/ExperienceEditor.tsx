@@ -6,6 +6,7 @@ import { Briefcase, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { experienceAnchor } from '@/lib/previewAnchor';
 import { createEntityId } from '@/lib/id';
+import { BulletListTextarea } from './BulletListTextarea';
 
 interface ExperienceEditorProps {
   embedded?: boolean;
@@ -34,32 +35,9 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
       endDate: '',
       current: false,
       description: [''],
+      showBulletPoints: true,
     };
     addExperience(newExp);
-  };
-
-  const handleUpdateDescription = (id: string, index: number, value: string) => {
-    const exp = resume.experience.find(e => e.id === id);
-    if (exp) {
-      const newDesc = [...exp.description];
-      newDesc[index] = value;
-      updateExperience(id, { description: newDesc });
-    }
-  };
-
-  const handleAddDescription = (id: string) => {
-    const exp = resume.experience.find(e => e.id === id);
-    if (exp) {
-      updateExperience(id, { description: [...exp.description, ''] });
-    }
-  };
-
-  const handleRemoveDescription = (id: string, index: number) => {
-    const exp = resume.experience.find(e => e.id === id);
-    if (exp && exp.description.length > 1) {
-      const newDesc = exp.description.filter((_, i) => i !== index);
-      updateExperience(id, { description: newDesc });
-    }
   };
 
   const content = (
@@ -140,37 +118,17 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
               />
             </label>
 
-            <div className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('editor.experience.description')}
-              <div className="mt-1 space-y-2">
-                {exp.description.map((desc, descIdx) => (
-                  <div key={descIdx} className="flex gap-2">
-                    <span className="mt-2.5 text-gray-400">•</span>
-                    <input
-                      type="text"
-                      value={desc}
-                      onChange={(e) => handleUpdateDescription(exp.id, descIdx, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder=""
-                    />
-                    {exp.description.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveDescription(exp.id, descIdx)}
-                        className="p-2 text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={() => handleAddDescription(exp.id)}
-                  className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  {t('editor.experience.addDescription')}
-                </button>
-              </div>
-            </div>
+            <BulletListTextarea
+              className="col-span-full"
+              label={t('editor.experience.description')}
+              value={exp.description}
+              showBulletPoints={exp.showBulletPoints !== false}
+              onChange={(nextValue) => updateExperience(exp.id, { description: nextValue })}
+              onToggleShowBulletPoints={(nextValue) => updateExperience(exp.id, { showBulletPoints: nextValue })}
+              showBulletPointsLabel={t('editor.experience.showBulletPoints')}
+              hideBulletPointsLabel={t('editor.experience.hideBulletPoints')}
+              placeholder={t('editor.experience.descriptionPlaceholder')}
+            />
           </div>
         </div>
       ))

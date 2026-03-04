@@ -6,6 +6,7 @@ import { GraduationCap, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { educationAnchor } from '@/lib/previewAnchor';
 import { createEntityId } from '@/lib/id';
+import { BulletListTextarea } from './BulletListTextarea';
 
 interface EducationEditorProps {
   embedded?: boolean;
@@ -34,7 +35,8 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
       startDate: '',
       endDate: '',
       gpa: '',
-      description: [],
+      description: [''],
+      showBulletPoints: true,
     };
     addEducation(newEdu);
   };
@@ -110,6 +112,18 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
                 placeholder=""
               />
             </label>
+
+            <BulletListTextarea
+              className="col-span-full"
+              label={t('editor.education.description')}
+              value={edu.description || ['']}
+              showBulletPoints={edu.showBulletPoints !== false}
+              onChange={(nextValue) => updateEducation(edu.id, { description: nextValue })}
+              onToggleShowBulletPoints={(nextValue) => updateEducation(edu.id, { showBulletPoints: nextValue })}
+              showBulletPointsLabel={t('editor.education.showBulletPoints')}
+              hideBulletPointsLabel={t('editor.education.hideBulletPoints')}
+              placeholder={t('editor.education.descriptionPlaceholder')}
+            />
           </div>
         </div>
       ))

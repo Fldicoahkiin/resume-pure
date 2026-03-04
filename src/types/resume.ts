@@ -48,6 +48,7 @@ export interface Experience {
   endDate: string;
   current?: boolean;
   description: string[];
+  showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
 }
 
 export interface Education {
@@ -60,6 +61,7 @@ export interface Education {
   endDate: string;
   gpa?: string;
   description?: string[];
+  showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
 }
 
 export interface Project {
@@ -72,6 +74,7 @@ export interface Project {
   url?: string;
   description: string[];
   technologies?: string[];
+  showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
 }
 
 export interface Skill {

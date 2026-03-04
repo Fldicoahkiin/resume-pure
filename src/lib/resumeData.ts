@@ -211,6 +211,7 @@ function normalizeExperience(input: unknown): Experience[] {
         endDate: asString(item.endDate, ''),
         current: asBoolean(item.current, false),
         description: asStringArray(item.description),
+        showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;
@@ -237,6 +238,7 @@ function normalizeEducation(input: unknown): Education[] {
         endDate: asString(item.endDate, ''),
         gpa: asOptionalString(item.gpa),
         description: description.length > 0 ? description : undefined,
+        showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;
@@ -263,6 +265,7 @@ function normalizeProjects(input: unknown): Project[] {
         url: asOptionalString(item.url),
         description: asStringArray(item.description),
         technologies: technologies.length > 0 ? technologies : undefined,
+        showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;

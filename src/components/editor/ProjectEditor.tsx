@@ -6,6 +6,7 @@ import { Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { projectAnchor } from '@/lib/previewAnchor';
 import { createEntityId } from '@/lib/id';
+import { BulletListTextarea } from './BulletListTextarea';
 
 interface ProjectEditorProps {
   embedded?: boolean;
@@ -35,32 +36,9 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
       url: '',
       description: [''],
       technologies: [],
+      showBulletPoints: true,
     };
     addProject(newProj);
-  };
-
-  const handleUpdateDescription = (id: string, index: number, value: string) => {
-    const proj = resume.projects.find(p => p.id === id);
-    if (proj) {
-      const newDesc = [...proj.description];
-      newDesc[index] = value;
-      updateProject(id, { description: newDesc });
-    }
-  };
-
-  const handleAddDescription = (id: string) => {
-    const proj = resume.projects.find(p => p.id === id);
-    if (proj) {
-      updateProject(id, { description: [...proj.description, ''] });
-    }
-  };
-
-  const handleRemoveDescription = (id: string, index: number) => {
-    const proj = resume.projects.find(p => p.id === id);
-    if (proj && proj.description.length > 1) {
-      const newDesc = proj.description.filter((_, i) => i !== index);
-      updateProject(id, { description: newDesc });
-    }
   };
 
   const handleUpdateTechnologies = (id: string, value: string) => {
@@ -157,37 +135,17 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
               />
             </label>
 
-            <div className="col-span-full text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('editor.projects.description')}
-              <div className="mt-1 space-y-2">
-                {proj.description.map((desc, descIdx) => (
-                  <div key={descIdx} className="flex gap-2">
-                    <span className="mt-2.5 text-gray-400">•</span>
-                    <input
-                      type="text"
-                      value={desc}
-                      onChange={(e) => handleUpdateDescription(proj.id, descIdx, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder=""
-                    />
-                    {proj.description.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveDescription(proj.id, descIdx)}
-                        className="p-2 text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={() => handleAddDescription(proj.id)}
-                  className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  {t('editor.projects.addDescription')}
-                </button>
-              </div>
-            </div>
+            <BulletListTextarea
+              className="col-span-full"
+              label={t('editor.projects.description')}
+              value={proj.description}
+              showBulletPoints={proj.showBulletPoints !== false}
+              onChange={(nextValue) => updateProject(proj.id, { description: nextValue })}
+              onToggleShowBulletPoints={(nextValue) => updateProject(proj.id, { showBulletPoints: nextValue })}
+              showBulletPointsLabel={t('editor.projects.showBulletPoints')}
+              hideBulletPointsLabel={t('editor.projects.hideBulletPoints')}
+              placeholder={t('editor.projects.descriptionPlaceholder')}
+            />
           </div>
         </div>
       ))
