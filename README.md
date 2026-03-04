@@ -4,7 +4,9 @@
 
 一个纯本地、零注册、零追踪的在线简历编辑器。你可以直接用表单编辑，也可以用 JSON/YAML 的 Raw 数据驱动简历内容，适合与 AI 工作流结合。
 
-**在线体验：<https://fldicoahkiin.github.io/resume-pure>**
+**在线体验：**
+<https://resume-pure.vercel.app/>
+<https://fldicoahkiin.github.io/resume-pure>
 
 ## 项目定位
 

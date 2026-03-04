@@ -4,7 +4,9 @@
 
 A local-first, no-signup, no-tracking resume editor. You can edit with forms or drive the resume directly with JSON/YAML raw data, which works well with AI-assisted writing workflows.
 
-**Live Demo: <https://fldicoahkiin.github.io/resume-pure>**
+**Live Demo:**
+<https://resume-pure.vercel.app/>
+<https://fldicoahkiin.github.io/resume-pure>
 
 ## Project Goal
 
