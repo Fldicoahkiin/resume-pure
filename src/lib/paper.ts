@@ -1,6 +1,6 @@
 import type { PaperSize } from '@/types';
 
-export interface PaperDimensions {
+interface PaperDimensions {
   width: number;
   height: number;
 }

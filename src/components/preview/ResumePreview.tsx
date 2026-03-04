@@ -270,7 +270,7 @@ interface ResumeSectionsProps {
   activeAnchor?: string | null;
 }
 
-function ResumeSections({
+function renderResumeSectionsContent({
   visibleSections,
   experience,
   education,
@@ -573,6 +573,10 @@ function ResumeSections({
       })}
     </>
   );
+}
+
+function ResumeSections(props: ResumeSectionsProps) {
+  return renderResumeSectionsContent(props);
 }
 
 export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewProps) {

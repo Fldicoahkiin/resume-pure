@@ -1,11 +1,11 @@
 import { Font } from '@react-pdf/renderer';
-import { getFontConfig, getFontOptions } from '@/lib/fonts';
+import { getFontConfig } from '@/lib/fonts';
 
 // 已注册的字体集合（避免重复注册）
 const registeredFonts = new Set<string>();
 
 // 为 react-pdf 注册单个字体
-export function registerPDFFont(family: string): boolean {
+function registerPDFFont(family: string): boolean {
   if (registeredFonts.has(family)) return true;
 
   const config = getFontConfig(family);
@@ -29,13 +29,6 @@ export function registerPDFFont(family: string): boolean {
     console.error(`[fonts] 注册字体失败: ${config.family}`, error);
     return false;
   }
-}
-
-// 注册所有字体（用于初始化）
-export function registerAllPDFFonts(): void {
-  getFontOptions().all.forEach((font) => {
-    registerPDFFont(font.family);
-  });
 }
 
 // 注册中文断词回调（解决 react-pdf 中文换行问题）

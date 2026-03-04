@@ -173,23 +173,3 @@ export function getFontOptions() {
 export function getFontConfig(family: string): FontConfig | undefined {
     return FONT_FAMILIES.find(f => f.family === family);
 }
-
-// 生成 Google Fonts CSS @import URL（用于预览）
-export function getGoogleFontsCSSUrl(): string {
-    const families = FONT_FAMILIES
-        .filter(f => f.language === 'en')
-        .map(f => f.family.replace(/ /g, '+') + ':wght@400;700')
-        .join('&family=');
-
-    const zhFamilies = FONT_FAMILIES
-        .filter(f => f.language === 'zh' && f.family !== 'LXGW WenKai')
-        .map(f => f.family.replace(/ /g, '+') + ':wght@400;700')
-        .join('&family=');
-
-    let url = `https://fonts.googleapis.com/css2?family=${families}`;
-    if (zhFamilies) {
-        url += `&family=${zhFamilies}`;
-    }
-    url += '&display=swap';
-    return url;
-}

@@ -6,7 +6,7 @@ import { getPaperDimensions } from '@/lib/paper';
 // 注册中文断词回调
 registerCJKHyphenation();
 
-export interface PDFTranslations {
+interface PDFTranslations {
   summary: string;
   experience: string;
   education: string;

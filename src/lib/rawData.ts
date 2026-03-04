@@ -67,7 +67,7 @@ interface RawSectionConfig {
   visible: boolean;
 }
 
-export interface RawResumeData {
+interface RawResumeData {
   personalInfo: {
     name: string;
     title?: string;

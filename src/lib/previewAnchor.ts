@@ -45,7 +45,7 @@ export function customItemAnchor(sectionId: string, itemId: string): string {
   return `${CUSTOM_PREFIX}${sectionId}:${itemId}`;
 }
 
-export interface ParsedPreviewAnchor {
+interface ParsedPreviewAnchor {
   kind: 'personalInfo' | 'personalField' | 'contact' | 'section' | 'experience' | 'education' | 'projects' | 'skills' | 'custom' | 'unknown';
   sectionId?: string;
   field?: string;
@@ -53,7 +53,7 @@ export interface ParsedPreviewAnchor {
   itemId?: string;
 }
 
-export function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
+function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
   if (anchor === PERSONAL_INFO_ANCHOR) {
     return { kind: 'personalInfo', sectionId: 'personalInfo' };
   }

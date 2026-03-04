@@ -20,10 +20,21 @@ import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
 import { getEditorAnchorCandidates, getSectionIdFromPreviewAnchor } from '@/lib/previewAnchor';
 import { getPaperDimensions } from '@/lib/paper';
+import type { ResumeData, SectionConfig } from '@/types';
 
 type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
 type PreviewScaleMode = 'fit' | 'manual';
+type RawJumpRequest = { id: number; anchor: string };
+
+interface BuilderUIState {
+  scale: number;
+  previewScaleMode: PreviewScaleMode;
+  editorMode: EditorMode;
+  mobileView: MobileView;
+  draggedIdx: number | null;
+  collapsedSections: Set<string>;
+}
 
 const PREVIEW_SCALE_MIN = 0.45;
 const PREVIEW_SCALE_MAX = 1.25;
@@ -53,16 +64,380 @@ const sectionEditors: Record<string, React.ReactNode> = {
   skills: <SkillEditor embedded />,
 };
 
+interface SectionActions {
+  sortableSections: SectionConfig[];
+  handleDragStart: (idx: number) => void;
+  handleDragOver: (e: React.DragEvent, idx: number) => void;
+  handleDragEnd: () => void;
+  toggleCollapse: (sectionId: string) => void;
+  toggleVisible: (sectionId: string) => void;
+  getSectionTitle: (sectionId: string) => string | undefined;
+}
+
+function createSectionActions({
+  resume,
+  hasHydrated,
+  draggedIdx,
+  reorderSections,
+  updateSectionConfig,
+  setUi,
+  t,
+}: {
+  resume: ResumeData;
+  hasHydrated: boolean;
+  draggedIdx: number | null;
+  reorderSections: (sections: SectionConfig[]) => void;
+  updateSectionConfig: (sectionId: string, config: Partial<SectionConfig>) => void;
+  setUi: React.Dispatch<React.SetStateAction<BuilderUIState>>;
+  t: (key: string) => string;
+}): SectionActions {
+  const sortableSections = hasHydrated
+    ? [...resume.sections].filter((section) => section.id !== 'summary').sort((a, b) => a.order - b.order)
+    : [];
+
+  const handleDragStart = (idx: number) => {
+    setUi((prev) => ({ ...prev, draggedIdx: idx }));
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+
+    const newSections = [...sortableSections];
+    const [removed] = newSections.splice(draggedIdx, 1);
+    newSections.splice(idx, 0, removed);
+
+    const summarySection = resume.sections.find((section) => section.id === 'summary');
+    const allSections = summarySection ? [summarySection, ...newSections] : newSections;
+
+    reorderSections(allSections);
+    setUi((prev) => ({ ...prev, draggedIdx: idx }));
+  };
+
+  const handleDragEnd = () => {
+    setUi((prev) => ({ ...prev, draggedIdx: null }));
+  };
+
+  const toggleCollapse = (sectionId: string) => {
+    setUi((prev) => {
+      const next = new Set(prev.collapsedSections);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return {
+        ...prev,
+        collapsedSections: next,
+      };
+    });
+  };
+
+  const toggleVisible = (sectionId: string) => {
+    const section = resume.sections.find((record) => record.id === sectionId);
+    if (section) {
+      updateSectionConfig(sectionId, { visible: !section.visible });
+    }
+  };
+
+  const getSectionTitle = (sectionId: string): string | undefined => {
+    const section = resume.sections.find((record) => record.id === sectionId);
+    if (section?.title) {
+      return section.title;
+    }
+    return t(`builder.sections.${sectionId}`);
+  };
+
+  return {
+    sortableSections,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    toggleCollapse,
+    toggleVisible,
+    getSectionTitle,
+  };
+}
+
+function renderBuilderPageLayout({
+  t,
+  ui,
+  setUi,
+  editorViewportRef,
+  previewViewportRef,
+  rawJumpRequest,
+  activePreviewAnchor,
+  sortableSections,
+  getSectionTitle,
+  toggleCollapse,
+  toggleVisible,
+  updateSectionConfig,
+  handleDragStart,
+  handleDragOver,
+  handleDragEnd,
+  deleteCustomSection,
+  addCustomSection,
+  handlePreviewWheel,
+  handleZoom,
+  handleScaleChange,
+  handleFitScale,
+  handleActualScale,
+  handlePreviewSelect,
+}: {
+  t: (key: string) => string;
+  ui: BuilderUIState;
+  setUi: React.Dispatch<React.SetStateAction<BuilderUIState>>;
+  editorViewportRef: React.RefObject<HTMLDivElement>;
+  previewViewportRef: React.RefObject<HTMLDivElement>;
+  rawJumpRequest: RawJumpRequest | null;
+  activePreviewAnchor: string | null;
+  sortableSections: SectionActions['sortableSections'];
+  getSectionTitle: (sectionId: string) => string | undefined;
+  toggleCollapse: (sectionId: string) => void;
+  toggleVisible: (sectionId: string) => void;
+  updateSectionConfig: (sectionId: string, config: Partial<SectionConfig>) => void;
+  handleDragStart: (idx: number) => void;
+  handleDragOver: (e: React.DragEvent, idx: number) => void;
+  handleDragEnd: () => void;
+  deleteCustomSection: (sectionId: string) => void;
+  addCustomSection: (title: string) => string;
+  handlePreviewWheel: (event: React.WheelEvent<HTMLDivElement>) => void;
+  handleZoom: (delta: number) => void;
+  handleScaleChange: (nextScale: number) => void;
+  handleFitScale: () => void;
+  handleActualScale: () => void;
+  handlePreviewSelect: (anchor: string) => void;
+}) {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
+              <FileText size={20} />
+              <span className="font-semibold">{t('common.appName')}</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <LanguageToggle />
+              <ThemeToggle />
+              <ExportButtons />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 移动端视图切换 - 放在 Main Content 外部，始终可见 */}
+      <div className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <button
+          onClick={() => setUi((prev) => ({ ...prev, mobileView: 'edit' }))}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
+            ui.mobileView === 'edit'
+              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Edit3 size={16} />
+          {t('builder.edit')}
+        </button>
+        <button
+          onClick={() => setUi((prev) => ({ ...prev, mobileView: 'preview' }))}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
+            ui.mobileView === 'preview'
+              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Eye size={16} />
+          {t('builder.preview')}
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
+        <div className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* 编辑模式切换 */}
+          <div className="flex items-center gap-1 px-4 sm:px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <button
+              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'form' }))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
+                ui.editorMode === 'form'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <FormInput size={14} />
+              {t('builder.form')}
+            </button>
+            <button
+              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
+                ui.editorMode === 'raw'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Code size={14} />
+              {t('builder.raw')}
+            </button>
+          </div>
+
+          {/* 编辑内容 */}
+          {ui.editorMode === 'form' ? (
+            <div ref={editorViewportRef} className="flex-1 overflow-y-auto">
+              <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto lg:mr-0">
+                {/* 个人信息 - 固定在顶部 */}
+                <PersonalInfoEditor />
+
+                {/* 可拖拽的模块 */}
+                {sortableSections.map((section, idx) => (
+                  <DraggableSection
+                    key={section.id}
+                    section={section}
+                    icon={section.isCustom ? <CustomIcon size={18} /> : sectionIcons[section.id]}
+                    title={getSectionTitle(section.id)}
+                    isCollapsed={ui.collapsedSections.has(section.id)}
+                    onToggleCollapse={() => toggleCollapse(section.id)}
+                    onToggleVisible={() => toggleVisible(section.id)}
+                    onTitleChange={(newTitle) => updateSectionConfig(section.id, { title: newTitle })}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDragEnd={handleDragEnd}
+                    isDragging={ui.draggedIdx === idx}
+                    onDelete={section.isCustom ? () => deleteCustomSection(section.id) : undefined}
+                  >
+                    {section.isCustom ? (
+                      <CustomSectionEditor sectionId={section.id} embedded />
+                    ) : (
+                      sectionEditors[section.id]
+                    )}
+                  </DraggableSection>
+                ))}
+
+                {/* 添加自定义模块按钮 */}
+                <button
+                  onClick={() => {
+                    const title = t('editor.customSection.newSectionTitle');
+                    addCustomSection(title);
+                  }}
+                  className="w-full py-3 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={18} />
+                  {t('editor.customSection.addSection')}
+                </button>
+
+                {/* 主题设置 - 固定在底部 */}
+                <ThemeEditor />
+                <div className="h-8" />
+              </div>
+            </div>
+          ) : (
+            <RawEditor jumpRequest={rawJumpRequest} />
+          )}
+        </div>
+
+        {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
+        <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
+          {/* 缩放控制 */}
+          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
+                aria-label={t('builder.previewZoomOut')}
+                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+              >
+                −
+              </button>
+
+              <span className="text-sm font-medium w-14 text-center tabular-nums text-gray-700 dark:text-gray-300">
+                {Math.round(ui.scale * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
+                aria-label={t('builder.previewZoomIn')}
+                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
+              >
+                +
+              </button>
+
+              <input
+                type="range"
+                min={PREVIEW_SCALE_MIN}
+                max={PREVIEW_SCALE_MAX}
+                step={PREVIEW_SCALE_STEP}
+                value={ui.scale}
+                onChange={(event) => handleScaleChange(Number(event.target.value))}
+                aria-label={t('builder.preview')}
+                className="w-24 sm:w-32 accent-gray-900 dark:accent-gray-100"
+              />
+
+              <button
+                type="button"
+                onClick={handleFitScale}
+                className={`px-3 py-1.5 rounded border text-xs sm:text-sm transition ${
+                  ui.previewScaleMode === 'fit'
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                }`}
+              >
+                {t('builder.previewFitWidth')}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleActualScale}
+                className="px-3 py-1.5 rounded border text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+              >
+                {t('builder.previewActualSize')}
+              </button>
+            </div>
+
+            <p className="hidden sm:block text-[11px] text-center mt-1 text-gray-500 dark:text-gray-400">
+              {t('builder.previewHelp')}
+            </p>
+          </div>
+
+          {/* 预览内容 */}
+          <div
+            ref={previewViewportRef}
+            onWheel={handlePreviewWheel}
+            className="flex-1 overflow-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-5"
+          >
+            <div className="flex justify-center">
+              <div
+                className="will-change-transform"
+                style={{
+                  transform: `scale(${ui.scale})`,
+                  transformOrigin: 'top center',
+                }}
+              >
+                <ResumePreview
+                  onSelectAnchor={handlePreviewSelect}
+                  activeAnchor={activePreviewAnchor}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BuilderPage() {
   const { t } = useTranslation();
   const [activePreviewAnchor, setActivePreviewAnchor] = useState<string | null>(null);
-  const [rawJumpRequest, setRawJumpRequest] = useState<{ id: number; anchor: string } | null>(null);
-  const [ui, setUi] = useState({
+  const [rawJumpRequest, setRawJumpRequest] = useState<RawJumpRequest | null>(null);
+  const [ui, setUi] = useState<BuilderUIState>({
     scale: 0.8,
-    previewScaleMode: 'fit' as PreviewScaleMode,
-    editorMode: 'form' as EditorMode,
-    mobileView: 'edit' as MobileView,
-    draggedIdx: null as number | null,
+    previewScaleMode: 'fit',
+    editorMode: 'form',
+    mobileView: 'edit',
+    draggedIdx: null,
     collapsedSections: new Set<string>(),
   });
   const previewViewportRef = useRef<HTMLDivElement>(null);
@@ -302,282 +677,47 @@ export default function BuilderPage() {
     };
   }, [clearEditorFlash]);
 
-  // 排除 summary（个人简介在头部显示）
-  const sortableSections = hasHydrated
-    ? [...resume.sections].filter(s => s.id !== 'summary').sort((a, b) => a.order - b.order)
-    : [];
+  const {
+    sortableSections,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    toggleCollapse,
+    toggleVisible,
+    getSectionTitle,
+  } = createSectionActions({
+    resume,
+    hasHydrated,
+    draggedIdx: ui.draggedIdx,
+    reorderSections,
+    updateSectionConfig,
+    setUi,
+    t,
+  });
 
-  const handleDragStart = (idx: number) => {
-    setUi((prev) => ({ ...prev, draggedIdx: idx }));
-  };
-
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    if (ui.draggedIdx === null || ui.draggedIdx === idx) return;
-
-    const newSections = [...sortableSections];
-    const [removed] = newSections.splice(ui.draggedIdx, 1);
-    newSections.splice(idx, 0, removed);
-
-    // 保持 summary 的位置
-    const summarySection = resume.sections.find(s => s.id === 'summary');
-    const allSections = summarySection ? [summarySection, ...newSections] : newSections;
-
-    reorderSections(allSections);
-    setUi((prev) => ({ ...prev, draggedIdx: idx }));
-  };
-
-  const handleDragEnd = () => {
-    setUi((prev) => ({ ...prev, draggedIdx: null }));
-  };
-
-  const toggleCollapse = (sectionId: string) => {
-    setUi((prev) => {
-      const next = new Set(prev.collapsedSections);
-      if (next.has(sectionId)) {
-        next.delete(sectionId);
-      } else {
-        next.add(sectionId);
-      }
-      return {
-        ...prev,
-        collapsedSections: next,
-      };
-    });
-  };
-
-  const toggleVisible = (sectionId: string) => {
-    const section = resume.sections.find(s => s.id === sectionId);
-    if (section) {
-      updateSectionConfig(sectionId, { visible: !section.visible });
-    }
-  };
-
-  const getSectionTitle = (sectionId: string): string | undefined => {
-    const section = resume.sections.find(s => s.id === sectionId);
-    // 如果用户自定义了标题，使用用户的标题；否则返回 undefined 让组件使用 i18n
-    if (section?.title) {
-      return section.title;
-    }
-    return t(`builder.sections.${sectionId}`);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
-              <FileText size={20} />
-              <span className="font-semibold">{t('common.appName')}</span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <LanguageToggle />
-              <ThemeToggle />
-              <ExportButtons />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 移动端视图切换 - 放在 Main Content 外部，始终可见 */}
-      <div className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <button
-          onClick={() => setUi((prev) => ({ ...prev, mobileView: 'edit' }))}
-          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
-            ui.mobileView === 'edit'
-              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
-          <Edit3 size={16} />
-          {t('builder.edit')}
-        </button>
-        <button
-          onClick={() => setUi((prev) => ({ ...prev, mobileView: 'preview' }))}
-          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
-            ui.mobileView === 'preview'
-              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
-          <Eye size={16} />
-          {t('builder.preview')}
-        </button>
-      </div>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
-        <div className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
-          {/* 编辑模式切换 */}
-          <div className="flex items-center gap-1 px-4 sm:px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'form' }))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
-                ui.editorMode === 'form'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <FormInput size={14} />
-              {t('builder.form')}
-            </button>
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
-                ui.editorMode === 'raw'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Code size={14} />
-              {t('builder.raw')}
-            </button>
-          </div>
-
-          {/* 编辑内容 */}
-          {ui.editorMode === 'form' ? (
-            <div ref={editorViewportRef} className="flex-1 overflow-y-auto">
-              <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto lg:mr-0">
-                {/* 个人信息 - 固定在顶部 */}
-                <PersonalInfoEditor />
-
-                {/* 可拖拽的模块 */}
-                {sortableSections.map((section, idx) => (
-                  <DraggableSection
-                    key={section.id}
-                    section={section}
-                    icon={section.isCustom ? <CustomIcon size={18} /> : sectionIcons[section.id]}
-                    title={getSectionTitle(section.id)}
-                    isCollapsed={ui.collapsedSections.has(section.id)}
-                    onToggleCollapse={() => toggleCollapse(section.id)}
-                    onToggleVisible={() => toggleVisible(section.id)}
-                    onTitleChange={(newTitle) => updateSectionConfig(section.id, { title: newTitle })}
-                    onDragStart={() => handleDragStart(idx)}
-                    onDragOver={(e) => handleDragOver(e, idx)}
-                    onDragEnd={handleDragEnd}
-                    isDragging={ui.draggedIdx === idx}
-                    onDelete={section.isCustom ? () => deleteCustomSection(section.id) : undefined}
-                  >
-                    {section.isCustom ? (
-                      <CustomSectionEditor sectionId={section.id} embedded />
-                    ) : (
-                      sectionEditors[section.id]
-                    )}
-                  </DraggableSection>
-                ))}
-
-                {/* 添加自定义模块按钮 */}
-                <button
-                  onClick={() => {
-                    const title = t('editor.customSection.newSectionTitle');
-                    addCustomSection(title);
-                  }}
-                  className="w-full py-3 px-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Plus size={18} />
-                  {t('editor.customSection.addSection')}
-                </button>
-
-                {/* 主题设置 - 固定在底部 */}
-                <ThemeEditor />
-                <div className="h-8" />
-              </div>
-            </div>
-          ) : (
-            <RawEditor jumpRequest={rawJumpRequest} />
-          )}
-        </div>
-
-        {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
-        <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
-          {/* 缩放控制 */}
-          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
-                aria-label={t('builder.previewZoomOut')}
-                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-              >
-                −
-              </button>
-
-              <span className="text-sm font-medium w-14 text-center tabular-nums text-gray-700 dark:text-gray-300">
-                {Math.round(ui.scale * 100)}%
-              </span>
-
-              <button
-                type="button"
-                onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
-                aria-label={t('builder.previewZoomIn')}
-                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-              >
-                +
-              </button>
-
-              <input
-                type="range"
-                min={PREVIEW_SCALE_MIN}
-                max={PREVIEW_SCALE_MAX}
-                step={PREVIEW_SCALE_STEP}
-                value={ui.scale}
-                onChange={(event) => handleScaleChange(Number(event.target.value))}
-                aria-label={t('builder.preview')}
-                className="w-24 sm:w-32 accent-gray-900 dark:accent-gray-100"
-              />
-
-              <button
-                type="button"
-                onClick={handleFitScale}
-                className={`px-3 py-1.5 rounded border text-xs sm:text-sm transition ${
-                  ui.previewScaleMode === 'fit'
-                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
-              >
-                {t('builder.previewFitWidth')}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleActualScale}
-                className="px-3 py-1.5 rounded border text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
-              >
-                {t('builder.previewActualSize')}
-              </button>
-            </div>
-
-            <p className="hidden sm:block text-[11px] text-center mt-1 text-gray-500 dark:text-gray-400">
-              {t('builder.previewHelp')}
-            </p>
-          </div>
-
-          {/* 预览内容 */}
-          <div
-            ref={previewViewportRef}
-            onWheel={handlePreviewWheel}
-            className="flex-1 overflow-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-5"
-          >
-            <div className="flex justify-center">
-              <div
-                className="will-change-transform"
-                style={{
-                  transform: `scale(${ui.scale})`,
-                  transformOrigin: 'top center',
-                }}
-              >
-                <ResumePreview
-                  onSelectAnchor={handlePreviewSelect}
-                  activeAnchor={activePreviewAnchor}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return renderBuilderPageLayout({
+    t,
+    ui,
+    setUi,
+    editorViewportRef,
+    previewViewportRef,
+    rawJumpRequest,
+    activePreviewAnchor,
+    sortableSections,
+    getSectionTitle,
+    toggleCollapse,
+    toggleVisible,
+    updateSectionConfig,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    deleteCustomSection,
+    addCustomSection,
+    handlePreviewWheel,
+    handleZoom,
+    handleScaleChange,
+    handleFitScale,
+    handleActualScale,
+    handlePreviewSelect,
+  });
 }
