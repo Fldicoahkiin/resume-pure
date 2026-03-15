@@ -256,10 +256,12 @@ function ProjectFormFields({
           className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           placeholder={t('editor.projects.repoPlaceholder')}
         />
-        <div className="mt-1 flex min-h-5 items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <Github size={12} />
-          <RepoStatusText status={repoStatus} />
-        </div>
+        {repoStatus?.message && (
+          <div className="mt-1 flex min-h-5 items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <Github size={12} />
+            <RepoStatusText status={repoStatus} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -507,29 +509,26 @@ function ProjectCard({
     >
       <ProjectHeader t={t} onDelete={() => onDelete(project.id)} />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_248px]">
-        <div className="space-y-4">
-          <ProjectFormFields
-            project={project}
-            repoStatus={repoStatus}
-            t={t}
-            onUpdate={updateProject}
-            onSyncRepo={onSyncRepo}
-          />
-          <ProjectLogoPanel
-            project={project}
-            logoError={logoError}
-            t={t}
-            onUpdate={updateProject}
-            onUploadLogo={onUploadLogo}
-          />
-          <ProjectTechPanel
-            project={project}
-            t={t}
-            onUpdate={updateProject}
-          />
-        </div>
-
+      <div className="space-y-4">
+        <ProjectFormFields
+          project={project}
+          repoStatus={repoStatus}
+          t={t}
+          onUpdate={updateProject}
+          onSyncRepo={onSyncRepo}
+        />
+        <ProjectLogoPanel
+          project={project}
+          logoError={logoError}
+          t={t}
+          onUpdate={updateProject}
+          onUploadLogo={onUploadLogo}
+        />
+        <ProjectTechPanel
+          project={project}
+          t={t}
+          onUpdate={updateProject}
+        />
         <ProjectContributionsPanel
           project={project}
           t={t}
@@ -654,11 +653,8 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
       const dataUrl = await readImageFileAsDataUrl(file);
       updateProject(projectId, { customLogo: dataUrl });
       setLogoErrorMap((current) => ({ ...current, [projectId]: '' }));
-    } catch (error) {
-      const message = error instanceof Error && error.message === 'image-too-large'
-        ? t('editor.projects.logoTooLarge')
-        : t('editor.projects.logoUploadFailed');
-      setLogoErrorMap((current) => ({ ...current, [projectId]: message }));
+    } catch {
+      setLogoErrorMap((current) => ({ ...current, [projectId]: t('editor.projects.logoUploadFailed') }));
     } finally {
       event.target.value = '';
     }
