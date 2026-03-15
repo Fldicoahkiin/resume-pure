@@ -1,9 +1,8 @@
 import React from 'react';
-import { ResumeData } from '@/types';
+import { ResumeData, SkillLevel } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperDimensions } from '@/lib/paper';
 
-// 注册中文断词回调
 registerCJKHyphenation();
 
 interface PDFTranslations {
@@ -13,7 +12,9 @@ interface PDFTranslations {
   projects: string;
   skills: string;
   technologies: string;
+  contributions: string;
   present: string;
+  skillLevel: Record<SkillLevel, string>;
 }
 
 const defaultTranslations: PDFTranslations = {
@@ -23,7 +24,13 @@ const defaultTranslations: PDFTranslations = {
   projects: '项目经验',
   skills: '技能专长',
   technologies: '技术栈',
+  contributions: '贡献记录',
   present: '至今',
+  skillLevel: {
+    core: '核心',
+    proficient: '熟练',
+    familiar: '了解',
+  },
 };
 
 type PDFRenderer = typeof import('@react-pdf/renderer');
@@ -47,6 +54,14 @@ function getDescriptionLines(items: string[], prefix: string) {
     items.filter((desc) => desc && desc.trim()),
     prefix
   );
+}
+
+function getDateRange(startDate: string, endDate: string, current: boolean | undefined, presentLabel: string): string {
+  if (!startDate && !endDate && !current) {
+    return '';
+  }
+
+  return `${startDate}${startDate && (endDate || current) ? ' - ' : ''}${current ? presentLabel : endDate}`;
 }
 
 function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: PDFTranslations) {
@@ -112,6 +127,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
       justifyContent: 'space-between',
       marginBottom: 4,
     },
+    itemHeaderMain: {
+      flexGrow: 1,
+      flexShrink: 1,
+    },
     itemTitle: {
       fontSize: theme.fontSize,
       fontWeight: 'bold',
@@ -119,269 +138,287 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
     itemSubtitle: {
       fontSize: theme.fontSize - 1,
       color: '#666',
-      marginBottom: 2,
+      marginTop: 1,
     },
     itemDate: {
       fontSize: theme.fontSize - 1,
       color: '#666',
-    },
-    bulletPoint: {
-      fontSize: theme.fontSize - 1,
-      marginLeft: 12,
-      marginBottom: 2,
+      flexShrink: 0,
     },
     descriptionLine: {
       fontSize: theme.fontSize - 1,
+      color: '#333',
       marginBottom: 2,
+    },
+    bulletPoint: {
+      fontSize: theme.fontSize - 1,
+      color: '#333',
+      marginBottom: 2,
+      marginLeft: 8,
+    },
+    itemMeta: {
+      fontSize: theme.fontSize - 2,
+      color: '#666',
+      marginTop: 4,
+    },
+    contributionTitle: {
+      fontSize: theme.fontSize - 2,
+      color: '#666',
+      marginTop: 5,
+      marginBottom: 2,
+    },
+    contributionItem: {
+      fontSize: theme.fontSize - 2,
+      color: '#333',
+      marginBottom: 2,
+      marginLeft: 8,
     },
     skillCategory: {
       fontSize: theme.fontSize,
       fontWeight: 'bold',
+      color: '#333',
       marginBottom: 4,
     },
-    skillItems: {
+    skillEntry: {
+      marginBottom: 5,
+      paddingLeft: 8,
+    },
+    skillEntryTitle: {
       fontSize: theme.fontSize - 1,
+      color: '#333',
+    },
+    skillEntryContext: {
+      fontSize: theme.fontSize - 2,
       color: '#666',
+      marginTop: 1,
+      lineHeight: theme.lineHeight,
+    },
+    customSectionItem: {
       marginBottom: theme.spacing,
     },
   });
 
-  const visibleSections = data.sections
-    .filter(s => s.visible)
-    .sort((a, b) => a.order - b.order);
-
   return (
     <Document>
-      <Page size={{ width: paper.width, height: paper.height }} style={styles.page}>
-        {/* 个人信息 */}
+      <Page
+        size={[paper.width, paper.height]}
+        style={styles.page}
+      >
         <View style={styles.header}>
           <Text style={styles.name}>{data.personalInfo.name}</Text>
           {data.personalInfo.title && (
             <Text style={styles.title}>{data.personalInfo.title}</Text>
           )}
-
           <View style={styles.contactInfo}>
-            {withStableStringKey(
-              [
-                data.personalInfo.email,
-                data.personalInfo.phone,
-                data.personalInfo.location,
-                data.personalInfo.website,
-              ].filter(Boolean) as string[],
-              'pdf-contact-basic'
-            ).map((info) => (
-              <Text key={info.key} style={styles.contactItem}>{info.value}</Text>
+            {data.personalInfo.email && <Text style={styles.contactItem}>{data.personalInfo.email}</Text>}
+            {data.personalInfo.phone && <Text style={styles.contactItem}>{data.personalInfo.phone}</Text>}
+            {data.personalInfo.location && <Text style={styles.contactItem}>{data.personalInfo.location}</Text>}
+            {data.personalInfo.website && <Text style={styles.contactItem}>{data.personalInfo.website}</Text>}
+            {data.personalInfo.linkedin && <Text style={styles.contactItem}>{data.personalInfo.linkedin}</Text>}
+            {data.personalInfo.github && <Text style={styles.contactItem}>{data.personalInfo.github}</Text>}
+            {(data.personalInfo.contacts || []).map((contact) => (
+              <Text key={contact.id} style={styles.contactItem}>{contact.value}</Text>
             ))}
           </View>
-
-          {(data.personalInfo.linkedin || data.personalInfo.github || (data.personalInfo.contacts && data.personalInfo.contacts.length > 0)) && (
-            <View style={styles.contactInfo}>
-              {withStableStringKey(
-                [
-                  data.personalInfo.linkedin,
-                  data.personalInfo.github,
-                  ...(data.personalInfo.contacts || []).map(c => c.value),
-                ].filter(Boolean) as string[],
-                'pdf-contact-extra'
-              ).map((info) => (
-                <Text key={info.key} style={styles.contactItem}>{info.value}</Text>
-              ))}
-            </View>
+          {data.personalInfo.summary && (
+            <Text style={styles.summary}>{data.personalInfo.summary}</Text>
           )}
         </View>
 
-        {visibleSections.map(section => {
-          switch (section.id) {
-            case 'summary':
-              if (!data.personalInfo.summary) return null;
-              return (
-                <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{translations.summary}</Text>
-                  <Text style={styles.summary}>{data.personalInfo.summary}</Text>
-                </View>
-              );
+        {data.sections
+          .filter((section) => section.visible)
+          .sort((a, b) => a.order - b.order)
+          .map((section) => {
+            switch (section.id) {
+              case 'summary':
+                return null;
 
-            case 'experience':
-              if (data.experience.length === 0) return null;
-              return (
-                <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{translations.experience}</Text>
-                  {data.experience.map(exp => (
-                    <View key={exp.id} style={styles.itemContainer}>
-                      <View style={styles.itemHeader}>
-                        <View>
-                          <Text style={styles.itemTitle}>{exp.position}</Text>
-                          <Text style={styles.itemSubtitle}>
-                            {exp.company}{exp.location ? ` - ${exp.location}` : ''}
+              case 'experience':
+                if (data.experience.length === 0) return null;
+                return (
+                  <View key={section.id} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{translations.experience}</Text>
+                    {data.experience.map((exp) => (
+                      <View key={exp.id} style={styles.itemContainer} wrap={false}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemHeaderMain}>
+                            <Text style={styles.itemTitle}>{exp.position}</Text>
+                            <Text style={styles.itemSubtitle}>
+                              {exp.company}{exp.location ? ` - ${exp.location}` : ''}
+                            </Text>
+                          </View>
+                          <Text style={styles.itemDate}>
+                            {getDateRange(exp.startDate, exp.endDate, exp.current, translations.present)}
                           </Text>
                         </View>
-                        <Text style={styles.itemDate}>
-                          {exp.startDate || exp.endDate || exp.current ? (
-                            `${exp.startDate}${exp.startDate && (exp.endDate || exp.current) ? ' - ' : ''}${exp.current ? translations.present : exp.endDate}`
-                          ) : ''}
-                        </Text>
+                        {exp.showBulletPoints === false
+                          ? getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                            ))
+                          : getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                            ))}
                       </View>
-                      {exp.showBulletPoints === false
-                        ? getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
-                          ))
-                        : getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                          ))}
-                    </View>
-                  ))}
-                </View>
-              );
+                    ))}
+                  </View>
+                );
 
-            case 'education':
-              if (data.education.length === 0) return null;
-              return (
-                <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{translations.education}</Text>
-                  {data.education.map(edu => (
-                    <View key={edu.id} style={styles.itemContainer}>
-                      <View style={styles.itemHeader}>
-                        <View>
-                          <Text style={styles.itemTitle}>{edu.school}</Text>
-                          <Text style={styles.itemSubtitle}>
-                            {edu.degree} - {edu.major}
-                            {edu.gpa ? ` | GPA: ${edu.gpa}` : ''}
+              case 'education':
+                if (data.education.length === 0) return null;
+                return (
+                  <View key={section.id} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{translations.education}</Text>
+                    {data.education.map((edu) => (
+                      <View key={edu.id} style={styles.itemContainer} wrap={false}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemHeaderMain}>
+                            <Text style={styles.itemTitle}>{edu.school}</Text>
+                            <Text style={styles.itemSubtitle}>
+                              {edu.degree} - {edu.major}
+                              {edu.gpa ? ` | GPA: ${edu.gpa}` : ''}
+                            </Text>
+                          </View>
+                          <Text style={styles.itemDate}>
+                            {getDateRange(edu.startDate, edu.endDate, false, translations.present)}
                           </Text>
                         </View>
-                        <Text style={styles.itemDate}>
-                          {edu.startDate || edu.endDate ? (
-                            `${edu.startDate}${edu.startDate && edu.endDate ? ' - ' : ''}${edu.endDate}`
-                          ) : ''}
-                        </Text>
+                        {edu.showBulletPoints === false
+                          ? getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                            ))
+                          : getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                            ))}
                       </View>
-                      {edu.showBulletPoints === false
-                        ? getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
-                          ))
-                        : getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                          ))}
-                    </View>
-                  ))}
-                </View>
-              );
+                    ))}
+                  </View>
+                );
 
-            case 'projects':
-              if (data.projects.length === 0) return null;
-              return (
-                <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{translations.projects}</Text>
-                  {data.projects.map(proj => (
-                    <View key={proj.id} style={styles.itemContainer}>
-                      <View style={styles.itemHeader}>
-                        <View>
-                          <Text style={styles.itemTitle}>{proj.name}</Text>
-                          {proj.role && (
-                            <Text style={styles.itemSubtitle}>{proj.role}</Text>
-                          )}
+              case 'projects':
+                if (data.projects.length === 0) return null;
+                return (
+                  <View key={section.id} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{translations.projects}</Text>
+                    {data.projects.map((project) => (
+                      <View key={project.id} style={styles.itemContainer} wrap={false}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemHeaderMain}>
+                            <Text style={styles.itemTitle}>
+                              {project.name}{project.role ? ` · ${project.role}` : ''}
+                            </Text>
+                            <Text style={styles.itemSubtitle}>
+                              {project.repoUrl ? `GitHub` : ''}
+                              {project.showStars !== false && typeof project.repoStars === 'number' ? `${project.repoUrl ? ' · ' : ''}★ ${project.repoStars}` : ''}
+                              {project.url ? `${project.repoUrl || typeof project.repoStars === 'number' ? ' · ' : ''}${project.url}` : ''}
+                            </Text>
+                          </View>
+                          <Text style={styles.itemDate}>
+                            {getDateRange(project.startDate, project.endDate, project.current, translations.present)}
+                          </Text>
                         </View>
-                        <Text style={styles.itemDate}>
-                          {proj.startDate || proj.endDate || proj.current ? (
-                            `${proj.startDate}${proj.startDate && (proj.endDate || proj.current) ? ' - ' : ''}${proj.current ? translations.present : proj.endDate}`
-                          ) : ''}
-                        </Text>
+                        {project.showBulletPoints === false
+                          ? getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                            ))
+                          : getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                            ))}
+                        {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 && (
+                          <Text style={styles.itemMeta}>
+                            {translations.technologies}: {project.technologies.join(' · ')}
+                          </Text>
+                        )}
+                        {project.showContributions !== false && project.contributions && project.contributions.length > 0 && (
+                          <View>
+                            <Text style={styles.contributionTitle}>{translations.contributions}</Text>
+                            {project.contributions.map((contribution) => (
+                              <Text key={contribution.id} style={styles.contributionItem}>
+                                - {contribution.summary}{contribution.url ? ` (${contribution.url})` : ''}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
                       </View>
-                      {proj.showBulletPoints === false
-                        ? getDescriptionLines(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
-                          ))
-                        : getDescriptionLines(proj.description, `pdf-proj-${proj.id}`).map((desc) => (
-                            <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                          ))}
-                      {proj.technologies && proj.technologies.length > 0 && (
-                        <Text style={styles.itemSubtitle}>
-                          {translations.technologies}: {proj.technologies.join(', ')}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              );
+                    ))}
+                  </View>
+                );
 
-            case 'skills':
-              if (data.skills.length === 0) return null;
-              return (
-                <View key={section.id} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{translations.skills}</Text>
-                  {data.skills.map(skill => (
-                    <View key={skill.id} style={styles.itemContainer}>
-                      <Text style={styles.skillCategory}>{skill.category}</Text>
-                      <Text style={styles.skillItems}>{skill.items.join(' • ')}</Text>
-                    </View>
-                  ))}
-                </View>
-              );
+              case 'skills':
+                if (data.skills.length === 0) return null;
+                return (
+                  <View key={section.id} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{translations.skills}</Text>
+                    {data.skills.map((skill) => (
+                      <View key={skill.id} style={styles.itemContainer} wrap={false}>
+                        <Text style={styles.skillCategory}>{skill.category}</Text>
+                        {skill.items.map((item) => (
+                          <View key={item.id} style={styles.skillEntry}>
+                            <Text style={styles.skillEntryTitle}>
+                              {item.name} · {translations.skillLevel[item.level]}
+                            </Text>
+                            {item.showContext !== false && item.context && (
+                              <Text style={styles.skillEntryContext}>{item.context}</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                );
 
-            default:
-              // 处理自定义模块
-              if (section.isCustom) {
-                const customSection = data.customSections?.find(cs => cs.id === section.id);
+              default:
+                if (!section.isCustom) return null;
+                const customSection = data.customSections.find((record) => record.id === section.id);
                 if (!customSection || customSection.items.length === 0) return null;
 
                 return (
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{section.title}</Text>
-                    {customSection.items.map((item) => {
-                      const descriptions = getDescriptionLines(item.description, `pdf-custom-${item.id}`);
-
-                      return (
-                        <View key={item.id} style={styles.itemContainer}>
-                          <View style={styles.itemHeader}>
-                            <View>
-                              {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
-                              {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
-                            </View>
-                            {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
+                    {customSection.items.map((item) => (
+                      <View key={item.id} style={styles.customSectionItem} wrap={false}>
+                        <View style={styles.itemHeader}>
+                          <View style={styles.itemHeaderMain}>
+                            {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
+                            {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
                           </View>
-                          {item.showBulletPoints === false
-                            ? descriptions.map((desc) => (
-                                <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
-                              ))
-                            : descriptions.map((desc) => (
-                                <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
-                              ))}
+                          {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
                         </View>
-                      );
-                    })}
+                        {item.showBulletPoints === false
+                          ? getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                            ))
+                          : getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
+                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                            ))}
+                      </View>
+                    ))}
                   </View>
                 );
-              }
-              return null;
-          }
-        })}
+            }
+          })}
       </Page>
     </Document>
   );
 }
 
-/**
- * Export to PDF
- */
 export async function exportToPDF(
   data: ResumeData,
   filename: string = 'resume.pdf',
   translations: PDFTranslations = defaultTranslations
 ): Promise<void> {
-  const renderer = await import('@react-pdf/renderer');
-  const { pdf } = renderer;
-
   try {
+    const renderer = await import('@react-pdf/renderer');
+    const { pdf } = renderer;
+
     const blob = await pdf(createResumePDF(renderer, data, translations)).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('PDF export failed:', error);
+    console.error('PDF 导出失败:', error);
     throw new Error('PDF export failed');
   }
 }
