@@ -1,4 +1,4 @@
-import { ResumeData, ContactItem, Experience, Education, Project, Skill, CustomSectionItem, SectionConfig } from '@/types';
+import { ContactItem, CustomSectionItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel } from '@/types';
 
 export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw format. Expected latest raw structure.';
 
@@ -31,6 +31,11 @@ interface RawEducationItem {
   showBulletPoints?: boolean;
 }
 
+interface RawProjectContribution {
+  summary: string;
+  url: string;
+}
+
 interface RawProjectItem {
   name: string;
   role?: string;
@@ -38,14 +43,32 @@ interface RawProjectItem {
   endDate: string;
   current?: boolean;
   url?: string;
+  repoUrl?: string;
+  repoStars?: number;
+  repoAvatarUrl?: string;
+  customLogo?: string;
   description: string[];
   technologies?: string[];
+  contributions?: RawProjectContribution[];
+  showLogo?: boolean;
+  showStars?: boolean;
+  showTechnologies?: boolean;
+  showContributions?: boolean;
   showBulletPoints?: boolean;
+}
+
+interface RawSkillEntry {
+  name: string;
+  level?: SkillLevel;
+  context?: string;
+  logo?: string;
+  showLogo?: boolean;
+  showContext?: boolean;
 }
 
 interface RawSkillItem {
   category: string;
-  items: string[];
+  items: RawSkillEntry[];
 }
 
 interface RawCustomSectionItem {
@@ -188,16 +211,39 @@ function toRawProjects(items: Project[]): RawProjectItem[] {
     endDate: item.endDate,
     current: item.current,
     url: item.url,
+    repoUrl: item.repoUrl,
+    repoStars: item.repoStars,
+    repoAvatarUrl: item.repoAvatarUrl,
+    customLogo: item.customLogo,
     description: item.description,
     technologies: item.technologies,
+    contributions: item.contributions?.map((contribution) => ({
+      summary: contribution.summary,
+      url: contribution.url,
+    })),
+    showLogo: item.showLogo,
+    showStars: item.showStars,
+    showTechnologies: item.showTechnologies,
+    showContributions: item.showContributions,
     showBulletPoints: item.showBulletPoints,
+  }));
+}
+
+function toRawSkillItems(items: SkillItem[]): RawSkillEntry[] {
+  return items.map((item) => ({
+    name: item.name,
+    level: item.level,
+    context: item.context,
+    logo: item.logo,
+    showLogo: item.showLogo,
+    showContext: item.showContext,
   }));
 }
 
 function toRawSkills(items: Skill[]): RawSkillItem[] {
   return items.map((item) => ({
     category: item.category,
-    items: item.items,
+    items: toRawSkillItems(item.items),
   }));
 }
 
@@ -357,6 +403,54 @@ function createSectionKeyMap(raw: Record<string, unknown>): Map<string, string> 
   return map;
 }
 
+function mapProjectContributions(value: unknown): Record<string, unknown>[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const mapped = value.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `contribution-${index + 1}`,
+    });
+    return acc;
+  }, []);
+
+  return mapped.length > 0 ? mapped : undefined;
+}
+
+function mapSkillEntries(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<Record<string, unknown>[]>((acc, item, index) => {
+    if (typeof item === 'string') {
+      const name = item.trim();
+      if (!name) return acc;
+
+      acc.push({
+        id: `skill-item-${index + 1}`,
+        name,
+        level: 'proficient',
+        showLogo: true,
+        showContext: true,
+      });
+      return acc;
+    }
+
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      ...item,
+      id: `skill-item-${index + 1}`,
+    });
+    return acc;
+  }, []);
+}
+
 export function prepareImportedResumeData(input: unknown): unknown {
   if (!isLatestRawData(input)) {
     throw new Error(RAW_SCHEMA_ERROR_MESSAGE);
@@ -469,6 +563,7 @@ export function prepareImportedResumeData(input: unknown): unknown {
     acc.push({
       ...item,
       id: `proj-${index + 1}`,
+      contributions: mapProjectContributions(item.contributions),
     });
     return acc;
   }, []);
@@ -479,6 +574,7 @@ export function prepareImportedResumeData(input: unknown): unknown {
     acc.push({
       ...item,
       id: `skill-${index + 1}`,
+      items: mapSkillEntries(item.items),
     });
     return acc;
   }, []);

@@ -72,15 +72,42 @@ export interface Project {
   endDate: string;
   current?: boolean;
   url?: string;
+  repoUrl?: string;
+  repoStars?: number;
+  repoAvatarUrl?: string;
+  customLogo?: string;
   description: string[];
   technologies?: string[];
+  contributions?: ProjectContribution[];
+  showLogo?: boolean;
+  showStars?: boolean;
+  showTechnologies?: boolean;
+  showContributions?: boolean;
   showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
+}
+
+export interface ProjectContribution {
+  id: string;
+  summary: string;
+  url: string;
+}
+
+export type SkillLevel = 'core' | 'proficient' | 'familiar';
+
+export interface SkillItem {
+  id: string;
+  name: string;
+  level: SkillLevel;
+  context?: string;
+  logo?: string;
+  showLogo?: boolean;
+  showContext?: boolean;
 }
 
 export interface Skill {
   id: string;
   category: string;
-  items: string[];
+  items: SkillItem[];
 }
 
 export interface SectionConfig {

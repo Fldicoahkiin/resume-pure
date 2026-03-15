@@ -7,9 +7,12 @@ import {
   Experience,
   PersonalInfo,
   Project,
+  ProjectContribution,
   ResumeData,
   SectionConfig,
   Skill,
+  SkillItem,
+  SkillLevel,
   ThemeConfig,
 } from '@/types';
 import { normalizePaperSize } from '@/lib/paper';
@@ -46,7 +49,8 @@ const CONTACT_ICON_TYPES: ContactIconType[] = [
 ];
 
 const CONTACT_ICON_TYPE_SET = new Set<ContactIconType>(CONTACT_ICON_TYPES);
-
+const SKILL_LEVELS: SkillLevel[] = ['core', 'proficient', 'familiar'];
+const SKILL_LEVEL_SET = new Set<SkillLevel>(SKILL_LEVELS);
 const CURRENT_SCHEMA_VERSION = 1;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -117,6 +121,24 @@ function asNumber(value: unknown, fallback: number, min?: number, max?: number):
   return parsed;
 }
 
+function asOptionalNumber(value: unknown, min?: number): number | undefined {
+  const parsed = typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? Number.parseFloat(value)
+      : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  if (typeof min === 'number' && parsed < min) {
+    return min;
+  }
+
+  return parsed;
+}
+
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -135,6 +157,14 @@ function normalizeContactIcon(value: unknown, fallback: ContactIconType): Contac
   return fallback;
 }
 
+function normalizeSkillLevel(value: unknown, fallback: SkillLevel = 'proficient'): SkillLevel {
+  if (typeof value === 'string' && SKILL_LEVEL_SET.has(value as SkillLevel)) {
+    return value as SkillLevel;
+  }
+
+  return fallback;
+}
+
 function normalizeColor(value: unknown, fallback: string): string {
   const raw = asString(value, '').trim();
   if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw)) {
@@ -146,6 +176,63 @@ function normalizeColor(value: unknown, fallback: string): string {
 
 function createId(prefix: string, index: number): string {
   return `${prefix}-${index + 1}`;
+}
+
+function normalizeProjectContributions(value: unknown): ProjectContribution[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<ProjectContribution[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      id: asString(item.id, createId('contribution', index)),
+      summary: asString(item.summary, ''),
+      url: asString(item.url, ''),
+    });
+
+    return acc;
+  }, []);
+}
+
+function normalizeSkillItems(value: unknown): SkillItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<SkillItem[]>((acc, item, index) => {
+    if (typeof item === 'string') {
+      const name = item.trim();
+      if (!name) return acc;
+
+      acc.push({
+        id: createId('skill-item', index),
+        name,
+        level: 'proficient',
+        showLogo: true,
+        showContext: true,
+      });
+      return acc;
+    }
+
+    if (!isRecord(item)) return acc;
+
+    const name = asString(item.name, '').trim();
+    if (!name) return acc;
+
+    acc.push({
+      id: asString(item.id, createId('skill-item', index)),
+      name,
+      level: normalizeSkillLevel(item.level),
+      context: asOptionalString(item.context),
+      logo: asOptionalString(item.logo),
+      showLogo: asBoolean(item.showLogo, true),
+      showContext: asBoolean(item.showContext, true),
+    });
+
+    return acc;
+  }, []);
 }
 
 function normalizePersonalInfo(input: unknown, fallback: PersonalInfo): PersonalInfo {
@@ -203,15 +290,15 @@ function normalizeExperience(input: unknown): Experience[] {
     if (!isRecord(item)) return acc;
 
     acc.push({
-        id: asString(item.id, createId('exp', index)),
-        company: asString(item.company, ''),
-        position: asString(item.position, ''),
-        location: asOptionalString(item.location),
-        startDate: asString(item.startDate, ''),
-        endDate: asString(item.endDate, ''),
-        current: asBoolean(item.current, false),
-        description: asStringArray(item.description),
-        showBulletPoints: asBoolean(item.showBulletPoints, true),
+      id: asString(item.id, createId('exp', index)),
+      company: asString(item.company, ''),
+      position: asString(item.position, ''),
+      location: asOptionalString(item.location),
+      startDate: asString(item.startDate, ''),
+      endDate: asString(item.endDate, ''),
+      current: asBoolean(item.current, false),
+      description: asStringArray(item.description),
+      showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;
@@ -229,16 +316,16 @@ function normalizeEducation(input: unknown): Education[] {
     const description = asStringArray(item.description);
 
     acc.push({
-        id: asString(item.id, createId('edu', index)),
-        school: asString(item.school, ''),
-        degree: asString(item.degree, ''),
-        major: asString(item.major, ''),
-        location: asOptionalString(item.location),
-        startDate: asString(item.startDate, ''),
-        endDate: asString(item.endDate, ''),
-        gpa: asOptionalString(item.gpa),
-        description: description.length > 0 ? description : undefined,
-        showBulletPoints: asBoolean(item.showBulletPoints, true),
+      id: asString(item.id, createId('edu', index)),
+      school: asString(item.school, ''),
+      degree: asString(item.degree, ''),
+      major: asString(item.major, ''),
+      location: asOptionalString(item.location),
+      startDate: asString(item.startDate, ''),
+      endDate: asString(item.endDate, ''),
+      gpa: asOptionalString(item.gpa),
+      description: description.length > 0 ? description : undefined,
+      showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;
@@ -254,18 +341,28 @@ function normalizeProjects(input: unknown): Project[] {
     if (!isRecord(item)) return acc;
 
     const technologies = asStringArray(item.technologies);
+    const contributions = normalizeProjectContributions(item.contributions);
 
     acc.push({
-        id: asString(item.id, createId('proj', index)),
-        name: asString(item.name, ''),
-        role: asOptionalString(item.role),
-        startDate: asString(item.startDate, ''),
-        endDate: asString(item.endDate, ''),
-        current: asBoolean(item.current, false),
-        url: asOptionalString(item.url),
-        description: asStringArray(item.description),
-        technologies: technologies.length > 0 ? technologies : undefined,
-        showBulletPoints: asBoolean(item.showBulletPoints, true),
+      id: asString(item.id, createId('proj', index)),
+      name: asString(item.name, ''),
+      role: asOptionalString(item.role),
+      startDate: asString(item.startDate, ''),
+      endDate: asString(item.endDate, ''),
+      current: asBoolean(item.current, false),
+      url: asOptionalString(item.url),
+      repoUrl: asOptionalString(item.repoUrl),
+      repoStars: asOptionalNumber(item.repoStars, 0),
+      repoAvatarUrl: asOptionalString(item.repoAvatarUrl),
+      customLogo: asOptionalString(item.customLogo),
+      description: asStringArray(item.description),
+      technologies: technologies.length > 0 ? technologies : undefined,
+      contributions: contributions.length > 0 ? contributions : undefined,
+      showLogo: asBoolean(item.showLogo, true),
+      showStars: asBoolean(item.showStars, true),
+      showTechnologies: asBoolean(item.showTechnologies, true),
+      showContributions: asBoolean(item.showContributions, true),
+      showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 
     return acc;
@@ -281,9 +378,9 @@ function normalizeSkills(input: unknown): Skill[] {
     if (!isRecord(item)) return acc;
 
     acc.push({
-        id: asString(item.id, createId('skill', index)),
-        category: asString(item.category, ''),
-        items: asStringArray(item.items),
+      id: asString(item.id, createId('skill', index)),
+      category: asString(item.category, ''),
+      items: normalizeSkillItems(item.items),
     });
 
     return acc;
@@ -317,8 +414,8 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
     );
 
     sectionAcc.push({
-        id: asString(section.id, createId('custom', sectionIndex)),
-        items,
+      id: asString(section.id, createId('custom', sectionIndex)),
+      items,
     });
 
     return sectionAcc;
@@ -353,11 +450,11 @@ function normalizeSections(input: unknown): SectionConfig[] {
     const isBuiltIn = BUILTIN_SECTION_ID_SET.has(id);
 
     acc.push({
-        id,
-        title: asString(section.title, ''),
-        visible: asBoolean(section.visible, true),
-        order: asNumber(section.order, index + 1, 1),
-        isCustom: isBuiltIn ? false : asBoolean(section.isCustom, true),
+      id,
+      title: asString(section.title, ''),
+      visible: asBoolean(section.visible, true),
+      order: asNumber(section.order, index + 1, 1),
+      isCustom: isBuiltIn ? false : asBoolean(section.isCustom, true),
     });
 
     return acc;
@@ -504,7 +601,7 @@ export function normalizeResumeData(input: unknown): ResumeData {
   const sections = sortAndReorderSections(Array.from(sectionMap.values()));
 
   const customSections = Array.from(customSectionMap.values())
-    .filter((section) => sections.some((s) => s.id === section.id && s.isCustom))
+    .filter((section) => sections.some((record) => record.id === section.id && record.isCustom))
     .sort((a, b) => {
       const orderA = sections.find((section) => section.id === a.id)?.order ?? Number.MAX_SAFE_INTEGER;
       const orderB = sections.find((section) => section.id === b.id)?.order ?? Number.MAX_SAFE_INTEGER;
