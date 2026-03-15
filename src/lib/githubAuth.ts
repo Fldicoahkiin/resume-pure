@@ -40,6 +40,15 @@ export function clearAuth() {
   localStorage.removeItem(USER_KEY);
 }
 
+export function setManualToken(token: string) {
+  const trimmed = token.trim();
+  if (trimmed) {
+    localStorage.setItem(TOKEN_KEY, trimmed);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
 export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
   const response = await fetch('/api/github/device', { method: 'POST' });
   if (!response.ok) {
@@ -48,54 +57,48 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
   return response.json() as Promise<DeviceCodeResponse>;
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function pollForToken(deviceCode: string, interval: number): Promise<string> {
-  const pollInterval = Math.max(interval, 5) * 1000;
+  let pollMs = Math.max(interval, 5) * 1000;
 
-  return new Promise((resolve, reject) => {
-    const timer = setInterval(async () => {
-      try {
-        const response = await fetch('/api/github/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_code: deviceCode }),
-        });
+  for (;;) {
+    await delay(pollMs);
 
-        if (!response.ok) {
-          clearInterval(timer);
-          reject(new Error('token-exchange-failed'));
-          return;
-        }
+    const response = await fetch('/api/github/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_code: deviceCode }),
+    });
 
-        const data = await response.json() as {
-          access_token?: string;
-          error?: string;
-        };
+    if (!response.ok) {
+      throw new Error('token-exchange-failed');
+    }
 
-        if (data.access_token) {
-          clearInterval(timer);
-          resolve(data.access_token);
-          return;
-        }
+    const data = await response.json() as {
+      access_token?: string;
+      error?: string;
+    };
 
-        if (data.error === 'expired_token') {
-          clearInterval(timer);
-          reject(new Error('expired'));
-          return;
-        }
+    if (data.access_token) {
+      return data.access_token;
+    }
 
-        if (data.error === 'access_denied') {
-          clearInterval(timer);
-          reject(new Error('denied'));
-          return;
-        }
+    if (data.error === 'slow_down') {
+      pollMs += 5000;
+      continue;
+    }
 
-        // authorization_pending or slow_down → keep polling
-      } catch (error) {
-        clearInterval(timer);
-        reject(error);
-      }
-    }, pollInterval);
-  });
+    if (data.error === 'expired_token') {
+      throw new Error('expired');
+    }
+
+    if (data.error === 'access_denied') {
+      throw new Error('denied');
+    }
+  }
 }
 
 async function fetchUser(token: string): Promise<GitHubUser> {

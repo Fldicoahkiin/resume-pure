@@ -255,7 +255,8 @@
       "githubAuthExpired": "Authorization expired, please try again.",
       "githubAuthFailed": "GitHub authorization failed, please try again.",
       "githubDeviceHint": "Enter this code on the page that opened:",
-      "githubOpenVerify": "Open verification page"
+      "githubOpenVerify": "Open verification page",
+      "githubManualToken": "Or paste a Personal Access Token manually ▸"
     },
     "actions": {
       "delete": "Delete",

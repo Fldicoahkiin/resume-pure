@@ -255,7 +255,8 @@
       "githubAuthExpired": "授权已过期，请重试。",
       "githubAuthFailed": "GitHub 授权失败，请重试。",
       "githubDeviceHint": "请在打开的页面中输入以下验证码：",
-      "githubOpenVerify": "打开验证页面"
+      "githubOpenVerify": "打开验证页面",
+      "githubManualToken": "或手动填入 Personal Access Token ▸"
     },
     "actions": {
       "delete": "删除",
