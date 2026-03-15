@@ -1,8 +1,30 @@
-/**
- * 导出为 PNG 图片
- */
+export const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
+
+export async function readImageFileAsDataUrl(file: File, maxBytes: number = MAX_EMBEDDED_LOGO_BYTES): Promise<string> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('invalid-image-type');
+  }
+
+  if (file.size > maxBytes) {
+    throw new Error('image-too-large');
+  }
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error('image-read-failed'));
+    };
+    reader.onerror = () => reject(new Error('image-read-failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function exportToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
-  // 动态导入 html-to-image
   const htmlToImage = await import('html-to-image');
 
   const element = document.getElementById(elementId);
@@ -15,7 +37,7 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
       quality: 1,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
-      skipFonts: true, // 跳过字体嵌入，避免 font is undefined 错误
+      skipFonts: true,
     });
 
     const link = document.createElement('a');

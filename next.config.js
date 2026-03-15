@@ -12,6 +12,17 @@ const nextConfig = {
   assetPrefix: process.env.GITHUB_PAGES ? '/resume-pure/' : '',
   images: {
     unoptimized: true,
+    dangerouslyAllowSVG: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.jsdelivr.net',
+      },
+    ],
   },
 };
 
