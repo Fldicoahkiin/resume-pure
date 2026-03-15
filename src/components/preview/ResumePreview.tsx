@@ -1,10 +1,11 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
-import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign, Star } from 'lucide-react';
 import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, ThemeConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { LogoBadge } from '@/components/LogoBadge';
 import { getPaperDimensions } from '@/lib/paper';
 import {
   customContactAnchor,
@@ -13,9 +14,12 @@ import {
   experienceAnchor,
   personalInfoFieldAnchor,
   projectAnchor,
+  projectContributionAnchor,
   sectionAnchor,
   skillAnchor,
+  skillItemAnchor,
 } from '@/lib/previewAnchor';
+import { resolveSkillLogo } from '@/lib/skillLogo';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
 const DEFAULT_PAPER_DIMENSIONS = getPaperDimensions('A4');
@@ -54,17 +58,21 @@ function SelectableBlock({
     ? 'ring-2 ring-blue-400 bg-blue-50/70 dark:bg-blue-900/25'
     : '';
 
+  const interactiveProps = isSelectable ? {
+    role: 'button',
+    tabIndex: 0,
+    onClick: handleActivate,
+    onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleActivate();
+      }
+    },
+  } : {};
+
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleActivate}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          handleActivate();
-        }
-      }}
+      {...interactiveProps}
       className={`${className || ''} ${interactiveClass} ${activeClass}`.trim()}
     >
       {children}
@@ -113,7 +121,7 @@ function sanitizeUrl(url: string | undefined): string | undefined {
   return undefined;
 }
 
-function getSectionTitle(sectionId: string, customTitle: string | undefined, t: (key: string) => string): string {
+function getSectionTitle(sectionId: string, customTitle: string | undefined, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (customTitle) return customTitle;
 
   switch (sectionId) {
@@ -256,6 +264,351 @@ function DescriptionList({
   );
 }
 
+
+const PRINT_SAFE_BLOCK_STYLE: CSSProperties = {
+  breakInside: 'avoid-page',
+  pageBreakInside: 'avoid',
+};
+
+function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+
+function formatGitHubPath(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'github.com' || parsed.hostname === 'www.github.com') {
+      return parsed.pathname.replace(/^\//, '').replace(/\.git$/i, '').replace(/\/$/, '');
+    }
+  } catch { /* ignore */ }
+  return url;
+}
+
+function formatContributionRef(url: string): string | null {
+  if (!url) return null;
+  const prMatch = url.match(/\/pull\/(\d+)/);
+  if (prMatch) return `PR #${prMatch[1]}`;
+  const commitMatch = url.match(/\/commit\/([a-f0-9]{7,})/i);
+  if (commitMatch) return commitMatch[1].substring(0, 7);
+  const issueMatch = url.match(/\/issues\/(\d+)/);
+  if (issueMatch) return `#${issueMatch[1]}`;
+  return null;
+}
+
+function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; fontSize: number }) {
+  if (technologies.length === 0) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-gray-500" style={{ fontSize: `${fontSize - 2}pt` }}>
+      {withStableStringKey(technologies, 'tech').map((tech, index) => {
+        const logo = resolveSkillLogo(tech.value);
+        return (
+          <span key={tech.key} className="inline-flex items-center gap-0.5">
+            {index > 0 && <span className="mr-0.5 text-gray-300">·</span>}
+            {logo && (
+              <span
+                className="inline-block shrink-0"
+                style={{
+                  width: '1em',
+                  height: '1em',
+                  backgroundColor: logo.color,
+                  WebkitMaskImage: `url(${logo.src})`,
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskImage: `url(${logo.src})`,
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                }}
+              />
+            )}
+            {tech.value}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProjectContributionList({
+  project,
+  theme,
+  fontSize,
+  onSelectAnchor,
+  activeAnchor,
+}: {
+  project: Project;
+  theme: ThemeConfig;
+  fontSize: number;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
+}) {
+  const contributions = project.contributions || [];
+  if (project.showContributions === false || contributions.length === 0) return null;
+
+  return (
+    <div className="mt-1.5">
+      <ul className="space-y-0.5">
+        {contributions.map((contribution) => {
+          const anchor = projectContributionAnchor(project.id, contribution.id);
+          const href = sanitizeUrl(contribution.url);
+          const ref = formatContributionRef(contribution.url);
+
+          return (
+            <SelectableBlock
+              key={contribution.id}
+              anchor={anchor}
+              activeAnchor={activeAnchor}
+              onSelectAnchor={onSelectAnchor}
+              className="-mx-1 rounded-sm px-1"
+            >
+              <li className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
+                <span className="mr-2 text-gray-400">•</span>
+                <span className="flex-1">
+                  {contribution.summary}
+                  {ref && (
+                    <>
+                      {' '}
+                      {!onSelectAnchor && href && theme.enableLinks !== false ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 hover:text-blue-600 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {ref}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">{ref}</span>
+                      )}
+                    </>
+                  )}
+                </span>
+              </li>
+            </SelectableBlock>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function ProjectPreviewCard({
+  project,
+  theme,
+  fontSize,
+  t,
+  onSelectAnchor,
+  activeAnchor,
+}: {
+  project: Project;
+  theme: ThemeConfig;
+  fontSize: number;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
+}) {
+  const itemAnchor = projectAnchor(project.id);
+  const repoPath = project.repoUrl ? formatGitHubPath(project.repoUrl) : null;
+  const repoHref = sanitizeUrl(project.repoUrl);
+
+  return (
+    <div style={PRINT_SAFE_BLOCK_STYLE}>
+      <SelectableBlock
+        anchor={itemAnchor}
+        activeAnchor={activeAnchor}
+        onSelectAnchor={onSelectAnchor}
+        className="-mx-1 rounded-sm px-1 py-0.5"
+      >
+        <div className="flex gap-3">
+          {project.showLogo !== false && (project.customLogo || project.repoAvatarUrl) && (
+            <LogoBadge
+              src={project.customLogo || project.repoAvatarUrl}
+              alt={project.name}
+              label={project.name}
+              size={36}
+              variant="round"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex justify-between gap-3">
+              <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fontSize}pt` }}>
+                {project.name}
+              </h3>
+              {project.role && (
+                <span className="text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
+                  · {project.role}
+                </span>
+              )}
+              {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 && (
+                <span
+                  className="inline-flex items-center gap-0.5 text-amber-600"
+                  style={{ fontSize: `${fontSize - 2}pt` }}
+                >
+                  <Star size={12} />
+                  {formatCompactNumber(project.repoStars)}
+                </span>
+              )}
+            </div>
+            {(repoPath || project.url) && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
+                {repoPath && (
+                  <span className="inline-flex items-center gap-1">
+                    <Github size={12} />
+                    {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
+                      <a
+                        href={repoHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 hover:underline"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {repoPath}
+                      </a>
+                    ) : (
+                      <span>{repoPath}</span>
+                    )}
+                  </span>
+                )}
+                {project.url && (
+                  <span className="inline-flex items-center gap-1">
+                    <Link size={12} />
+                    {!onSelectAnchor && theme.enableLinks !== false ? (
+                      <a
+                        href={sanitizeUrl(project.url) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 hover:underline"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {project.url}
+                      </a>
+                    ) : (
+                      <span>{project.url}</span>
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
+              </div>
+              <span className="shrink-0 text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
+                {project.startDate || project.endDate || project.current ? (
+                  <>
+                    {project.startDate}
+                    {(project.startDate && (project.endDate || project.current)) && ' - '}
+                    {project.current ? t('preview.present') : project.endDate}
+                  </>
+                ) : null}
+              </span>
+            </div>
+
+        <DescriptionList
+          items={project.description}
+          fontSize={fontSize}
+          showBulletPoints={project.showBulletPoints !== false}
+        />
+
+        {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 && (
+          <ProjectTechTags technologies={project.technologies} fontSize={fontSize} />
+        )}
+          </div>
+        </div>
+      </SelectableBlock>
+
+      <ProjectContributionList
+        project={project}
+        theme={theme}
+        fontSize={fontSize}
+        t={t}
+        onSelectAnchor={onSelectAnchor}
+        activeAnchor={activeAnchor}
+      />
+    </div>
+  );
+}
+
+function SkillCategoryPreview({
+  skill,
+  fontSize,
+  t,
+  onSelectAnchor,
+  activeAnchor,
+}: {
+  skill: Skill;
+  theme: ThemeConfig;
+  fontSize: number;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
+}) {
+  const categoryAnchor = skillAnchor(skill.id);
+  const coreItems = skill.items.filter((item) => item.level === 'core');
+  const proficientItems = skill.items.filter((item) => item.level === 'proficient');
+  const familiarItems = skill.items.filter((item) => item.level === 'familiar');
+
+  return (
+    <div style={PRINT_SAFE_BLOCK_STYLE}>
+      <SelectableBlock
+        anchor={categoryAnchor}
+        activeAnchor={activeAnchor}
+        onSelectAnchor={onSelectAnchor}
+        className="-mx-1 rounded-sm px-1 py-0.5"
+      >
+        <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fontSize}pt` }}>
+          {skill.category}
+        </h3>
+      </SelectableBlock>
+
+      {coreItems.length > 0 && (
+        <div className="mt-1 space-y-0.5">
+          {coreItems.map((item) => {
+            const anchor = skillItemAnchor(skill.id, item.id);
+            return (
+              <SelectableBlock
+                key={item.id}
+                anchor={anchor}
+                activeAnchor={activeAnchor}
+                onSelectAnchor={onSelectAnchor}
+                className="-mx-1 rounded-sm px-1"
+              >
+                <p style={{ fontSize: `${fontSize - 1}pt` }}>
+                  <span className="font-medium text-gray-800">{item.name}</span>
+                  {item.showContext !== false && item.context && (
+                    <span className="text-gray-500"> — {item.context}</span>
+                  )}
+                </p>
+              </SelectableBlock>
+            );
+          })}
+        </div>
+      )}
+
+      {proficientItems.length > 0 && (
+        <p className="mt-1.5 text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
+          <span className="font-medium">{t('preview.skillLevel.proficient')}:</span>{' '}
+          {proficientItems.map((item) => item.name).join(' · ')}
+        </p>
+      )}
+
+      {familiarItems.length > 0 && (
+        <p className="mt-1 text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
+          <span className="font-medium">{t('preview.skillLevel.familiar')}:</span>{' '}
+          {familiarItems.map((item) => item.name).join(' · ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 interface ResumeSectionsProps {
   visibleSections: SectionConfig[];
   experience: Experience[];
@@ -265,7 +618,7 @@ interface ResumeSectionsProps {
   customSections: CustomSection[];
   theme: ThemeConfig;
   fs: number;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
   onSelectAnchor?: (anchor: string) => void;
   activeAnchor?: string | null;
 }
@@ -423,48 +776,17 @@ function renderResumeSectionsContent({
                   onSelectAnchor={onSelectAnchor}
                 />
                 <div className="space-y-3">
-                  {projects.map(proj => {
-                    const itemAnchor = projectAnchor(proj.id);
-
-                    return (
-                      <SelectableBlock
-                        key={proj.id}
-                        anchor={itemAnchor}
-                        activeAnchor={activeAnchor}
-                        onSelectAnchor={onSelectAnchor}
-                        className="-mx-1 px-1 py-0.5"
-                      >
-                        <div className="flex justify-between items-baseline">
-                          <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
-                            {proj.name}
-                            {proj.role && (
-                              <span className="font-normal text-gray-600"> · {proj.role}</span>
-                            )}
-                          </h3>
-                          <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>
-                            {proj.startDate || proj.endDate || proj.current ? (
-                              <>
-                                {proj.startDate}
-                                {(proj.startDate && (proj.endDate || proj.current)) && ' - '}
-                                {proj.current ? t('preview.present') : proj.endDate}
-                              </>
-                            ) : null}
-                          </span>
-                        </div>
-                        <DescriptionList
-                          items={proj.description}
-                          fontSize={fs}
-                          showBulletPoints={proj.showBulletPoints !== false}
-                        />
-                        {proj.technologies && proj.technologies.length > 0 && (
-                          <p className="text-gray-500 mt-1.5" style={{ fontSize: `${fs - 1}pt` }}>
-                            <span className="font-medium">{t('preview.technologies')}</span>
-                            {proj.technologies.join(' · ')}
-                          </p>
-                        )}
-                      </SelectableBlock>
-                    );
-                  })}
+                  {projects.map((project) => (
+                    <ProjectPreviewCard
+                      key={project.id}
+                      project={project}
+                      theme={theme}
+                      fontSize={fs}
+                      t={t}
+                      onSelectAnchor={onSelectAnchor}
+                      activeAnchor={activeAnchor}
+                    />
+                  ))}
                 </div>
               </section>
             );
@@ -481,36 +803,18 @@ function renderResumeSectionsContent({
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
                 />
-                <div className="space-y-2">
-                  {skills.map(skill => {
-                    const itemAnchor = skillAnchor(skill.id);
-
-                    return (
-                      <SelectableBlock
-                        key={skill.id}
-                        anchor={itemAnchor}
-                        activeAnchor={activeAnchor}
-                        onSelectAnchor={onSelectAnchor}
-                        className="-mx-1 px-1 py-0.5"
-                      >
-                        <div style={{ fontSize: `${fs - 1}pt` }}>
-                          {skill.category && (
-                            <span className="font-semibold text-gray-800 mr-2">
-                              {skill.category}:
-                            </span>
-                          )}
-                          <span className="text-gray-700">
-                            {withStableStringKey(skill.items, 'skill-item').map((item, idx) => (
-                              <span key={item.key}>
-                                {idx > 0 && <span className="mx-1.5 text-gray-400">•</span>}
-                                {item.value}
-                              </span>
-                            ))}
-                          </span>
-                        </div>
-                      </SelectableBlock>
-                    );
-                  })}
+                <div className="space-y-3">
+                  {skills.map((skill) => (
+                    <SkillCategoryPreview
+                      key={skill.id}
+                      skill={skill}
+                      theme={theme}
+                      fontSize={fs}
+                      t={t}
+                      onSelectAnchor={onSelectAnchor}
+                      activeAnchor={activeAnchor}
+                    />
+                  ))}
                 </div>
               </section>
             );
