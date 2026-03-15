@@ -246,7 +246,8 @@
       "relaxed": "宽松",
       "enableLinks": "启用超链接",
       "enableLinksHint": "导出 PDF 时可点击跳转",
-      "moreSettings": "更多设置功能即将推出..."
+      "moreSettings": "更多设置功能即将推出...",
+      "githubTokenHint": "填入 GitHub Personal Access Token 可提高 API 速率限额（60→5000/小时），在 GitHub Settings → Developer settings → Tokens 中生成。"
     },
     "actions": {
       "delete": "删除",

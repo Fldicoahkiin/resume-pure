@@ -246,7 +246,8 @@
       "relaxed": "Relaxed",
       "enableLinks": "Enable Hyperlinks",
       "enableLinksHint": "Clickable links in exported PDF",
-      "moreSettings": "More settings coming soon..."
+      "moreSettings": "More settings coming soon...",
+      "githubTokenHint": "Enter a GitHub Personal Access Token to increase API rate limit (60→5000/hr). Generate one at GitHub Settings → Developer settings → Tokens."
     },
     "actions": {
       "delete": "Delete",

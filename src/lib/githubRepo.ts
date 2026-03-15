@@ -10,6 +10,23 @@ export interface GitHubRepoMeta extends GitHubRepoReference {
   htmlUrl: string;
 }
 
+const GITHUB_TOKEN_KEY = 'resume-pure:github-token';
+
+export function getGitHubToken(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(GITHUB_TOKEN_KEY) || '';
+}
+
+export function setGitHubToken(token: string): void {
+  if (typeof window === 'undefined') return;
+  const trimmed = token.trim();
+  if (trimmed) {
+    localStorage.setItem(GITHUB_TOKEN_KEY, trimmed);
+  } else {
+    localStorage.removeItem(GITHUB_TOKEN_KEY);
+  }
+}
+
 function normalizeInputUrl(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
@@ -64,10 +81,16 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
     throw new Error('invalid-url');
   }
 
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+  };
+  const token = getGitHubToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch(`https://api.github.com/repos/${reference.owner}/${reference.repo}`, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-    },
+    headers,
   });
 
   if (!response.ok) {

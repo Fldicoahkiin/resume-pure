@@ -1,10 +1,11 @@
 'use client';
 
 import { useResumeStore } from '@/store/resumeStore';
-import { Settings, RotateCcw } from 'lucide-react';
+import { Settings, RotateCcw, Github } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FontSelector } from './FontSelector';
 import { PAPER_SIZE_OPTIONS } from '@/lib/paper';
+import { getGitHubToken, setGitHubToken } from '@/lib/githubRepo';
 import type { PaperSize } from '@/types';
 
 const presetColors = [
@@ -209,6 +210,26 @@ export function ThemeEditor() {
                 }`}
             />
           </button>
+        </div>
+
+        {/* GitHub Token */}
+        <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            <Github size={16} className="text-gray-600 dark:text-gray-400" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              GitHub Token
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {t('editor.theme.githubTokenHint')}
+          </p>
+          <input
+            type="password"
+            defaultValue={getGitHubToken()}
+            onChange={(e) => setGitHubToken(e.target.value)}
+            className="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            placeholder="ghp_xxxxxxxxxxxx"
+          />
         </div>
       </div>
 
