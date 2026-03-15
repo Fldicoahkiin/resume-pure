@@ -247,7 +247,15 @@
       "enableLinks": "启用超链接",
       "enableLinksHint": "导出 PDF 时可点击跳转",
       "moreSettings": "更多设置功能即将推出...",
-      "githubTokenHint": "填入 GitHub Personal Access Token 可提高 API 速率限额（60→5000/小时），在 GitHub Settings → Developer settings → Tokens 中生成。"
+      "githubTokenHint": "登录 GitHub 可提高 API 速率限额，支持同步仓库信息。",
+      "githubLogin": "登录 GitHub",
+      "githubLogout": "退出",
+      "githubConnected": "已连接",
+      "githubAuthWaiting": "等待授权...",
+      "githubAuthExpired": "授权已过期，请重试。",
+      "githubAuthFailed": "GitHub 授权失败，请重试。",
+      "githubDeviceHint": "请在打开的页面中输入以下验证码：",
+      "githubOpenVerify": "打开验证页面"
     },
     "actions": {
       "delete": "删除",

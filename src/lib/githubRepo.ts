@@ -10,22 +10,7 @@ export interface GitHubRepoMeta extends GitHubRepoReference {
   htmlUrl: string;
 }
 
-const GITHUB_TOKEN_KEY = 'resume-pure:github-token';
-
-export function getGitHubToken(): string {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem(GITHUB_TOKEN_KEY) || '';
-}
-
-export function setGitHubToken(token: string): void {
-  if (typeof window === 'undefined') return;
-  const trimmed = token.trim();
-  if (trimmed) {
-    localStorage.setItem(GITHUB_TOKEN_KEY, trimmed);
-  } else {
-    localStorage.removeItem(GITHUB_TOKEN_KEY);
-  }
-}
+import { getStoredToken } from './githubAuth';
 
 function normalizeInputUrl(input: string): string | null {
   const trimmed = input.trim();
@@ -84,7 +69,7 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
   };
-  const token = getGitHubToken();
+  const token = getStoredToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }

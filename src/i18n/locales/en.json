@@ -247,7 +247,15 @@
       "enableLinks": "Enable Hyperlinks",
       "enableLinksHint": "Clickable links in exported PDF",
       "moreSettings": "More settings coming soon...",
-      "githubTokenHint": "Enter a GitHub Personal Access Token to increase API rate limit (60→5000/hr). Generate one at GitHub Settings → Developer settings → Tokens."
+      "githubTokenHint": "Sign in with GitHub to increase API rate limit and sync repo info.",
+      "githubLogin": "Sign in with GitHub",
+      "githubLogout": "Sign out",
+      "githubConnected": "Connected",
+      "githubAuthWaiting": "Waiting for authorization...",
+      "githubAuthExpired": "Authorization expired, please try again.",
+      "githubAuthFailed": "GitHub authorization failed, please try again.",
+      "githubDeviceHint": "Enter this code on the page that opened:",
+      "githubOpenVerify": "Open verification page"
     },
     "actions": {
       "delete": "Delete",
