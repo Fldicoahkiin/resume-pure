@@ -12,7 +12,13 @@ interface PDFTranslations {
   projects: string;
   skills: string;
   technologies: string;
+  contributions: string;
   present: string;
+  skillLevel: {
+    core: string;
+    proficient: string;
+    familiar: string;
+  };
 }
 
 export function ExportButtons() {
@@ -32,7 +38,13 @@ export function ExportButtons() {
         projects: t('pdf.projects'),
         skills: t('pdf.skills'),
         technologies: t('pdf.technologies'),
+        contributions: t('pdf.contributions'),
         present: t('pdf.present'),
+        skillLevel: {
+          core: t('pdf.skillLevel.core'),
+          proficient: t('pdf.skillLevel.proficient'),
+          familiar: t('pdf.skillLevel.familiar'),
+        },
       };
       await exportToPDF(resume, 'resume.pdf', pdfTranslations);
     } catch (error) {

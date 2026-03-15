@@ -8,7 +8,9 @@ const SECTION_PREFIX = 'section:';
 const EXPERIENCE_PREFIX = 'experience:';
 const EDUCATION_PREFIX = 'education:';
 const PROJECT_PREFIX = 'projects:';
+const PROJECT_CONTRIBUTION_PREFIX = 'projectContribution:';
 const SKILL_PREFIX = 'skills:';
+const SKILL_ITEM_PREFIX = 'skillItem:';
 const CUSTOM_PREFIX = 'custom:';
 
 export function sectionAnchor(sectionId: string): string {
@@ -37,20 +39,48 @@ export function projectAnchor(id: string): string {
   return `${PROJECT_PREFIX}${id}`;
 }
 
+export function projectContributionAnchor(projectId: string, contributionId: string): string {
+  return `${PROJECT_CONTRIBUTION_PREFIX}${projectId}:${contributionId}`;
+}
+
 export function skillAnchor(id: string): string {
   return `${SKILL_PREFIX}${id}`;
+}
+
+export function skillItemAnchor(skillId: string, itemId: string): string {
+  return `${SKILL_ITEM_PREFIX}${skillId}:${itemId}`;
 }
 
 export function customItemAnchor(sectionId: string, itemId: string): string {
   return `${CUSTOM_PREFIX}${sectionId}:${itemId}`;
 }
 
+type ParsedKind =
+  | 'personalInfo'
+  | 'personalField'
+  | 'contact'
+  | 'section'
+  | 'experience'
+  | 'education'
+  | 'projects'
+  | 'projectContribution'
+  | 'skills'
+  | 'skillItem'
+  | 'custom'
+  | 'unknown';
+
 interface ParsedPreviewAnchor {
-  kind: 'personalInfo' | 'personalField' | 'contact' | 'section' | 'experience' | 'education' | 'projects' | 'skills' | 'custom' | 'unknown';
+  kind: ParsedKind;
   sectionId?: string;
   field?: string;
   contactId?: string;
   itemId?: string;
+  parentId?: string;
+}
+
+function parseNestedAnchor(value: string): { parentId?: string; itemId?: string } {
+  const [parentId, itemId] = value.split(':');
+  return { parentId, itemId };
 }
 
 function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
@@ -97,11 +127,31 @@ function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
     };
   }
 
+  if (anchor.startsWith(PROJECT_CONTRIBUTION_PREFIX)) {
+    const { parentId, itemId } = parseNestedAnchor(anchor.slice(PROJECT_CONTRIBUTION_PREFIX.length));
+    return {
+      kind: 'projectContribution',
+      sectionId: 'projects',
+      parentId,
+      itemId,
+    };
+  }
+
   if (anchor.startsWith(PROJECT_PREFIX)) {
     return {
       kind: 'projects',
       sectionId: 'projects',
       itemId: anchor.slice(PROJECT_PREFIX.length),
+    };
+  }
+
+  if (anchor.startsWith(SKILL_ITEM_PREFIX)) {
+    const { parentId, itemId } = parseNestedAnchor(anchor.slice(SKILL_ITEM_PREFIX.length));
+    return {
+      kind: 'skillItem',
+      sectionId: 'skills',
+      parentId,
+      itemId,
     };
   }
 
@@ -135,6 +185,14 @@ export function getSectionIdFromPreviewAnchor(anchor: string): string | undefine
 export function getEditorAnchorCandidates(anchor: string): string[] {
   const parsed = parsePreviewAnchor(anchor);
   const candidates = [anchor];
+
+  if (parsed.kind === 'projectContribution' && parsed.parentId) {
+    candidates.push(projectAnchor(parsed.parentId));
+  }
+
+  if (parsed.kind === 'skillItem' && parsed.parentId) {
+    candidates.push(skillAnchor(parsed.parentId));
+  }
 
   if (parsed.sectionId && parsed.kind !== 'section' && parsed.sectionId !== 'personalInfo') {
     candidates.push(sectionAnchor(parsed.sectionId));
@@ -255,6 +313,24 @@ export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJu
     }
   }
 
+  if (parsed.kind === 'projectContribution' && parsed.parentId && parsed.itemId && resume) {
+    const projectIndex = resume.projects.findIndex((item) => item.id === parsed.parentId);
+    if (projectIndex < 0) return null;
+
+    const project = resume.projects[projectIndex];
+    const contributionIndex = (project.contributions || []).findIndex((item) => item.id === parsed.itemId);
+    if (contributionIndex < 0) return null;
+
+    return {
+      arrayPath: ['projects'],
+      itemIndex: projectIndex,
+      nestedArrayPath: ['contributions'],
+      nestedItemIndex: contributionIndex,
+      focusKey: 'summary',
+      fallbackFocusKey: 'url',
+    };
+  }
+
   if (parsed.kind === 'skills' && parsed.itemId && resume) {
     const itemIndex = resume.skills.findIndex((item) => item.id === parsed.itemId);
     if (itemIndex >= 0) {
@@ -264,6 +340,24 @@ export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJu
         focusKey: 'category',
       };
     }
+  }
+
+  if (parsed.kind === 'skillItem' && parsed.parentId && parsed.itemId && resume) {
+    const skillIndex = resume.skills.findIndex((item) => item.id === parsed.parentId);
+    if (skillIndex < 0) return null;
+
+    const skill = resume.skills[skillIndex];
+    const skillItemIndex = skill.items.findIndex((item) => item.id === parsed.itemId);
+    if (skillItemIndex < 0) return null;
+
+    return {
+      arrayPath: ['skills'],
+      itemIndex: skillIndex,
+      nestedArrayPath: ['items'],
+      nestedItemIndex: skillItemIndex,
+      focusKey: 'name',
+      fallbackFocusKey: 'context',
+    };
   }
 
   if (parsed.kind === 'custom' && parsed.sectionId && parsed.itemId && resume) {
@@ -331,7 +425,7 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
     push(
       `"${field}":`,
       `${field}:`,
-      `"personalInfo"`,
+      '"personalInfo"',
       'personalInfo:',
     );
 
@@ -429,9 +523,6 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
     }
 
     push(
-      `"id": "${parsed.itemId}"`,
-      `id: ${parsed.itemId}`,
-      `id: "${parsed.itemId}"`,
       `"${sectionToken}"`,
       `${sectionToken}:`,
       `"key": "${sectionToken}"`,
@@ -454,14 +545,33 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
         const item = resume.projects.find((record) => record.id === parsed.itemId);
         if (item) {
           push(...getValueSearchPatterns(item.name), ...getValueSearchPatterns(item.role));
+          push(...getValueSearchPatterns(item.repoUrl), ...getValueSearchPatterns(item.url));
+        }
+      } else if (parsed.kind === 'projectContribution' && parsed.parentId) {
+        const project = resume.projects.find((record) => record.id === parsed.parentId);
+        const contribution = project?.contributions?.find((record) => record.id === parsed.itemId);
+        if (project) {
+          push(...getValueSearchPatterns(project.name));
+        }
+        if (contribution) {
+          push(...getValueSearchPatterns(contribution.summary), ...getValueSearchPatterns(contribution.url));
         }
       } else if (parsed.kind === 'skills') {
         const item = resume.skills.find((record) => record.id === parsed.itemId);
         if (item) {
           push(...getValueSearchPatterns(item.category));
           if (item.items.length > 0) {
-            push(...getValueSearchPatterns(item.items[0]));
+            push(...getValueSearchPatterns(item.items[0].name));
           }
+        }
+      } else if (parsed.kind === 'skillItem' && parsed.parentId) {
+        const skill = resume.skills.find((record) => record.id === parsed.parentId);
+        const skillItem = skill?.items.find((record) => record.id === parsed.itemId);
+        if (skill) {
+          push(...getValueSearchPatterns(skill.category));
+        }
+        if (skillItem) {
+          push(...getValueSearchPatterns(skillItem.name), ...getValueSearchPatterns(skillItem.context));
         }
       } else if (parsed.kind === 'custom' && parsed.sectionId) {
         const section = resume.customSections.find((record) => record.id === parsed.sectionId);
