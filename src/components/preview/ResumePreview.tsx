@@ -309,22 +309,14 @@ function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; f
           <span key={tech.key} className="inline-flex items-center gap-0.5">
             {index > 0 && <span className="mr-0.5 text-gray-300">·</span>}
             {logo && (
-              <span
-                className="inline-block shrink-0"
-                style={{
-                  width: '1em',
-                  height: '1em',
-                  backgroundColor: logo.color,
-                  WebkitMaskImage: `url(${logo.src})`,
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  maskImage: `url(${logo.src})`,
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                }}
-              />
+              <svg
+                viewBox="0 0 24 24"
+                fill={logo.color}
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0 }}
+              >
+                <path d={logo.svgPath} />
+              </svg>
             )}
             {tech.value}
           </span>
@@ -554,6 +546,25 @@ function SkillCategoryPreview({
   const proficientItems = skill.items.filter((item) => item.level === 'proficient');
   const familiarItems = skill.items.filter((item) => item.level === 'familiar');
 
+  const renderSkillName = (name: string) => {
+    const logo = resolveSkillLogo(name);
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        {logo && (
+          <svg
+            viewBox="0 0 24 24"
+            fill={logo.color}
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0 }}
+          >
+            <path d={logo.svgPath} />
+          </svg>
+        )}
+        {name}
+      </span>
+    );
+  };
+
   return (
     <div style={PRINT_SAFE_BLOCK_STYLE}>
       <SelectableBlock
@@ -580,7 +591,7 @@ function SkillCategoryPreview({
                 className="-mx-1 rounded-sm px-1"
               >
                 <p style={{ fontSize: `${fontSize - 1}pt` }}>
-                  <span className="font-medium text-gray-800">{item.name}</span>
+                  <span className="font-medium text-gray-800">{renderSkillName(item.name)}</span>
                   {item.showContext !== false && item.context && (
                     <span className="text-gray-500"> — {item.context}</span>
                   )}
@@ -594,14 +605,24 @@ function SkillCategoryPreview({
       {proficientItems.length > 0 && (
         <p className="mt-1.5 text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
           <span className="font-medium">{t('preview.skillLevel.proficient')}:</span>{' '}
-          {proficientItems.map((item) => item.name).join(' · ')}
+          {proficientItems.map((item, index) => (
+            <span key={item.id}>
+              {index > 0 && ' · '}
+              {renderSkillName(item.name)}
+            </span>
+          ))}
         </p>
       )}
 
       {familiarItems.length > 0 && (
         <p className="mt-1 text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
           <span className="font-medium">{t('preview.skillLevel.familiar')}:</span>{' '}
-          {familiarItems.map((item) => item.name).join(' · ')}
+          {familiarItems.map((item, index) => (
+            <span key={item.id}>
+              {index > 0 && ' · '}
+              {renderSkillName(item.name)}
+            </span>
+          ))}
         </p>
       )}
     </div>

@@ -179,8 +179,10 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                 <div className="space-y-3">
                   {skill.items.map((item, index) => {
                     const resolvedLogo = resolveSkillLogo(item.name);
-                    const previewLogo = item.logo || resolvedLogo?.src;
-                    const previewColor = item.logo ? undefined : resolvedLogo?.color;
+                    const resolvedSvgUrl = resolvedLogo
+                      ? `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${resolvedLogo.color}"><path d="${resolvedLogo.svgPath}"/></svg>`)}`
+                      : undefined;
+                    const previewLogo = item.logo || resolvedSvgUrl;
                     const errorKey = `${skill.id}:${item.id}`;
 
                     return (
@@ -226,7 +228,6 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                               label={item.name || t('editor.skills.logoTitle')}
                               size={68}
                               fit="contain"
-                              accentColor={previewColor}
                             />
                             <label className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
                               <ImageIcon size={12} />

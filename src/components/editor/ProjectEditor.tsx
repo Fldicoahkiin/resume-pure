@@ -40,9 +40,7 @@ interface ProjectCardProps {
   onUpdateContribution: (project: Project, contributionId: string, patch: Partial<ProjectContribution>) => void;
 }
 
-function splitCommaValues(value: string): string[] {
-  return value.split(',').map((item) => item.trim()).filter(Boolean);
-}
+
 
 function getDateValue(project: Project, presentLabel: string): string {
   if (project.current) {
@@ -362,6 +360,30 @@ function ProjectTechPanel({
   t: TranslationFn;
   onUpdate: (patch: Partial<Project>) => void;
 }) {
+  const [inputValue, setInputValue] = useState('');
+  const technologies = project.technologies || [];
+
+  const addTech = (raw: string) => {
+    const value = raw.trim();
+    if (!value || technologies.includes(value)) return;
+    onUpdate({ technologies: [...technologies, value] });
+  };
+
+  const removeTech = (index: number) => {
+    onUpdate({ technologies: technologies.filter((_, i) => i !== index) });
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      addTech(inputValue);
+      setInputValue('');
+    }
+    if (event.key === 'Backspace' && inputValue === '' && technologies.length > 0) {
+      removeTech(technologies.length - 1);
+    }
+  };
+
   return (
     <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800/60">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -376,16 +398,37 @@ function ProjectTechPanel({
           onClick={() => onUpdate({ showTechnologies: project.showTechnologies === false })}
         />
       </div>
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {t('editor.projects.technologies')}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-700">
+        {technologies.map((tech, index) => (
+          <span
+            key={`${tech}-${index}`}
+            className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-200"
+          >
+            {tech}
+            <button
+              type="button"
+              onClick={() => removeTech(index)}
+              className="ml-0.5 text-gray-400 transition hover:text-red-500"
+            >
+              ×
+            </button>
+          </span>
+        ))}
         <input
           type="text"
-          value={(project.technologies || []).join(', ')}
-          onChange={(event) => onUpdate({ technologies: splitCommaValues(event.target.value) })}
-          className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          placeholder={t('editor.projects.technologiesPlaceholder')}
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={() => {
+            if (inputValue.trim()) {
+              addTech(inputValue);
+              setInputValue('');
+            }
+          }}
+          className="min-w-[120px] flex-1 bg-transparent px-1 py-1 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
+          placeholder={technologies.length === 0 ? t('editor.projects.technologiesPlaceholder') : ''}
         />
-      </label>
+      </div>
     </div>
   );
 }
