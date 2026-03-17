@@ -66,7 +66,7 @@ function getDateRange(startDate: string, endDate: string, current: boolean | und
 }
 
 function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: PDFTranslations) {
-  const { Document, Page, Text, View, StyleSheet, Svg, Path } = renderer;
+  const { Document, Page, Text, View, StyleSheet, Svg, Path, Image } = renderer;
 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
@@ -207,23 +207,23 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
       >
         <View style={styles.header}>
           <Text style={styles.name}>{data.personalInfo.name}</Text>
-          {data.personalInfo.title && (
+          {data.personalInfo.title ? (
             <Text style={styles.title}>{data.personalInfo.title}</Text>
-          )}
+          ) : null}
           <View style={styles.contactInfo}>
-            {data.personalInfo.email && <Text style={styles.contactItem}>{data.personalInfo.email}</Text>}
-            {data.personalInfo.phone && <Text style={styles.contactItem}>{data.personalInfo.phone}</Text>}
-            {data.personalInfo.location && <Text style={styles.contactItem}>{data.personalInfo.location}</Text>}
-            {data.personalInfo.website && <Text style={styles.contactItem}>{data.personalInfo.website}</Text>}
-            {data.personalInfo.linkedin && <Text style={styles.contactItem}>{data.personalInfo.linkedin}</Text>}
-            {data.personalInfo.github && <Text style={styles.contactItem}>{data.personalInfo.github}</Text>}
+            {data.personalInfo.email ? <Text style={styles.contactItem}>{data.personalInfo.email}</Text> : null}
+            {data.personalInfo.phone ? <Text style={styles.contactItem}>{data.personalInfo.phone}</Text> : null}
+            {data.personalInfo.location ? <Text style={styles.contactItem}>{data.personalInfo.location}</Text> : null}
+            {data.personalInfo.website ? <Text style={styles.contactItem}>{data.personalInfo.website}</Text> : null}
+            {data.personalInfo.linkedin ? <Text style={styles.contactItem}>{data.personalInfo.linkedin}</Text> : null}
+            {data.personalInfo.github ? <Text style={styles.contactItem}>{data.personalInfo.github}</Text> : null}
             {(data.personalInfo.contacts || []).map((contact) => (
               <Text key={contact.id} style={styles.contactItem}>{contact.value}</Text>
             ))}
           </View>
-          {data.personalInfo.summary && (
+          {data.personalInfo.summary ? (
             <Text style={styles.summary}>{data.personalInfo.summary}</Text>
-          )}
+          ) : null}
         </View>
 
         {data.sections
@@ -324,25 +324,25 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                           : getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
                               <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
                             ))}
-                        {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 && (
+                        {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 ? (
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4, gap: 2 }}>
                             {project.technologies.map((tech, techIndex) => {
                               const logo = resolveSkillLogo(tech);
                               return (
                                 <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 4 }}>
-                                  {techIndex > 0 && <Text style={{ fontSize: theme.fontSize - 2, color: '#ccc', marginRight: 3 }}>·</Text>}
-                                  {logo && (
+                                  {techIndex > 0 ? <Text style={{ fontSize: theme.fontSize - 2, color: '#ccc', marginRight: 3 }}>·</Text> : null}
+                                  {logo ? (
                                     <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 1 }}>
                                       <Path d={logo.svgPath} fill={logo.color} />
                                     </Svg>
-                                  )}
+                                  ) : null}
                                   <Text style={{ fontSize: theme.fontSize - 2, color: '#666' }}>{tech}</Text>
                                 </View>
                               );
                             })}
                           </View>
-                        )}
-                        {project.showContributions !== false && project.contributions && project.contributions.length > 0 && (
+                        ) : null}
+                        {project.showContributions !== false && project.contributions && project.contributions.length > 0 ? (
                           <View>
                             <Text style={styles.contributionTitle}>{translations.contributions}</Text>
                             {project.contributions.map((contribution) => (
@@ -351,7 +351,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               </Text>
                             ))}
                           </View>
-                        )}
+                        ) : null}
                       </View>
                     ))}
                   </View>
@@ -363,50 +363,34 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{translations.skills}</Text>
                     {data.skills.map((skill) => {
-                      const coreItems = skill.items.filter((item) => item.level === 'core');
-                      const proficientItems = skill.items.filter((item) => item.level === 'proficient');
-                      const familiarItems = skill.items.filter((item) => item.level === 'familiar');
+                      if (skill.items.length === 0) return null;
 
                       const iconSize = theme.fontSize - 1;
-
-                      const renderSkillWithIcon = (item: { id: string; name: string; context?: string; showContext?: boolean }, showContext: boolean) => {
-                        const logo = resolveSkillLogo(item.name);
-                        return (
-                          <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6 }}>
-                            {logo && (
-                              <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 2 }}>
-                                <Path d={logo.svgPath} fill={logo.color} />
-                              </Svg>
-                            )}
-                            <Text style={{ fontSize: theme.fontSize - 1, color: '#333' }}>
-                              {item.name}
-                              {showContext && item.showContext !== false && item.context ? ` — ${item.context}` : ''}
-                            </Text>
-                          </View>
-                        );
-                      };
 
                       return (
                         <View key={skill.id} style={styles.itemContainer} wrap={false}>
                           <Text style={styles.skillCategory}>{skill.category}</Text>
-                          {coreItems.length > 0 && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginLeft: 8, marginTop: 2 }}>
-                              <Text style={{ fontSize: theme.fontSize - 1, color: '#666', marginRight: 4 }}>{translations.skillLevel.core}:</Text>
-                              {coreItems.map((item) => renderSkillWithIcon(item, true))}
-                            </View>
-                          )}
-                          {proficientItems.length > 0 && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginLeft: 8, marginTop: 2 }}>
-                              <Text style={{ fontSize: theme.fontSize - 1, color: '#666', marginRight: 4 }}>{translations.skillLevel.proficient}:</Text>
-                              {proficientItems.map((item) => renderSkillWithIcon(item, false))}
-                            </View>
-                          )}
-                          {familiarItems.length > 0 && (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginLeft: 8, marginTop: 2 }}>
-                              <Text style={{ fontSize: theme.fontSize - 1, color: '#666', marginRight: 4 }}>{translations.skillLevel.familiar}:</Text>
-                              {familiarItems.map((item) => renderSkillWithIcon(item, false))}
-                            </View>
-                          )}
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 2 }}>
+                            {skill.items.map((item, index) => {
+                              const logo = resolveSkillLogo(item.name);
+                              return (
+                                <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                                  {item.showLogo === false ? null : item.logo ? (
+                                    <Image src={item.logo} style={{ width: iconSize, height: iconSize, marginRight: 2 }} />
+                                  ) : logo ? (
+                                    <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 2 }}>
+                                      <Path d={logo.svgPath} fill={logo.color} />
+                                    </Svg>
+                                  ) : null}
+                                  <Text style={{ fontSize: theme.fontSize - 1, color: '#333' }}>
+                                    {item.name}
+                                    {item.showContext !== false && item.context ? ` (${item.context})` : ''}
+                                    {index < skill.items.length - 1 ? '  ·  ' : ''}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                          </View>
                         </View>
                       );
                     })}
@@ -425,10 +409,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       <View key={item.id} style={styles.customSectionItem} wrap={false}>
                         <View style={styles.itemHeader}>
                           <View style={styles.itemHeaderMain}>
-                            {item.title && <Text style={styles.itemTitle}>{item.title}</Text>}
-                            {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
+                            {item.title ? <Text style={styles.itemTitle}>{item.title}</Text> : null}
+                            {item.subtitle ? <Text style={styles.itemSubtitle}>{item.subtitle}</Text> : null}
                           </View>
-                          {item.date && <Text style={styles.itemDate}>{item.date}</Text>}
+                          {item.date ? <Text style={styles.itemDate}>{item.date}</Text> : null}
                         </View>
                         {item.showBulletPoints === false
                           ? getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (

@@ -3,7 +3,7 @@
 import { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign, Star } from 'lucide-react';
-import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, ThemeConfig } from '@/types';
+import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, SkillItem, ThemeConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { LogoBadge } from '@/components/LogoBadge';
 import { getPaperDimensions } from '@/lib/paper';
@@ -530,24 +530,33 @@ function ProjectPreviewCard({
 function SkillCategoryPreview({
   skill,
   fontSize,
-  t,
   onSelectAnchor,
   activeAnchor,
 }: {
   skill: Skill;
-  theme: ThemeConfig;
   fontSize: number;
-  t: (key: string, options?: Record<string, unknown>) => string;
   onSelectAnchor?: (anchor: string) => void;
   activeAnchor?: string | null;
 }) {
   const categoryAnchor = skillAnchor(skill.id);
-  const coreItems = skill.items.filter((item) => item.level === 'core');
-  const proficientItems = skill.items.filter((item) => item.level === 'proficient');
-  const familiarItems = skill.items.filter((item) => item.level === 'familiar');
 
-  const renderSkillName = (name: string) => {
-    const logo = resolveSkillLogo(name);
+  const renderSkillName = (item: SkillItem) => {
+    if (item.showLogo === false) return <span>{item.name}</span>;
+
+    if (item.logo) {
+      return (
+        <span className="inline-flex items-center gap-0.5">
+          <img
+            src={item.logo}
+            alt=""
+            style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0, objectFit: 'contain' }}
+          />
+          {item.name}
+        </span>
+      );
+    }
+
+    const logo = resolveSkillLogo(item.name);
     return (
       <span className="inline-flex items-center gap-0.5">
         {logo && (
@@ -560,27 +569,30 @@ function SkillCategoryPreview({
             <path d={logo.svgPath} />
           </svg>
         )}
-        {name}
+        {item.name}
       </span>
     );
   };
 
   return (
-    <div style={PRINT_SAFE_BLOCK_STYLE}>
+    <div style={PRINT_SAFE_BLOCK_STYLE} className="mb-2">
       <SelectableBlock
         anchor={categoryAnchor}
         activeAnchor={activeAnchor}
         onSelectAnchor={onSelectAnchor}
-        className="-mx-1 rounded-sm px-1 py-0.5"
+        className="-mx-1 mb-0.5 rounded-sm px-1 py-0.5"
       >
         <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fontSize}pt` }}>
           {skill.category}
         </h3>
       </SelectableBlock>
 
-      {coreItems.length > 0 && (
-        <div className="mt-1 space-y-0.5">
-          {coreItems.map((item) => {
+      {skill.items.length > 0 && (
+        <div 
+          className="text-gray-700" 
+          style={{ fontSize: `${fontSize - 1}pt`, lineHeight: 1.6 }}
+        >
+          {skill.items.map((item, index) => {
             const anchor = skillItemAnchor(skill.id, item.id);
             return (
               <SelectableBlock
@@ -588,42 +600,19 @@ function SkillCategoryPreview({
                 anchor={anchor}
                 activeAnchor={activeAnchor}
                 onSelectAnchor={onSelectAnchor}
-                className="-mx-1 rounded-sm px-1"
+                className="inline px-0.5 rounded-sm"
               >
-                <p style={{ fontSize: `${fontSize - 1}pt` }}>
-                  <span className="font-medium text-gray-800">{renderSkillName(item.name)}</span>
-                  {item.showContext !== false && item.context && (
-                    <span className="text-gray-500"> — {item.context}</span>
-                  )}
-                </p>
+                <span className="font-semibold text-gray-900">{renderSkillName(item)}</span>
+                {item.showContext !== false && item.context && (
+                  <span className="text-gray-500 font-normal"> ({item.context})</span>
+                )}
+                {index < skill.items.length - 1 && (
+                  <span className="mx-1.5 text-gray-400 font-normal">·</span>
+                )}
               </SelectableBlock>
             );
           })}
         </div>
-      )}
-
-      {proficientItems.length > 0 && (
-        <p className="mt-1.5 text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
-          <span className="font-medium">{t('preview.skillLevel.proficient')}:</span>{' '}
-          {proficientItems.map((item, index) => (
-            <span key={item.id}>
-              {index > 0 && ' · '}
-              {renderSkillName(item.name)}
-            </span>
-          ))}
-        </p>
-      )}
-
-      {familiarItems.length > 0 && (
-        <p className="mt-1 text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
-          <span className="font-medium">{t('preview.skillLevel.familiar')}:</span>{' '}
-          {familiarItems.map((item, index) => (
-            <span key={item.id}>
-              {index > 0 && ' · '}
-              {renderSkillName(item.name)}
-            </span>
-          ))}
-        </p>
       )}
     </div>
   );
@@ -829,9 +818,7 @@ function renderResumeSectionsContent({
                     <SkillCategoryPreview
                       key={skill.id}
                       skill={skill}
-                      theme={theme}
-                      fontSize={fs}
-                      t={t}
+                      fontSize={theme.fontSize}
                       onSelectAnchor={onSelectAnchor}
                       activeAnchor={activeAnchor}
                     />
