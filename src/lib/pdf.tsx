@@ -3,6 +3,7 @@ import { ResumeData, SkillLevel } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperDimensions } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
+import { parseMarkdownLinks } from '@/lib/markdown';
 
 registerCJKHyphenation();
 
@@ -66,7 +67,7 @@ function getDateRange(startDate: string, endDate: string, current: boolean | und
 }
 
 function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: PDFTranslations) {
-  const { Document, Page, Text, View, StyleSheet, Svg, Path, Image } = renderer;
+  const { Document, Page, Text, View, StyleSheet, Svg, Path, Image, Link } = renderer;
 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
@@ -211,12 +212,12 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
             <Text style={styles.title}>{data.personalInfo.title}</Text>
           ) : null}
           <View style={styles.contactInfo}>
-            {data.personalInfo.email ? <Text style={styles.contactItem}>{data.personalInfo.email}</Text> : null}
+            {data.personalInfo.email ? <Link src={`mailto:${data.personalInfo.email}`} style={styles.contactItem}>{data.personalInfo.email}</Link> : null}
             {data.personalInfo.phone ? <Text style={styles.contactItem}>{data.personalInfo.phone}</Text> : null}
             {data.personalInfo.location ? <Text style={styles.contactItem}>{data.personalInfo.location}</Text> : null}
-            {data.personalInfo.website ? <Text style={styles.contactItem}>{data.personalInfo.website}</Text> : null}
-            {data.personalInfo.linkedin ? <Text style={styles.contactItem}>{data.personalInfo.linkedin}</Text> : null}
-            {data.personalInfo.github ? <Text style={styles.contactItem}>{data.personalInfo.github}</Text> : null}
+            {data.personalInfo.website ? <Link src={data.personalInfo.website.startsWith('http') ? data.personalInfo.website : `https://${data.personalInfo.website}`} style={styles.contactItem}>{data.personalInfo.website}</Link> : null}
+            {data.personalInfo.linkedin ? <Link src={data.personalInfo.linkedin.startsWith('http') ? data.personalInfo.linkedin : `https://${data.personalInfo.linkedin}`} style={styles.contactItem}>{data.personalInfo.linkedin}</Link> : null}
+            {data.personalInfo.github ? <Link src={data.personalInfo.github.startsWith('http') ? data.personalInfo.github : `https://${data.personalInfo.github}`} style={styles.contactItem}>{data.personalInfo.github}</Link> : null}
             {(data.personalInfo.contacts || []).map((contact) => (
               <Text key={contact.id} style={styles.contactItem}>{contact.value}</Text>
             ))}
@@ -302,20 +303,53 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     <Text style={styles.sectionTitle}>{translations.projects}</Text>
                     {data.projects.map((project) => (
                       <View key={project.id} style={styles.itemContainer} wrap={false}>
-                        <View style={styles.itemHeader}>
-                          <View style={styles.itemHeaderMain}>
-                            <Text style={styles.itemTitle}>
-                              {project.name}{project.role ? ` · ${project.role}` : ''}
-                            </Text>
-                            <Text style={styles.itemSubtitle}>
-                              {project.repoUrl ? `GitHub` : ''}
-                              {project.showStars !== false && typeof project.repoStars === 'number' ? `${project.repoUrl ? ' · ' : ''}★ ${project.repoStars}` : ''}
-                              {project.url ? `${project.repoUrl || typeof project.repoStars === 'number' ? ' · ' : ''}${project.url}` : ''}
-                            </Text>
+                        <View style={[styles.itemHeader, { alignItems: 'flex-start' }]}>
+                          {project.showLogo !== false && (project.customLogo || project.repoAvatarUrl) ? (
+                            <Image
+                              src={project.customLogo || project.repoAvatarUrl}
+                              style={{ width: 24, height: 24, borderRadius: 12, marginRight: 6, objectFit: 'cover' }}
+                            />
+                          ) : null}
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <View style={styles.itemHeaderMain}>
+                                <Text style={styles.itemTitle}>
+                                  {project.name}{project.role ? ` · ${project.role}` : ''}
+                                </Text>
+                                <Text style={styles.itemSubtitle}>
+                                  {project.repoUrl ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2, marginBottom: -1 }}>
+                                        <Path d="M15 22v-4a4.8 4.8 0 0 0-1-3.03c3.18-.35 6.5-1.5 6.5-7a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3V3a11 11 0 0 0-11 0c-2.4-1.6-3.5-1.3-3.5-1.3a4.2 4.2 0 0 0-.1 3.2 4.6 4.6 0 0 0-1.3 3.2c0 5.4 3.3 6.6 6.5 7a4.8 4.8 0 0 0-1 3.03V22M9 18c-auto 0-3-1-4-3-1-2-3-2-3-2" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                      </Svg>
+                                      <Link src={project.repoUrl} style={{ color: '#666', textDecoration: 'none' }}>
+                                        {project.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
+                                      </Link>
+                                    </View>
+                                  ) : null}
+                                  {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                      <Text style={{ color: '#ccc', marginRight: 4, marginLeft: 4 }}>·</Text>
+                                      <Text style={{ color: '#d97706' }}>
+                                        ★ {project.repoStars}
+                                      </Text>
+                                    </View>
+                                  ) : null}
+                                  {project.url ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                      <Text style={{ color: '#ccc', marginRight: 4, marginLeft: 4 }}>·</Text>
+                                      <Link src={project.url.startsWith('http') ? project.url : `https://${project.url}`} style={{ color: '#666', textDecoration: 'none' }}>
+                                        {project.url}
+                                      </Link>
+                                    </View>
+                                  ) : null}
+                                </Text>
+                              </View>
+                              <Text style={styles.itemDate}>
+                                {getDateRange(project.startDate, project.endDate, project.current, translations.present)}
+                              </Text>
+                            </View>
                           </View>
-                          <Text style={styles.itemDate}>
-                            {getDateRange(project.startDate, project.endDate, project.current, translations.present)}
-                          </Text>
                         </View>
                         {project.showBulletPoints === false
                           ? getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
@@ -346,9 +380,26 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                           <View>
                             <Text style={styles.contributionTitle}>{translations.contributions}</Text>
                             {project.contributions.map((contribution) => (
-                              <Text key={contribution.id} style={styles.contributionItem}>
-                                - {contribution.summary}{contribution.url ? ` (${contribution.url})` : ''}
-                              </Text>
+                              <View key={contribution.id} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 1 }}>
+                                <Text style={styles.contributionItem}>
+                                  - {' '}
+                                  {parseMarkdownLinks(contribution.summary).map((node, i) => {
+                                    if (node.type === 'link' && node.url) {
+                                      return (
+                                        <Link key={i} src={node.url} style={{ color: '#4a7cc9', textDecoration: 'none' }}>
+                                          {node.content}
+                                        </Link>
+                                      );
+                                    }
+                                    return <Text key={i}>{node.content}</Text>;
+                                  })}
+                                </Text>
+                                {contribution.url ? (
+                                  <Link src={contribution.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', textDecoration: 'none', marginLeft: 2, paddingTop: 1.5 }}>
+                                    {contribution.url.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/commit\/([a-f0-9]{7})[a-f0-9]+$/, '/commit/$1')}
+                                  </Link>
+                                ) : null}
+                              </View>
                             ))}
                           </View>
                         ) : null}
@@ -446,8 +497,11 @@ export async function exportToPDF(
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (error) {
     console.error('PDF 导出失败:', error);
     throw new Error('PDF export failed');

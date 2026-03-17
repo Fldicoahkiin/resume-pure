@@ -5,22 +5,6 @@ import { useResumeStore } from '@/store/resumeStore';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface PDFTranslations {
-  summary: string;
-  experience: string;
-  education: string;
-  projects: string;
-  skills: string;
-  technologies: string;
-  contributions: string;
-  present: string;
-  skillLevel: {
-    core: string;
-    proficient: string;
-    familiar: string;
-  };
-}
-
 export function ExportButtons() {
   const { t } = useTranslation();
   const { resume } = useResumeStore();
@@ -30,23 +14,8 @@ export function ExportButtons() {
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
-      const { exportToPDF } = await import('@/lib/pdf');
-      const pdfTranslations: PDFTranslations = {
-        summary: t('pdf.summary'),
-        experience: t('pdf.experience'),
-        education: t('pdf.education'),
-        projects: t('pdf.projects'),
-        skills: t('pdf.skills'),
-        technologies: t('pdf.technologies'),
-        contributions: t('pdf.contributions'),
-        present: t('pdf.present'),
-        skillLevel: {
-          core: t('pdf.skillLevel.core'),
-          proficient: t('pdf.skillLevel.proficient'),
-          familiar: t('pdf.skillLevel.familiar'),
-        },
-      };
-      await exportToPDF(resume, 'resume.pdf', pdfTranslations);
+      const { exportToPDF } = await import('@/lib/pdfCapture');
+      await exportToPDF('resume-preview', 'resume.pdf', resume.theme.paperSize);
     } catch (error) {
       alert(t('export.pdfExportFailed') + (error as Error).message);
     } finally {

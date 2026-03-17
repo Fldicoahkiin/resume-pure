@@ -20,6 +20,7 @@ import {
   skillItemAnchor,
 } from '@/lib/previewAnchor';
 import { resolveSkillLogo } from '@/lib/skillLogo';
+import { parseMarkdownLinks } from '@/lib/markdown';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
 const DEFAULT_PAPER_DIMENSIONS = getPaperDimensions('A4');
@@ -288,7 +289,7 @@ function formatGitHubPath(url: string): string {
   return url;
 }
 
-function formatContributionRef(url: string): string | null {
+export function formatContributionRef(url: string): string | null {
   if (!url) return null;
   const prMatch = url.match(/\/pull\/(\d+)/);
   if (prMatch) return `PR #${prMatch[1]}`;
@@ -362,7 +363,23 @@ function ProjectContributionList({
               <li className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
                 <span className="mr-2 text-gray-400">•</span>
                 <span className="flex-1">
-                  {contribution.summary}
+                  {parseMarkdownLinks(contribution.summary).map((node, i) => {
+                    if (node.type === 'link' && node.url) {
+                      return (
+                        <a
+                          key={i}
+                          href={sanitizeUrl(node.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-400 hover:text-blue-600 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {node.content}
+                        </a>
+                      );
+                    }
+                    return <span key={i}>{node.content}</span>;
+                  })}
                   {ref && (
                     <>
                       {' '}
@@ -604,7 +621,7 @@ function SkillCategoryPreview({
               >
                 <span className="font-semibold text-gray-900">{renderSkillName(item)}</span>
                 {item.showContext !== false && item.context && (
-                  <span className="text-gray-500 font-normal"> ({item.context})</span>
+                  <span className="text-gray-500 font-normal"> — {item.context}</span>
                 )}
                 {index < skill.items.length - 1 && (
                   <span className="mx-1.5 text-gray-400 font-normal">·</span>
