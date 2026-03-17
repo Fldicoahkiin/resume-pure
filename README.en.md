@@ -7,7 +7,7 @@ A local-first, no-signup, no-tracking resume editor. You can edit with forms or 
 **Live Demo:**
 
 - <https://resume-pure.vercel.app/>
-- <https://flacier.com/resume-pure>
+- <https://resume-pure.pages.dev/>
 - <https://fldicoahkiin.github.io/resume-pure>
 
 ## Project Goal
@@ -67,7 +67,7 @@ Click the button and follow the import wizard. No manual project creation is req
 
 ### Cloudflare Pages
 
-[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.pages.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
 
 Click the button, log in to your Cloudflare account, and follow the wizard to deploy.
 

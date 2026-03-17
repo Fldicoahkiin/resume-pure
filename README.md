@@ -7,7 +7,7 @@
 **在线体验：**
 
 - <https://resume-pure.vercel.app/>
-- <https://flacier.com/resume-pure>
+- <https://resume-pure.pages.dev/>
 - <https://fldicoahkiin.github.io/resume-pure>
 
 ## 项目定位
@@ -75,13 +75,9 @@ docker run -p 3000:80 resume-pure
 
 ### Cloudflare Pages
 
-#### 一键部署（推荐）
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.pages.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
 
-[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
-
-点击按钮后登录 Cloudflare 账号，按向导完成部署即可。
-
-#### 手动部署
+点击按钮后登录 Cloudflare 账号，按向导完成部署即可。也可以手动部署：
 
 1. Fork 本仓库到自己的 GitHub 账号
 2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages → Create a project
