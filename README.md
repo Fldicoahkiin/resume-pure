@@ -5,8 +5,10 @@
 一个纯本地、零注册、零追踪的在线简历编辑器。你可以直接用表单编辑，也可以用 JSON/YAML 的 Raw 数据驱动简历内容，适合与 AI 工作流结合。
 
 **在线体验：**
-<https://resume-pure.vercel.app/>
-<https://fldicoahkiin.github.io/resume-pure>
+
+- <https://resume-pure.vercel.app/>
+- <https://flacier.com/resume-pure>
+- <https://fldicoahkiin.github.io/resume-pure>
 
 ## 项目定位
 
@@ -71,7 +73,26 @@ docker run -p 3000:80 resume-pure
 
 点击按钮后按向导完成 Import 即可，无需手动创建项目。
 
-#### GitHub Actions 自动部署（进阶）
+### Cloudflare Pages
+
+#### 一键部署（推荐）
+
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
+
+点击按钮后登录 Cloudflare 账号，按向导完成部署即可。
+
+#### 手动部署
+
+1. Fork 本仓库到自己的 GitHub 账号
+2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages → Create a project
+3. 选择 Connect to Git，关联你 Fork 的仓库
+4. 构建设置：
+   - **Framework preset**: `Next.js (Static HTML Export)`
+   - **Build command**: `pnpm build`
+   - **Build output directory**: `out`
+5. 点击 Save and Deploy
+
+### GitHub Actions 自动部署（进阶）
 
 仓库已提供 Vercel 自动部署工作流：`/.github/workflows/vercel-deploy.yml`
 

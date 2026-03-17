@@ -5,8 +5,10 @@
 A local-first, no-signup, no-tracking resume editor. You can edit with forms or drive the resume directly with JSON/YAML raw data, which works well with AI-assisted writing workflows.
 
 **Live Demo:**
-<https://resume-pure.vercel.app/>
-<https://fldicoahkiin.github.io/resume-pure>
+
+- <https://resume-pure.vercel.app/>
+- <https://flacier.com/resume-pure>
+- <https://fldicoahkiin.github.io/resume-pure>
 
 ## Project Goal
 
@@ -59,13 +61,28 @@ The project supports static export and can be deployed with GitHub Actions.
 
 ### Vercel
 
-#### One-Click Deploy (Recommended)
-
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
 
 Click the button and follow the import wizard. No manual project creation is required.
 
-#### GitHub Actions Auto Deploy (Advanced)
+### Cloudflare Pages
+
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Fldicoahkiin/resume-pure)
+
+Click the button, log in to your Cloudflare account, and follow the wizard to deploy.
+
+You can also deploy manually:
+
+1. Fork this repository to your GitHub account
+2. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages → Create a project
+3. Select Connect to Git and link your forked repository
+4. Build settings:
+   - **Framework preset**: `Next.js (Static HTML Export)`
+   - **Build command**: `pnpm build`
+   - **Build output directory**: `out`
+5. Click Save and Deploy
+
+### GitHub Actions Auto Deploy (Advanced)
 
 The repository includes a Vercel deployment workflow: `/.github/workflows/vercel-deploy.yml`
 
