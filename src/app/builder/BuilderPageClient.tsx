@@ -14,7 +14,7 @@ import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
+import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, Minus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
@@ -258,29 +258,31 @@ function renderBuilderPageLayout({
         {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
         <div data-print-hide className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           {/* 编辑模式切换 */}
-          <div className="flex items-center gap-1 px-4 sm:px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'form' }))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
-                ui.editorMode === 'form'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <FormInput size={14} />
-              {t('builder.form')}
-            </button>
-            <button
-              onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition ${
-                ui.editorMode === 'raw'
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Code size={14} />
-              {t('builder.raw')}
-            </button>
+          <div className="flex items-center h-14 shrink-0 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
+              <button
+                onClick={() => setUi((prev) => ({ ...prev, editorMode: 'form' }))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  ui.editorMode === 'form'
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <FormInput size={15} />
+                {t('builder.form')}
+              </button>
+              <button
+                onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  ui.editorMode === 'raw'
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <Code size={15} />
+                {t('builder.raw')}
+              </button>
+            </div>
           </div>
 
           {/* 编辑内容 */}
@@ -340,65 +342,59 @@ function renderBuilderPageLayout({
         {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
         <div id="builder-preview-area" className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
-          <div data-print-hide className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
-                aria-label={t('builder.previewZoomOut')}
-                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-              >
-                −
-              </button>
-
-              <span className="text-sm font-medium w-14 text-center tabular-nums text-gray-700 dark:text-gray-300">
-                {Math.round(ui.scale * 100)}%
-              </span>
-
-              <button
-                type="button"
-                onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
-                aria-label={t('builder.previewZoomIn')}
-                className="px-3 py-1.5 bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200"
-              >
-                +
-              </button>
-
-              <input
-                type="range"
-                min={PREVIEW_SCALE_MIN}
-                max={PREVIEW_SCALE_MAX}
-                step={PREVIEW_SCALE_STEP}
-                value={ui.scale}
-                onChange={(event) => handleScaleChange(Number(event.target.value))}
-                aria-label={t('builder.preview')}
-                className="w-24 sm:w-32 accent-gray-900 dark:accent-gray-100"
-              />
-
-              <button
-                type="button"
-                onClick={handleFitScale}
-                className={`px-3 py-1.5 rounded border text-xs sm:text-sm transition ${
-                  ui.previewScaleMode === 'fit'
-                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
-              >
-                {t('builder.previewFitWidth')}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleActualScale}
-                className="px-3 py-1.5 rounded border text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
-              >
-                {t('builder.previewActualSize')}
-              </button>
-            </div>
-
-            <p className="hidden sm:block text-[11px] text-center mt-1 text-gray-500 dark:text-gray-400">
+          <div data-print-hide className="flex h-auto sm:h-14 shrink-0 flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <p className="hidden md:block text-xs text-gray-400 dark:text-gray-500">
               {t('builder.previewHelp')}
             </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
+                  aria-label={t('builder.previewZoomOut')}
+                  className="p-1 text-gray-500 hover:text-gray-900 hover:bg-white dark:hover:bg-gray-800 dark:hover:text-white rounded-md transition-all focus:outline-none"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="w-14 text-center text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-300">
+                  {Math.round(ui.scale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
+                  aria-label={t('builder.previewZoomIn')}
+                  className="p-1 text-gray-500 hover:text-gray-900 hover:bg-white dark:hover:bg-gray-800 dark:hover:text-white rounded-md transition-all focus:outline-none"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                <button
+                  type="button"
+                  onClick={handleFitScale}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    ui.previewScaleMode === 'fit'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {t('builder.previewFitWidth')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleActualScale}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    ui.previewScaleMode === 'actual'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {t('builder.previewActualSize')}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* 预览内容 */}
