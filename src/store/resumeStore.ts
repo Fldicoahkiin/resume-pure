@@ -22,9 +22,11 @@ interface ResumeStore {
   addProject: (proj: Project) => void;
   updateProject: (id: string, proj: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+  reorderProjects: (projects: Project[]) => void;
   addSkill: (skill: Skill) => void;
   updateSkill: (id: string, skill: Partial<Skill>) => void;
   deleteSkill: (id: string) => void;
+  reorderSkills: (skills: Skill[]) => void;
   // 联系方式相关
   addContact: (contact: ContactItem) => void;
   updateContact: (id: string, contact: Partial<ContactItem>) => void;
@@ -172,6 +174,11 @@ export const useResumeStore = create<ResumeStore>()(
           },
         })),
 
+      reorderProjects: (projects) =>
+        set((state) => ({
+          resume: { ...state.resume, projects },
+        })),
+
       addSkill: (skill) =>
         set((state) => ({
           resume: {
@@ -196,6 +203,11 @@ export const useResumeStore = create<ResumeStore>()(
             ...state.resume,
             skills: state.resume.skills.filter((item) => item.id !== id),
           },
+        })),
+
+      reorderSkills: (skills) =>
+        set((state) => ({
+          resume: { ...state.resume, skills },
         })),
 
       // 联系方式相关

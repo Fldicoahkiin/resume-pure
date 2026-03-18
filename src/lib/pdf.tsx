@@ -296,12 +296,13 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                   </View>
                 );
 
-              case 'projects':
-                if (data.projects.length === 0) return null;
+              case 'projects': {
+                const activeProjects = data.projects.filter(p => p.visible !== false);
+                if (activeProjects.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{translations.projects}</Text>
-                    {data.projects.map((project) => (
+                    {activeProjects.map((project) => (
                       <View key={project.id} style={styles.itemContainer} wrap={false}>
                         <View style={[styles.itemHeader, { alignItems: 'flex-start' }]}>
                           {project.showLogo !== false && (project.customLogo || project.repoAvatarUrl) ? (
@@ -407,13 +408,15 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     ))}
                   </View>
                 );
+              }
 
-              case 'skills':
-                if (data.skills.length === 0) return null;
+              case 'skills': {
+                const activeSkills = data.skills.filter(s => s.visible !== false);
+                if (activeSkills.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
                     <Text style={styles.sectionTitle}>{translations.skills}</Text>
-                    {data.skills.map((skill) => {
+                    {activeSkills.map((skill) => {
                       if (skill.items.length === 0) return null;
 
                       const iconSize = theme.fontSize - 1;
@@ -447,6 +450,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     })}
                   </View>
                 );
+              }
 
               default:
                 if (!section.isCustom) return null;

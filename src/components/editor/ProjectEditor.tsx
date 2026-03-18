@@ -11,6 +11,7 @@ import { projectAnchor, projectContributionAnchor } from '@/lib/previewAnchor';
 import { useResumeStore } from '@/store/resumeStore';
 import { Project, ProjectContribution } from '@/types';
 import { BulletListTextarea } from './BulletListTextarea';
+import { DraggableItem } from './DraggableItem';
 
 interface ProjectEditorProps {
   embedded?: boolean;
@@ -548,10 +549,7 @@ function ProjectCard({
   return (
     <div
       data-editor-anchor={projectAnchor(project.id)}
-      className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/30"
     >
-      <ProjectHeader t={t} onDelete={() => onDelete(project.id)} />
-
       <div className="space-y-4">
         <ProjectFormFields
           project={project}
@@ -601,9 +599,10 @@ function ProjectCard({
 
 export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addProject, updateProject, deleteProject } = useResumeStore();
+  const { resume, hasHydrated, addProject, updateProject, deleteProject, reorderProjects } = useResumeStore();
   const [repoStatusMap, setRepoStatusMap] = useState<Record<string, RepoStatus>>({});
   const [logoErrorMap, setLogoErrorMap] = useState<Record<string, string>>({});
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   if (!hasHydrated) {
     return (
@@ -634,7 +633,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
       showBulletPoints: true,
     };
 
-    addProject(newProject);
+    addProject({ ...newProject, visible: true });
   };
 
   const updateRepoStatus = (projectId: string, nextStatus: RepoStatus) => {
@@ -723,6 +722,24 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
     });
   };
 
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+    const items = [...resume.projects];
+    const [removed] = items.splice(draggedIdx, 1);
+    items.splice(idx, 0, removed);
+    reorderProjects(items);
+    setDraggedIdx(idx);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+  };
+
   const content = (
     <>
       {resume.projects.length === 0 ? (
@@ -733,21 +750,43 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {resume.projects.map((project) => (
-            <ProjectCard
+          {resume.projects.map((project, idx) => (
+            <DraggableItem
               key={project.id}
-              project={project}
-              repoStatus={repoStatusMap[project.id]}
-              logoError={logoErrorMap[project.id]}
-              t={t}
-              onDelete={deleteProject}
-              onUpdate={updateProject}
-              onSyncRepo={handleRepoSync}
-              onUploadLogo={handleProjectLogoUpload}
-              onAddContribution={handleAddContribution}
-              onDeleteContribution={handleDeleteContribution}
-              onUpdateContribution={handleUpdateContribution}
-            />
+              id={project.id}
+              title={project.name || t('editor.projects.cardTitle')}
+              visible={project.visible !== false}
+              onToggleVisible={() => updateProject(project.id, { visible: project.visible === false })}
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              isDragging={draggedIdx === idx}
+              headerActions={
+                <button
+                  type="button"
+                  onClick={() => deleteProject(project.id)}
+                  className="p-1 rounded text-gray-400 hover:text-red-500 transition"
+                  title={t('editor.projects.deleteTitle')}
+                >
+                  <Trash2 size={16} />
+                </button>
+              }
+              defaultCollapsed
+            >
+              <ProjectCard
+                project={project}
+                repoStatus={repoStatusMap[project.id]}
+                logoError={logoErrorMap[project.id]}
+                t={t}
+                onDelete={deleteProject}
+                onUpdate={updateProject}
+                onSyncRepo={handleRepoSync}
+                onUploadLogo={handleProjectLogoUpload}
+                onAddContribution={handleAddContribution}
+                onDeleteContribution={handleDeleteContribution}
+                onUpdateContribution={handleUpdateContribution}
+              />
+            </DraggableItem>
           ))}
         </div>
       )}

@@ -83,7 +83,8 @@ export interface Project {
   showStars?: boolean;
   showTechnologies?: boolean;
   showContributions?: boolean;
-  showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
+  showBulletPoints?: boolean;
+  visible?: boolean;
 }
 
 export interface ProjectContribution {
@@ -110,6 +111,7 @@ export interface Skill {
   categoryIcon?: string;
   items: SkillItem[];
   tags?: string[];
+  visible?: boolean;
 }
 
 export interface SectionConfig {

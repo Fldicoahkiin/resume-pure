@@ -9,6 +9,7 @@ import { skillAnchor, skillItemAnchor } from '@/lib/previewAnchor';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { useResumeStore } from '@/store/resumeStore';
 import { Skill, SkillItem } from '@/types';
+import { DraggableItem } from './DraggableItem';
 
 interface SkillEditorProps {
   embedded?: boolean;
@@ -37,8 +38,9 @@ function createEmptySkill(): Skill {
 
 export function SkillEditor({ embedded = false }: SkillEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addSkill, updateSkill, deleteSkill } = useResumeStore();
+  const { resume, hasHydrated, addSkill, updateSkill, deleteSkill, reorderSkills } = useResumeStore();
   const [openSettings, setOpenSettings] = useState<Record<string, boolean>>({});
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   const toggleSettings = (id: string) => setOpenSettings((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -65,7 +67,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
   }
 
   const handleAdd = () => {
-    addSkill(createEmptySkill());
+    addSkill({ ...createEmptySkill(), visible: true });
   };
 
   const updateSkillItem = (skill: Skill, itemId: string, patch: Partial<SkillItem>) => {
@@ -88,6 +90,24 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
     });
   };
 
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+    const items = [...resume.skills];
+    const [removed] = items.splice(draggedIdx, 1);
+    items.splice(idx, 0, removed);
+    reorderSkills(items);
+    setDraggedIdx(idx);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+  };
+
   const content = (
     <>
       {resume.skills.length === 0 ? (
@@ -96,44 +116,54 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {resume.skills.map((skill) => (
-            <div
+          {resume.skills.map((skill, idx) => (
+            <DraggableItem
               key={skill.id}
-              data-editor-anchor={skillAnchor(skill.id)}
-              className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/30"
+              id={skill.id}
+              title={skill.category || t('editor.skills.categoryPlaceholder')}
+              visible={skill.visible !== false}
+              onToggleVisible={() => updateSkill(skill.id, { visible: skill.visible === false })}
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+              isDragging={draggedIdx === idx}
+              headerActions={
+                <button
+                  type="button"
+                  onClick={() => deleteSkill(skill.id)}
+                  className="p-1 rounded text-gray-400 hover:text-red-500 transition"
+                  title={t('editor.skills.deleteCategory')}
+                >
+                  <Trash2 size={16} />
+                </button>
+              }
+              defaultCollapsed
             >
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex-1 min-w-[220px]">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
-                    {t('editor.skills.category')}
-                  </label>
-                  <input
-                    type="text"
-                    value={skill.category}
-                    onChange={(e) => updateSkill(skill.id, { category: e.target.value })}
-                    className="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    placeholder={t('editor.skills.categoryPlaceholder')}
-                  />
+              <div data-editor-anchor={skillAnchor(skill.id)}>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex-1 min-w-[220px]">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
+                      {t('editor.skills.category')}
+                    </label>
+                    <input
+                      type="text"
+                      value={skill.category}
+                      onChange={(e) => updateSkill(skill.id, { category: e.target.value })}
+                      className="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                      placeholder={t('editor.skills.categoryPlaceholder')}
+                    />
+                  </div>
+                  <div className="flex gap-2 self-end">
+                    <button
+                      type="button"
+                      onClick={() => addSkillItem(skill)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-blue-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-blue-400"
+                    >
+                      <Plus size={16} />
+                      {t('editor.skills.addItem')}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2 self-end">
-                  <button
-                    type="button"
-                    onClick={() => deleteSkill(skill.id)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-red-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-red-400"
-                    title={t('editor.skills.deleteCategory')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addSkillItem(skill)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-blue-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-blue-400"
-                  >
-                    <Plus size={16} />
-                    {t('editor.skills.addItem')}
-                  </button>
-                </div>
-              </div>
 
               <div className="mb-4">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
@@ -254,6 +284,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                 </div>
               )}
             </div>
+            </DraggableItem>
           ))}
         </div>
       )}

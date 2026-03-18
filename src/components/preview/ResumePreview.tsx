@@ -842,8 +842,9 @@ function renderResumeSectionsContent({
               </section>
             );
 
-          case 'projects':
-            if (projects.length === 0) return null;
+          case 'projects': {
+            const activeProjects = projects.filter(p => p.visible !== false);
+            if (activeProjects.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
                 <SectionTitle
@@ -855,7 +856,7 @@ function renderResumeSectionsContent({
                   onSelectAnchor={onSelectAnchor}
                 />
                 <div className="space-y-3">
-                  {projects.map((project) => (
+                  {activeProjects.map((project) => (
                     <ProjectPreviewCard
                       key={project.id}
                       project={project}
@@ -869,9 +870,11 @@ function renderResumeSectionsContent({
                 </div>
               </section>
             );
+          }
 
-          case 'skills':
-            if (skills.length === 0) return null;
+          case 'skills': {
+            const activeSkills = skills.filter(s => s.visible !== false);
+            if (activeSkills.length === 0) return null;
             return (
               <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
                 <SectionTitle
@@ -883,7 +886,7 @@ function renderResumeSectionsContent({
                   onSelectAnchor={onSelectAnchor}
                 />
                 <div className="space-y-3">
-                  {skills.map((skill) => (
+                  {activeSkills.map((skill) => (
                     <SkillCategoryPreview
                       key={skill.id}
                       skill={skill}
@@ -896,6 +899,7 @@ function renderResumeSectionsContent({
                 </div>
               </section>
             );
+          }
 
           default:
             // 处理自定义模块
