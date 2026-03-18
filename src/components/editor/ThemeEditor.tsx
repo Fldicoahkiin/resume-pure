@@ -175,62 +175,140 @@ export function ThemeEditor() {
         </div>
 
         {/* 字号 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('editor.theme.fontSize')}: {theme.fontSize}pt
-          </label>
-          <input
-            type="range"
-            min="9"
-            max="14"
-            step="0.5"
-            value={theme.fontSize}
-            onChange={(e) => updateTheme({ fontSize: parseFloat(e.target.value) })}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span>9pt</span>
-            <span>14pt</span>
+        <div className="group">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('editor.theme.fontSize')}
+              </label>
+              {theme.fontSize !== 11 && (
+                <button
+                  type="button"
+                  onClick={() => updateTheme({ fontSize: 11 })}
+                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  title="恢复默认字号 (11pt)"
+                >
+                  回退默认
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="1"
+                max="100"
+                step="0.5"
+                value={theme.fontSize}
+                onChange={(e) => updateTheme({ fontSize: Number(e.target.value) || 11 })}
+                className="w-14 h-7 text-xs font-semibold text-center bg-gray-50 border border-gray-200 rounded-md dark:bg-gray-900 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-shadow appearance-none"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-3">pt</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-gray-400 tabular-nums">7</span>
+            <input
+              type="range"
+              min="7"
+              max="24"
+              step="0.5"
+              value={theme.fontSize}
+              onChange={(e) => updateTheme({ fontSize: parseFloat(e.target.value) })}
+              className="flex-1 accent-gray-900 dark:accent-gray-100"
+            />
+            <span className="text-[10px] text-gray-400 tabular-nums">24</span>
           </div>
         </div>
 
         {/* 行高 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('editor.theme.lineHeight')}: {theme.lineHeight}
-          </label>
-          <input
-            type="range"
-            min="1.2"
-            max="2"
-            step="0.1"
-            value={theme.lineHeight}
-            onChange={(e) => updateTheme({ lineHeight: parseFloat(e.target.value) })}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span>{t('editor.theme.compact')}</span>
-            <span>{t('editor.theme.relaxed')}</span>
+        <div className="group">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('editor.theme.lineHeight')}
+              </label>
+              {theme.lineHeight !== 1.5 && (
+                <button
+                  type="button"
+                  onClick={() => updateTheme({ lineHeight: 1.5 })}
+                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  title="恢复默认行高 (1.5)"
+                >
+                  回退默认
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="0.5"
+                max="5"
+                step="0.05"
+                value={theme.lineHeight}
+                onChange={(e) => updateTheme({ lineHeight: Number(e.target.value) || 1.5 })}
+                className="w-14 h-7 text-xs font-semibold text-center bg-gray-50 border border-gray-200 rounded-md dark:bg-gray-900 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-shadow appearance-none"
+              />
+              <span className="text-[10px] text-gray-400 font-medium w-3" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-gray-400 tabular-nums" title={t('editor.theme.compact')}>1.0</span>
+            <input
+              type="range"
+              min="1.0"
+              max="2.5"
+              step="0.05"
+              value={theme.lineHeight}
+              onChange={(e) => updateTheme({ lineHeight: parseFloat(e.target.value) })}
+              className="flex-1 accent-gray-900 dark:accent-gray-100"
+            />
+            <span className="text-[10px] text-gray-400 tabular-nums" title={t('editor.theme.relaxed')}>2.5</span>
           </div>
         </div>
 
         {/* 间距 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('editor.theme.spacing')}: {theme.spacing}px
-          </label>
-          <input
-            type="range"
-            min="4"
-            max="16"
-            step="2"
-            value={theme.spacing}
-            onChange={(e) => updateTheme({ spacing: parseInt(e.target.value) })}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span>{t('editor.theme.compact')}</span>
-            <span>{t('editor.theme.relaxed')}</span>
+        <div className="group">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('editor.theme.spacing')}
+              </label>
+              {theme.spacing !== 8 && (
+                <button
+                  type="button"
+                  onClick={() => updateTheme({ spacing: 8 })}
+                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  title="恢复默认间距 (8px)"
+                >
+                  回退默认
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={theme.spacing}
+                onChange={(e) => updateTheme({ spacing: Number(e.target.value) || 0 })}
+                className="w-14 h-7 text-xs font-semibold text-center bg-gray-50 border border-gray-200 rounded-md dark:bg-gray-900 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-shadow appearance-none"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-3">px</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-gray-400 tabular-nums">0</span>
+            <input
+              type="range"
+              min="0"
+              max="32"
+              step="1"
+              value={theme.spacing}
+              onChange={(e) => updateTheme({ spacing: parseInt(e.target.value) })}
+              className="flex-1 accent-gray-900 dark:accent-gray-100"
+            />
+            <span className="text-[10px] text-gray-400 tabular-nums">32</span>
           </div>
         </div>
 
