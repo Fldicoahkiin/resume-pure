@@ -209,9 +209,9 @@ function renderBuilderPageLayout({
   handlePreviewSelect: (anchor: string) => void;
 }) {
   return (
-    <div id="builder-page" className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div id="builder-page" className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+      <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 z-20">
         <div className="w-full px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
@@ -228,7 +228,7 @@ function renderBuilderPageLayout({
       </header>
 
       {/* 移动端视图切换 - 放在 Main Content 外部，始终可见 */}
-      <div data-print-hide className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div data-print-hide className="lg:hidden shrink-0 flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <button
           onClick={() => setUi((prev) => ({ ...prev, mobileView: 'edit' }))}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
@@ -254,9 +254,9 @@ function renderBuilderPageLayout({
       </div>
 
       {/* Main Content */}
-      <div id="builder-grid" className="grid grid-cols-1 lg:grid-cols-2">
+      <div id="builder-grid" className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2">
         {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
-        <div data-print-hide className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
+        <div data-print-hide className={`h-full overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           {/* 编辑模式切换 */}
           <div className="flex items-center h-14 shrink-0 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
@@ -340,7 +340,7 @@ function renderBuilderPageLayout({
         </div>
 
         {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
-        <div id="builder-preview-area" className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
+        <div id="builder-preview-area" className={`bg-gray-100 dark:bg-gray-950 h-full relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
           <div data-print-hide className="flex h-auto sm:h-14 shrink-0 flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <p className="hidden md:block text-xs text-gray-400 dark:text-gray-500">
