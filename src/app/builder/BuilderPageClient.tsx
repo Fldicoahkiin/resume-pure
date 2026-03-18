@@ -24,7 +24,7 @@ import type { ResumeData, SectionConfig } from '@/types';
 
 type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
-type PreviewScaleMode = 'fit' | 'manual';
+type PreviewScaleMode = 'fit' | 'manual' | 'actual';
 type RawJumpRequest = { id: number; anchor: string };
 
 interface BuilderUIState {
@@ -179,7 +179,6 @@ function renderBuilderPageLayout({
   addCustomSection,
   handlePreviewWheel,
   handleZoom,
-  handleScaleChange,
   handleFitScale,
   handleActualScale,
   handlePreviewSelect,
@@ -203,7 +202,6 @@ function renderBuilderPageLayout({
   addCustomSection: (title: string) => string;
   handlePreviewWheel: (event: React.WheelEvent<HTMLDivElement>) => void;
   handleZoom: (delta: number) => void;
-  handleScaleChange: (nextScale: number) => void;
   handleFitScale: () => void;
   handleActualScale: () => void;
   handlePreviewSelect: (anchor: string) => void;
@@ -481,13 +479,7 @@ export default function BuilderPage() {
     }));
   }, [clampScale]);
 
-  const handleScaleChange = useCallback((nextScale: number) => {
-    setUi((prev) => ({
-      ...prev,
-      previewScaleMode: 'manual',
-      scale: clampScale(nextScale),
-    }));
-  }, [clampScale]);
+
 
   const handleFitScale = useCallback(() => {
     const fitScale = getFitScale();
@@ -501,7 +493,7 @@ export default function BuilderPage() {
   const handleActualScale = useCallback(() => {
     setUi((prev) => ({
       ...prev,
-      previewScaleMode: 'manual',
+      previewScaleMode: 'actual',
       scale: 1,
     }));
   }, []);
@@ -713,7 +705,6 @@ export default function BuilderPage() {
     addCustomSection,
     handlePreviewWheel,
     handleZoom,
-    handleScaleChange,
     handleFitScale,
     handleActualScale,
     handlePreviewSelect,

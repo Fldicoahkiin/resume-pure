@@ -32,7 +32,6 @@ interface ProjectCardProps {
   repoStatus?: RepoStatus;
   logoError?: string;
   t: TranslationFn;
-  onDelete: (projectId: string) => void;
   onUpdate: (projectId: string, patch: Partial<Project>) => void;
   onSyncRepo: (project: Project, force?: boolean) => Promise<void>;
   onUploadLogo: (projectId: string, event: ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -153,30 +152,6 @@ function RepoStatusText({ status }: { status?: RepoStatus }) {
   return <p className={`text-xs ${colorClass}`}>{status.message}</p>;
 }
 
-function ProjectHeader({
-  t,
-  onDelete,
-}: {
-  t: TranslationFn;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">{t('editor.projects.cardTitle')}</p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('editor.projects.cardHint')}</p>
-      </div>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="rounded-full p-2 text-gray-400 transition hover:bg-white hover:text-red-500 dark:hover:bg-gray-800"
-        title={t('editor.projects.deleteTitle')}
-      >
-        <Trash2 size={16} />
-      </button>
-    </div>
-  );
-}
 
 function ProjectFormFields({
   project,
@@ -536,7 +511,6 @@ function ProjectCard({
   repoStatus,
   logoError,
   t,
-  onDelete,
   onUpdate,
   onSyncRepo,
   onUploadLogo,
@@ -778,7 +752,6 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
                 repoStatus={repoStatusMap[project.id]}
                 logoError={logoErrorMap[project.id]}
                 t={t}
-                onDelete={deleteProject}
                 onUpdate={updateProject}
                 onSyncRepo={handleRepoSync}
                 onUploadLogo={handleProjectLogoUpload}
