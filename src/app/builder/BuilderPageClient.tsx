@@ -212,7 +212,7 @@ function renderBuilderPageLayout({
     <div id="builder-page" className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
               <FileText size={20} />
