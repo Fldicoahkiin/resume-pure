@@ -34,3 +34,49 @@ body {
 ::view-transition-new(root) {
   z-index: 9999;
 }
+
+/* ===== 打印样式：确保 PDF 与预览 100% 一致 ===== */
+@media print {
+  /* 隐藏所有非预览内容 */
+  body > *:not(#__next),
+  header, nav, footer,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* 重置 body 和 html */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* 预览元素：移除阴影，全宽 */
+  #resume-preview {
+    box-shadow: none !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  /* 去掉预览父级的 transform scale */
+  #resume-preview-scale-wrapper {
+    transform: none !important;
+  }
+
+  /* 隐藏预览区域的 overflow 容器滚动条和背景 */
+  #resume-preview-viewport {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: white !important;
+    height: auto !important;
+  }
+
+  /* 保留超链接颜色 */
+  a, a:visited {
+    color: inherit !important;
+    text-decoration: inherit !important;
+  }
+}

@@ -377,11 +377,19 @@ function normalizeSkills(input: unknown): Skill[] {
   return input.reduce<Skill[]>((acc, item, index) => {
     if (!isRecord(item)) return acc;
 
-    acc.push({
+    const skill: Skill = {
       id: asString(item.id, createId('skill', index)),
       category: asString(item.category, ''),
       items: normalizeSkillItems(item.items),
-    });
+    };
+
+    const categoryIcon = asOptionalString(item.categoryIcon);
+    if (categoryIcon) skill.categoryIcon = categoryIcon;
+
+    const tags = asStringArray(item.tags);
+    if (tags.length > 0) skill.tags = tags;
+
+    acc.push(skill);
 
     return acc;
   }, []);

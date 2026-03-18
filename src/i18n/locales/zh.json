@@ -175,8 +175,10 @@
     },
     "skills": {
       "title": "技能专长",
-      "category": "技能分类",
-      "categoryPlaceholder": "例如：前端工程 / 后端服务 / 工程工具",
+      "category": "能力维度",
+      "categoryPlaceholder": "例如：AI 驱动开发 / 产品架构 / 工程效能",
+      "tags": "关联技术",
+      "tagsPlaceholder": "逗号分隔，例如：React, TypeScript, Rust, Docker",
       "items": "技能",
       "itemsPlaceholder": "技能项，用逗号分隔",
       "noSkills": "点击下方按钮添加技能分类",

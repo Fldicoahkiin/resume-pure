@@ -107,7 +107,9 @@ export interface SkillItem {
 export interface Skill {
   id: string;
   category: string;
+  categoryIcon?: string;
   items: SkillItem[];
+  tags?: string[];
 }
 
 export interface SectionConfig {

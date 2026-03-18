@@ -631,6 +631,33 @@ function SkillCategoryPreview({
           })}
         </div>
       )}
+
+      {skill.tags && skill.tags.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1"
+          style={{ fontSize: `${fontSize - 2}pt` }}
+        >
+          {skill.tags.map((tag, i) => {
+            const logo = resolveSkillLogo(tag);
+            return (
+              <span key={`${tag}-${i}`} className="inline-flex items-center gap-0.5 text-gray-400">
+                {i > 0 && <span className="mx-0.5 text-gray-300">·</span>}
+                {logo && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill={logo.color}
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ width: '0.9em', height: '0.9em', verticalAlign: 'middle', flexShrink: 0, opacity: 0.7 }}
+                  >
+                    <path d={logo.svgPath} />
+                  </svg>
+                )}
+                <span>{tag}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

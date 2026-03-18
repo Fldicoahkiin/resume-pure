@@ -175,8 +175,10 @@
     },
     "skills": {
       "title": "Skills",
-      "category": "Category",
-      "categoryPlaceholder": "For example: Frontend / Backend / Tooling",
+      "category": "Capability",
+      "categoryPlaceholder": "For example: AI-Driven Development / Product Architecture / Engineering",
+      "tags": "Related Tech",
+      "tagsPlaceholder": "Comma separated, e.g. React, TypeScript, Rust, Docker",
       "items": "Skills",
       "itemsPlaceholder": "Skills, separated by commas",
       "noSkills": "Click the button below to add a skill group",

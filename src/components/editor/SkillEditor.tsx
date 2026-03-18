@@ -31,6 +31,7 @@ function createEmptySkill(): Skill {
     id: createEntityId('skill'),
     category: '',
     items: [createEmptySkillItem()],
+    tags: [],
   };
 }
 
@@ -132,6 +133,22 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                     {t('editor.skills.addItem')}
                   </button>
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
+                  {t('editor.skills.tags')}
+                </label>
+                <input
+                  type="text"
+                  value={(skill.tags || []).join(', ')}
+                  onChange={(e) => {
+                    const tags = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                    updateSkill(skill.id, { tags });
+                  }}
+                  className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                  placeholder={t('editor.skills.tagsPlaceholder')}
+                />
               </div>
 
               {skill.items.length === 0 ? (

@@ -211,7 +211,7 @@ function renderBuilderPageLayout({
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+      <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
@@ -228,7 +228,7 @@ function renderBuilderPageLayout({
       </header>
 
       {/* 移动端视图切换 - 放在 Main Content 外部，始终可见 */}
-      <div className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div data-print-hide className="lg:hidden flex items-center justify-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <button
           onClick={() => setUi((prev) => ({ ...prev, mobileView: 'edit' }))}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition flex-1 justify-center ${
@@ -256,7 +256,7 @@ function renderBuilderPageLayout({
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2">
         {/* 左侧编辑区 - 移动端根据 mobileView 切换显示 */}
-        <div className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
+        <div data-print-hide className={`h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] overflow-hidden flex flex-col ${ui.mobileView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
           {/* 编辑模式切换 */}
           <div className="flex items-center gap-1 px-4 sm:px-6 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button
@@ -340,7 +340,7 @@ function renderBuilderPageLayout({
         {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
         <div className={`bg-gray-100 dark:bg-gray-950 h-[calc(100vh-110px)] lg:h-[calc(100vh-57px)] relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
-          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
+          <div data-print-hide className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/95 dark:bg-gray-900/95 px-3 sm:px-4 py-2">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
@@ -403,12 +403,14 @@ function renderBuilderPageLayout({
 
           {/* 预览内容 */}
           <div
+            id="resume-preview-viewport"
             ref={previewViewportRef}
             onWheel={handlePreviewWheel}
             className="flex-1 overflow-auto overflow-x-hidden px-2 py-3 sm:px-6 sm:py-5"
           >
             <div className="flex justify-center">
               <div
+                id="resume-preview-scale-wrapper"
                 className="will-change-transform"
                 style={{
                   transform: `scale(${ui.scale})`,
