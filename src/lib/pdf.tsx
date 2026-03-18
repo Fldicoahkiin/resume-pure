@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResumeData, SkillLevel } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
-import { getPaperDimensions } from '@/lib/paper';
+import { getPaperPointSize } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { parseMarkdownLinks } from '@/lib/markdown';
 
@@ -71,7 +71,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
-  const paper = getPaperDimensions(theme.paperSize);
+  const paperPointSize = getPaperPointSize(theme.paperSize);
 
   const styles = StyleSheet.create({
     page: {
@@ -203,7 +203,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
   return (
     <Document>
       <Page
-        size={[paper.width, paper.height]}
+        size={paperPointSize}
         style={styles.page}
       >
         <View style={styles.header}>

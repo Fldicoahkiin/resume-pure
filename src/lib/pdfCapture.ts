@@ -1,30 +1,22 @@
 import type { PaperSize } from '@/types';
-
-const PAPER_CSS_SIZE: Record<string, string> = {
-  A4: '210mm 297mm',
-  Letter: '8.5in 11in',
-  Legal: '8.5in 14in',
-  A3: '297mm 420mm',
-};
+import { getPaperDimensions } from '@/lib/paper';
 
 /**
  * 使用浏览器原生打印导出 PDF。
- * 依赖 @media print CSS 规则隐藏编辑器等非预览 UI，
- * 动态注入 @page 规则设置纸张尺寸和零边距。
- * 优势：与预览 100% 一致，保留超链接、图标、图片。
+ * 依赖 globals.css 中的 @media print 规则隐藏非预览 UI，
+ * 动态注入 @page 规则匹配用户选择的纸张尺寸。
  */
 export async function exportToPDF(
   elementId: string,
   filename: string = 'resume.pdf',
   paperSize: PaperSize = 'A4'
 ): Promise<void> {
-  // 保持调用签名兼容，原生打印不需要 elementId 和 filename
   void elementId;
   void filename;
 
-  const cssSize = PAPER_CSS_SIZE[paperSize] || PAPER_CSS_SIZE.A4;
+  const paper = getPaperDimensions(paperSize);
 
-  // 动态注入 @page 规则
+  // 动态注入 @page 规则，匹配用户选择的纸张
   const styleId = 'print-page-size';
   let style = document.getElementById(styleId) as HTMLStyleElement | null;
   if (!style) {
@@ -32,8 +24,7 @@ export async function exportToPDF(
     style.id = styleId;
     document.head.appendChild(style);
   }
-  style.textContent = `@page { size: ${cssSize}; margin: 0; }`;
+  style.textContent = `@page { size: ${paper.mmWidth}mm ${paper.mmHeight}mm; margin: 0; }`;
 
-  // 触发打印
   window.print();
 }
