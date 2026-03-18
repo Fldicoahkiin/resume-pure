@@ -547,11 +547,13 @@ function ProjectPreviewCard({
 function SkillCategoryPreview({
   skill,
   fontSize,
+  primaryColor,
   onSelectAnchor,
   activeAnchor,
 }: {
   skill: Skill;
   fontSize: number;
+  primaryColor: string;
   onSelectAnchor?: (anchor: string) => void;
   activeAnchor?: string | null;
 }) {
@@ -604,33 +606,56 @@ function SkillCategoryPreview({
         </h3>
       </SelectableBlock>
 
-      {skill.items.length > 0 && (
-        <div 
-          className="text-gray-700" 
-          style={{ fontSize: `${fontSize - 1}pt`, lineHeight: 1.6 }}
-        >
-          {skill.items.map((item, index) => {
-            const anchor = skillItemAnchor(skill.id, item.id);
-            return (
-              <SelectableBlock
-                key={item.id}
-                anchor={anchor}
-                activeAnchor={activeAnchor}
-                onSelectAnchor={onSelectAnchor}
-                className="inline px-0.5 rounded-sm"
+      {skill.items.length > 0 && (() => {
+        const coreItems = skill.items.filter(i => i.level === 'core');
+        const proficientItems = skill.items.filter(i => i.level === 'proficient');
+        const familiarItems = skill.items.filter(i => i.level === 'familiar');
+
+        const renderBadge = (item: SkillItem, style: 'core' | 'proficient' | 'familiar', themeColor: string) => {
+          const anchor = skillItemAnchor(skill.id, item.id);
+          const badgeStyles: CSSProperties = style === 'core'
+            ? { backgroundColor: themeColor, color: '#fff', padding: '1px 8px', borderRadius: '4px', fontWeight: 600 }
+            : style === 'proficient'
+              ? { border: '1px solid #d1d5db', padding: '1px 7px', borderRadius: '4px', color: '#374151' }
+              : { color: '#6b7280' };
+
+          return (
+            <SelectableBlock
+              key={item.id}
+              anchor={anchor}
+              activeAnchor={activeAnchor}
+              onSelectAnchor={onSelectAnchor}
+              className="inline-block rounded-sm"
+            >
+              <span
+                className="inline-flex items-center gap-1 whitespace-nowrap"
+                style={{ ...badgeStyles, fontSize: `${fontSize - 1}pt`, lineHeight: '1.8' }}
               >
-                <span className="font-semibold text-gray-900">{renderSkillName(item)}</span>
-                {item.showContext !== false && item.context && (
-                  <span className="text-gray-500 font-normal"> — {item.context}</span>
-                )}
-                {index < skill.items.length - 1 && (
-                  <span className="mx-1.5 text-gray-400 font-normal">·</span>
-                )}
-              </SelectableBlock>
-            );
-          })}
-        </div>
-      )}
+                {renderSkillName(item)}
+              </span>
+              {item.showContext !== false && item.context && (
+                <span className="text-gray-500 font-normal" style={{ fontSize: `${fontSize - 1.5}pt` }}>
+                  {' '} — {item.context}
+                </span>
+              )}
+            </SelectableBlock>
+          );
+        };
+
+        return (
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1">
+            {coreItems.map(item => renderBadge(item, 'core', primaryColor))}
+            {proficientItems.length > 0 && coreItems.length > 0 && (
+              <span className="text-gray-300 select-none" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
+            )}
+            {proficientItems.map(item => renderBadge(item, 'proficient', ''))}
+            {familiarItems.length > 0 && (proficientItems.length > 0 || coreItems.length > 0) && (
+              <span className="text-gray-300 select-none" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
+            )}
+            {familiarItems.map(item => renderBadge(item, 'familiar', ''))}
+          </div>
+        );
+      })()}
 
       {skill.tags && skill.tags.length > 0 && (
         <div
@@ -863,6 +888,7 @@ function renderResumeSectionsContent({
                       key={skill.id}
                       skill={skill}
                       fontSize={theme.fontSize}
+                      primaryColor={theme.primaryColor}
                       onSelectAnchor={onSelectAnchor}
                       activeAnchor={activeAnchor}
                     />
