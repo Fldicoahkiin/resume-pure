@@ -18,6 +18,7 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  overscroll-behavior: none;
 }
 
 /* View Transitions API 主题切换动画 */
