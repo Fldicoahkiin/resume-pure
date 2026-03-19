@@ -395,18 +395,17 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               <Text key={desc.key} style={styles.bulletPoint}>• {md(desc.value)}</Text>
                             ))}
                         {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 ? (
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4, gap: 2 }}>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4, gap: 4 }}>
                             {project.technologies.map((tech, techIndex) => {
                               const logo = resolveSkillLogo(tech);
                               return (
-                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 4 }}>
-                                  {techIndex > 0 ? <Text style={{ fontSize: theme.fontSize - 2, color: '#ccc', marginRight: 3 }}>·</Text> : null}
+                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1, border: '0.5px solid #e5e7eb' }}>
                                   {logo ? (
-                                    <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 1 }}>
+                                    <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 2 }}>
                                       <Path d={logo.svgPath} fill={logo.color} />
                                     </Svg>
                                   ) : null}
-                                  <Text style={{ fontSize: theme.fontSize - 2, color: '#666' }}>{tech}</Text>
+                                  <Text style={{ fontSize: theme.fontSize - 2, color: '#4b5563' }}>{tech}</Text>
                                 </View>
                               );
                             })}

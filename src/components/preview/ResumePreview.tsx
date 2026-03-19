@@ -304,12 +304,14 @@ function formatContributionRef(url: string): string | null {
 function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; fontSize: number }) {
   if (technologies.length === 0) return null;
   return (
-    <div className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-gray-500" style={{ fontSize: `${fontSize - 2}pt` }}>
-      {withStableStringKey(technologies, 'tech').map((tech, index) => {
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-gray-600" style={{ fontSize: `${fontSize - 2}pt` }}>
+      {withStableStringKey(technologies, 'tech').map((tech) => {
         const logo = resolveSkillLogo(tech.value);
         return (
-          <span key={tech.key} className="inline-flex items-center gap-0.5">
-            {index > 0 && <span className="mr-0.5 text-gray-300">·</span>}
+          <span 
+            key={tech.key} 
+            className="inline-flex items-center gap-1 rounded bg-gray-50 px-1.5 py-0.5 border border-gray-200"
+          >
             {logo && (
               <svg
                 viewBox="0 0 24 24"
@@ -320,7 +322,7 @@ function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; f
                 <path d={logo.svgPath} />
               </svg>
             )}
-            {tech.value}
+            <span>{tech.value}</span>
           </span>
         );
       })}
@@ -585,11 +587,30 @@ function SkillBadge({
 }) {
   const anchor = skillItemAnchor(skillGroupId, item.id);
 
-  const badgeStyles: CSSProperties = level === 'core'
-    ? { backgroundColor: themeColor, color: '#fff', padding: '1px 8px', borderRadius: '4px', fontWeight: 600 }
-    : level === 'proficient'
-      ? { backgroundColor: `${themeColor}0d`, border: `1px solid ${themeColor}40`, padding: '1px 7px', borderRadius: '4px', color: '#374151' }
-      : { color: '#6b7280', padding: '0 2px' };
+  const isCore = level === 'core';
+  const isProf = level === 'proficient';
+
+  // 现代 Capsule (Pill) 设计理念，避免大面积色块导致的图标反差问题
+  // Core: 突出显示 -> 强色描边、高对比度文字
+  // Proficient: 辅助显示 -> 描边、中等对比度
+  // Familiar: 降级显示 -> 无描边浅色底、低对比度
+  const levelStyles: CSSProperties = isCore
+    ? { backgroundColor: '#ffffff', color: '#111827', border: `1px solid ${themeColor}`, fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }
+    : isProf
+    ? { backgroundColor: '#ffffff', color: '#4b5563', border: '1px solid #d1d5db', fontWeight: 500 }
+    : { backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid transparent', fontWeight: 400 };
+
+  const dividerStyle: CSSProperties = {
+    width: '1px',
+    height: '1.1em',
+    backgroundColor: isCore ? `${themeColor}40` : isProf ? '#e5e7eb' : '#d1d5db',
+  };
+
+  const contextStyle: CSSProperties = {
+    fontSize: `${fontSize - 1.5}pt`,
+    fontWeight: 400,
+    color: isCore ? '#4b5563' : isProf ? '#6b7280' : '#9ca3af',
+  };
 
   return (
     <SelectableBlock
@@ -597,22 +618,24 @@ function SkillBadge({
       anchor={anchor}
       activeAnchor={activeAnchor}
       onSelectAnchor={onSelectAnchor}
-      className="inline-flex flex-col rounded-sm"
+      className="inline-block"
     >
-      <span
-        className="inline-flex items-center gap-1 whitespace-nowrap"
-        style={{ ...badgeStyles, fontSize: `${fontSize - 1}pt`, lineHeight: '1.8' }}
+      <div 
+        className="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 transition-all hover:shadow-sm"
+        style={{ ...levelStyles, fontSize: `${fontSize - 0.5}pt`, lineHeight: '1.6' }}
       >
-        <SkillNameDisplay item={item} />
-      </span>
-      {item.showContext !== false && item.context && (
-        <span
-          className="text-gray-400 font-normal leading-tight"
-          style={{ fontSize: `${fontSize - 2.5}pt`, marginTop: '1px', paddingLeft: level === 'familiar' ? '2px' : '0' }}
-        >
-          {item.context}
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+          <SkillNameDisplay item={item} />
         </span>
-      )}
+        {item.showContext !== false && item.context && (
+          <>
+            <div style={dividerStyle} />
+            <span style={contextStyle} className="whitespace-nowrap">
+              {item.context}
+            </span>
+          </>
+        )}
+      </div>
     </SelectableBlock>
   );
 }
@@ -637,12 +660,12 @@ function SkillCategoryPreview({
   const familiarItems = skill.items.filter(i => i.level === 'familiar');
 
   return (
-    <div style={PRINT_SAFE_BLOCK_STYLE} className="mb-2">
+    <div style={PRINT_SAFE_BLOCK_STYLE} className="mb-3">
       <SelectableBlock
         anchor={categoryAnchor}
         activeAnchor={activeAnchor}
         onSelectAnchor={onSelectAnchor}
-        className="-mx-1 mb-0.5 rounded-sm px-1 py-0.5"
+        className="-mx-1 mb-1 rounded-sm px-1 py-0.5"
       >
         <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fontSize}pt` }}>
           {skill.category}
@@ -650,19 +673,14 @@ function SkillCategoryPreview({
       </SelectableBlock>
 
       {skill.items.length > 0 && (
-        <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5 mt-1">
+        <div className="flex flex-wrap items-center gap-2 mt-1">
           {coreItems.map(item => (
             <SkillBadge key={item.id} item={item} level="core" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
           ))}
-          {proficientItems.length > 0 && coreItems.length > 0 && (
-            <span className="text-gray-300 select-none self-center" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
-          )}
+          {/* 不需要分隔符，Capsule 本身就是出色的边界 */}
           {proficientItems.map(item => (
             <SkillBadge key={item.id} item={item} level="proficient" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
           ))}
-          {familiarItems.length > 0 && (proficientItems.length > 0 || coreItems.length > 0) && (
-            <span className="text-gray-300 select-none self-center" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
-          )}
           {familiarItems.map(item => (
             <SkillBadge key={item.id} item={item} level="familiar" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
           ))}
