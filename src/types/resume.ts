@@ -130,6 +130,12 @@ export interface CustomSectionItem {
   date?: string;       // 可选日期
   description: string[]; // 描述列表
   showBulletPoints?: boolean; // 是否以项目符号展示描述，默认 true
+  url?: string;           // 项目/成果链接
+  repoUrl?: string;       // GitHub 仓库链接
+  repoStars?: number;     // Star 数
+  repoAvatarUrl?: string; // 仓库/组织头像
+  showStars?: boolean;    // 是否展示 Star 数
+  showLogo?: boolean;     // 是否展示 Logo
 }
 
 // 自定义模块
