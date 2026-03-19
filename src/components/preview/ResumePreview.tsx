@@ -909,6 +909,8 @@ function renderResumeSectionsContent({
                   <div className="space-y-3">
                     {customSection.items.map(item => {
                       const itemAnchor = customItemAnchor(section.id, item.id);
+                      const repoPath = item.repoUrl ? formatGitHubPath(item.repoUrl) : null;
+                      const repoHref = item.repoUrl ? sanitizeUrl(item.repoUrl) : undefined;
 
                       return (
                         <SelectableBlock
@@ -918,24 +920,90 @@ function renderResumeSectionsContent({
                           onSelectAnchor={onSelectAnchor}
                           className="-mx-1 px-1 py-0.5"
                         >
-                          <div className="flex justify-between items-baseline">
-                            {item.title && (
-                              <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
-                                {item.title}
-                              </h3>
+                          <div className="flex gap-3">
+                            {item.showLogo !== false && item.repoAvatarUrl && (
+                              <LogoBadge
+                                src={item.repoAvatarUrl}
+                                alt={item.title || ''}
+                                label={item.title || ''}
+                                size={36}
+                                variant="round"
+                              />
                             )}
-                            {item.date && (
-                              <span className="text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
-                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    {item.title && (
+                                      <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
+                                        {item.title}
+                                      </h3>
+                                    )}
+                                    {item.showStars !== false && typeof item.repoStars === 'number' && item.repoStars > 0 && (
+                                      <span
+                                        className="inline-flex items-center gap-0.5 text-amber-600"
+                                        style={{ fontSize: `${fs - 2}pt` }}
+                                      >
+                                        <Star size={12} />
+                                        {formatCompactNumber(item.repoStars)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {item.subtitle && (
+                                    <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
+                                  )}
+                                  {(repoPath || item.url) && (
+                                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-gray-400" style={{ fontSize: `${fs - 2}pt` }}>
+                                      {repoPath && (
+                                        <span className="inline-flex items-center gap-1">
+                                          <Github size={12} />
+                                          {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
+                                            <a
+                                              href={repoHref}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="hover:text-blue-600 hover:underline"
+                                              onClick={(event) => event.stopPropagation()}
+                                            >
+                                              {repoPath}
+                                            </a>
+                                          ) : (
+                                            <span>{repoPath}</span>
+                                          )}
+                                        </span>
+                                      )}
+                                      {item.url && (
+                                        <span className="inline-flex items-center gap-1">
+                                          <Link size={12} />
+                                          {!onSelectAnchor && theme.enableLinks !== false ? (
+                                            <a
+                                              href={sanitizeUrl(item.url) || '#'}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="hover:text-blue-600 hover:underline"
+                                              onClick={(event) => event.stopPropagation()}
+                                            >
+                                              {item.url}
+                                            </a>
+                                          ) : (
+                                            <span>{item.url}</span>
+                                          )}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                {item.date && (
+                                  <span className="shrink-0 text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
+                                )}
+                              </div>
+                              <DescriptionList
+                                items={item.description}
+                                fontSize={fs}
+                                showBulletPoints={item.showBulletPoints !== false}
+                              />
+                            </div>
                           </div>
-                          {item.subtitle && (
-                            <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
-                          )}
-                          <DescriptionList
-                            items={item.description}
-                            fontSize={fs}
-                            showBulletPoints={item.showBulletPoints !== false}
-                          />
                         </SelectableBlock>
                       );
                     })}
