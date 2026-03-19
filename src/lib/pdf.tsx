@@ -399,9 +399,9 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                             {project.technologies.map((tech, techIndex) => {
                               const logo = resolveSkillLogo(tech);
                               return (
-                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1, border: '0.5px solid #e5e7eb' }}>
+                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1.5, border: '0.5px solid #e5e7eb' }}>
                                   {logo ? (
-                                    <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 2 }}>
+                                    <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 3 }}>
                                       <Path d={logo.svgPath} fill={logo.color} />
                                     </Svg>
                                   ) : null}

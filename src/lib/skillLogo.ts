@@ -57,6 +57,9 @@ const ALIAS_MAP: Record<string, string> = {
   godot: 'godotengine',
   'godot engine': 'godotengine',
   'unity3d': 'unity',
+  'egui': 'rust',
+  'steamworkssdk': 'steam',
+  'steamworks': 'steam',
 };
 
 function normalizeSkillName(name: string): string {
@@ -68,6 +71,7 @@ export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
 
   // 先查别名
   const slug = ALIAS_MAP[normalized] || normalized;
+
   const icon = ICON_DATA[slug];
 
   if (!icon) return undefined;

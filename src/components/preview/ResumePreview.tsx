@@ -310,7 +310,7 @@ function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; f
         return (
           <span 
             key={tech.key} 
-            className="inline-flex items-center gap-1 rounded bg-gray-50 px-1.5 py-0.5 border border-gray-200"
+            className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 border border-gray-200"
           >
             {logo && (
               <svg
