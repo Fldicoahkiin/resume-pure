@@ -566,6 +566,57 @@ function SkillNameDisplay({ item }: { item: SkillItem }) {
   );
 }
 
+function SkillBadge({
+  item,
+  level,
+  themeColor,
+  fontSize,
+  skillGroupId,
+  onSelectAnchor,
+  activeAnchor,
+}: {
+  item: SkillItem;
+  level: 'core' | 'proficient' | 'familiar';
+  themeColor: string;
+  fontSize: number;
+  skillGroupId: string;
+  onSelectAnchor?: (anchor: string) => void;
+  activeAnchor?: string | null;
+}) {
+  const anchor = skillItemAnchor(skillGroupId, item.id);
+
+  const badgeStyles: CSSProperties = level === 'core'
+    ? { backgroundColor: themeColor, color: '#fff', padding: '1px 8px', borderRadius: '4px', fontWeight: 600 }
+    : level === 'proficient'
+      ? { backgroundColor: `${themeColor}0d`, border: `1px solid ${themeColor}40`, padding: '1px 7px', borderRadius: '4px', color: '#374151' }
+      : { color: '#6b7280', padding: '0 2px' };
+
+  return (
+    <SelectableBlock
+      key={item.id}
+      anchor={anchor}
+      activeAnchor={activeAnchor}
+      onSelectAnchor={onSelectAnchor}
+      className="inline-flex flex-col rounded-sm"
+    >
+      <span
+        className="inline-flex items-center gap-1 whitespace-nowrap"
+        style={{ ...badgeStyles, fontSize: `${fontSize - 1}pt`, lineHeight: '1.8' }}
+      >
+        <SkillNameDisplay item={item} />
+      </span>
+      {item.showContext !== false && item.context && (
+        <span
+          className="text-gray-400 font-normal leading-tight"
+          style={{ fontSize: `${fontSize - 2.5}pt`, marginTop: '1px', paddingLeft: level === 'familiar' ? '2px' : '0' }}
+        >
+          {item.context}
+        </span>
+      )}
+    </SelectableBlock>
+  );
+}
+
 function SkillCategoryPreview({
   skill,
   fontSize,
@@ -581,6 +632,9 @@ function SkillCategoryPreview({
 }) {
   const categoryAnchor = skillAnchor(skill.id);
 
+  const coreItems = skill.items.filter(i => i.level === 'core');
+  const proficientItems = skill.items.filter(i => i.level === 'proficient');
+  const familiarItems = skill.items.filter(i => i.level === 'familiar');
 
   return (
     <div style={PRINT_SAFE_BLOCK_STYLE} className="mb-2">
@@ -595,56 +649,25 @@ function SkillCategoryPreview({
         </h3>
       </SelectableBlock>
 
-      {skill.items.length > 0 && (() => {
-        const coreItems = skill.items.filter(i => i.level === 'core');
-        const proficientItems = skill.items.filter(i => i.level === 'proficient');
-        const familiarItems = skill.items.filter(i => i.level === 'familiar');
-
-        const renderBadge = (item: SkillItem, style: 'core' | 'proficient' | 'familiar', themeColor: string) => {
-          const anchor = skillItemAnchor(skill.id, item.id);
-          const badgeStyles: CSSProperties = style === 'core'
-            ? { backgroundColor: themeColor, color: '#fff', padding: '1px 8px', borderRadius: '4px', fontWeight: 600 }
-            : style === 'proficient'
-              ? { border: '1px solid #d1d5db', padding: '1px 7px', borderRadius: '4px', color: '#374151' }
-              : { color: '#6b7280' };
-
-          return (
-            <SelectableBlock
-              key={item.id}
-              anchor={anchor}
-              activeAnchor={activeAnchor}
-              onSelectAnchor={onSelectAnchor}
-              className="inline-block rounded-sm"
-            >
-              <span
-                className="inline-flex items-center gap-1 whitespace-nowrap"
-                style={{ ...badgeStyles, fontSize: `${fontSize - 1}pt`, lineHeight: '1.8' }}
-              >
-                <SkillNameDisplay item={item} />
-              </span>
-              {item.showContext !== false && item.context && (
-                <span className="text-gray-500 font-normal" style={{ fontSize: `${fontSize - 1.5}pt` }}>
-                  {' '} — {item.context}
-                </span>
-              )}
-            </SelectableBlock>
-          );
-        };
-
-        return (
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1">
-            {coreItems.map(item => renderBadge(item, 'core', primaryColor))}
-            {proficientItems.length > 0 && coreItems.length > 0 && (
-              <span className="text-gray-300 select-none" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
-            )}
-            {proficientItems.map(item => renderBadge(item, 'proficient', ''))}
-            {familiarItems.length > 0 && (proficientItems.length > 0 || coreItems.length > 0) && (
-              <span className="text-gray-300 select-none" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
-            )}
-            {familiarItems.map(item => renderBadge(item, 'familiar', ''))}
-          </div>
-        );
-      })()}
+      {skill.items.length > 0 && (
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5 mt-1">
+          {coreItems.map(item => (
+            <SkillBadge key={item.id} item={item} level="core" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
+          ))}
+          {proficientItems.length > 0 && coreItems.length > 0 && (
+            <span className="text-gray-300 select-none self-center" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
+          )}
+          {proficientItems.map(item => (
+            <SkillBadge key={item.id} item={item} level="proficient" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
+          ))}
+          {familiarItems.length > 0 && (proficientItems.length > 0 || coreItems.length > 0) && (
+            <span className="text-gray-300 select-none self-center" style={{ fontSize: `${fontSize - 1}pt` }}>·</span>
+          )}
+          {familiarItems.map(item => (
+            <SkillBadge key={item.id} item={item} level="familiar" themeColor={primaryColor} fontSize={fontSize} skillGroupId={skill.id} onSelectAnchor={onSelectAnchor} activeAnchor={activeAnchor} />
+          ))}
+        </div>
+      )}
 
       {skill.tags && skill.tags.length > 0 && (
         <div
