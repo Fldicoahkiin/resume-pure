@@ -412,7 +412,13 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
           title: asOptionalString(item.title),
           subtitle: asOptionalString(item.subtitle),
           date: asOptionalString(item.date),
+          url: asOptionalString(item.url),
+          repoUrl: asOptionalString(item.repoUrl),
+          repoStars: typeof item.repoStars === 'number' ? item.repoStars : undefined,
+          repoAvatarUrl: asOptionalString(item.repoAvatarUrl),
           description: asStringArray(item.description),
+          showStars: typeof item.showStars === 'boolean' ? item.showStars : undefined,
+          showLogo: typeof item.showLogo === 'boolean' ? item.showLogo : undefined,
           showBulletPoints: asBoolean(item.showBulletPoints, true),
         });
 

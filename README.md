@@ -133,13 +133,31 @@ docker run -p 3000:80 resume-pure
   "education": [],
   "projects": [],
   "skills": [],
-  "customSections": [],
+  "customSections": [
+    {
+      "key": "开源贡献",
+      "items": [
+        {
+          "title": "项目名称",
+          "subtitle": "核心贡献或角色",
+          "date": "2024.01",
+          "url": "https://github.com/pulls/1",
+          "repoUrl": "https://github.com/someone/repo",
+          "repoStars": 1000,
+          "description": ["修复了 XXX 问题", "提升了 XXX 性能"],
+          "showStars": true,
+          "showLogo": true
+        }
+      ]
+    }
+  ],
   "sections": [
     { "key": "summary", "title": "", "visible": true },
     { "key": "experience", "title": "", "visible": true },
     { "key": "education", "title": "", "visible": true },
     { "key": "projects", "title": "", "visible": true },
-    { "key": "skills", "title": "", "visible": true }
+    { "key": "skills", "title": "", "visible": true },
+    { "key": "custom:开源贡献", "title": "开源贡献", "visible": true }
   ],
   "theme": {
     "primaryColor": "#3b82f6",
@@ -160,11 +178,25 @@ docker run -p 3000:80 resume-pure
 ## 5) AI 生成 Raw 提示词模板
 
 ```text
-请输出 Resume Pure 可导入的 JSON（不要 Markdown 代码块）：
-1. 必须包含 personalInfo/experience/education/projects/skills/customSections/sections/theme
-2. 所有日期字段输出字符串
-3. sections 使用 key 字段，至少包含 summary/experience/education/projects/skills
-4. 只输出合法 JSON
+# 角色与目标
+你是一个资深技术简历顾问与数据结构专家。请根据提供的用户个人经历，输出一份 Resume Pure 平台完美支持的结构化简历数据（默认请使用 JSON 格式，如用户明确要求也可输出 YAML）。
+
+# 数据结构核心规范要求：
+1. **必须包含的标准根节点**：
+   `personalInfo`, `experience`, `education`, `projects`, `skills`, `customSections`, `sections`, `theme`。
+2. **格式与验证逻辑**：
+   - 所有的日期字段（startDate, endDate, date 等）强烈建议使用字符串（如 `"2025.01"`, `"2024-02-01"`）。
+   - 只输出合法的格式代码本身，不要包裹在 Markdown 代码块外附加多余的解释文本。
+3. **Sections 路由映射机制**：
+   - `sections` 数组必须通过 `key` 字段对应上方的数据节点来排定渲染顺序。
+   - 至少应包含：`summary`, `experience`, `education`, `projects`, `skills`。
+4. **自定义模块强规范 (Custom Sections)**：
+   - 对于非标准经历（如：开源贡献、技术分享、获取专利），必须使用 `customSections` 组织。
+   - 每个自定义模块必须包含一个唯一的 `key`（如 "开源贡献"）。
+   - 在底部 `sections` 数组中，对应的模块注入 key 必须添加 `custom:` 前缀映射（如 `{"key": "custom:开源贡献", "title": "开源贡献", "visible": true}`）。
+   - 其内部 item 支持的富文本/元信息字段：`title`（主标题）, `subtitle`（副标题）, `date`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`（仓库 Star 数：纯数字）, `description`（描述数组）, `showStars`（布尔）, `showLogo`（布尔）, `showBulletPoints`（布尔）。请尽可能丰富这部分元信息。
+
+请立即开始根据我的诉求和个人经历生成匹配的数据：
 ```
 
 ## 6) 当前兼容边界

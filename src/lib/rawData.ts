@@ -75,7 +75,13 @@ interface RawCustomSectionItem {
   title?: string;
   subtitle?: string;
   date?: string;
+  url?: string;
+  repoUrl?: string;
+  repoStars?: number;
+  repoAvatarUrl?: string;
   description: string[];
+  showStars?: boolean;
+  showLogo?: boolean;
   showBulletPoints?: boolean;
 }
 
@@ -252,7 +258,13 @@ function toRawCustomItems(items: CustomSectionItem[]): RawCustomSectionItem[] {
     title: item.title,
     subtitle: item.subtitle,
     date: item.date,
+    url: item.url,
+    repoUrl: item.repoUrl,
+    repoStars: item.repoStars,
+    repoAvatarUrl: item.repoAvatarUrl,
     description: item.description,
+    showStars: item.showStars,
+    showLogo: item.showLogo,
     showBulletPoints: item.showBulletPoints,
   }));
 }

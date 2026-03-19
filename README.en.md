@@ -127,13 +127,31 @@ Trigger rules:
   "education": [],
   "projects": [],
   "skills": [],
-  "customSections": [],
+  "customSections": [
+    {
+      "key": "Open Source",
+      "items": [
+        {
+          "title": "Project Name",
+          "subtitle": "Core Contribution or Role",
+          "date": "2024.01",
+          "url": "https://github.com/pulls/1",
+          "repoUrl": "https://github.com/someone/repo",
+          "repoStars": 1000,
+          "description": ["Fixed XXX issue", "Improved XXX performance"],
+          "showStars": true,
+          "showLogo": true
+        }
+      ]
+    }
+  ],
   "sections": [
     { "key": "summary", "title": "", "visible": true },
     { "key": "experience", "title": "", "visible": true },
     { "key": "education", "title": "", "visible": true },
     { "key": "projects", "title": "", "visible": true },
-    { "key": "skills", "title": "", "visible": true }
+    { "key": "skills", "title": "", "visible": true },
+    { "key": "custom:Open Source", "title": "Open Source", "visible": true }
   ],
   "theme": {
     "primaryColor": "#3b82f6",
@@ -154,11 +172,25 @@ Trigger rules:
 ## 5) AI Prompt Template
 
 ```text
-Generate valid JSON for Resume Pure import (no markdown code block):
-1. include personalInfo/experience/education/projects/skills/customSections/sections/theme
-2. all date fields must be strings
-3. sections should use `key` and include summary/experience/education/projects/skills
-4. output valid JSON only
+# Role & Goal
+You are a senior tech resume consultant and data structure expert. Please generate structured resume data perfectly supported by the Resume Pure platform, based on the user's provided background (Use JSON format by default, or output YAML if explicitly requested).
+
+# Core Data Structure Specifications:
+1. **Required Standard Root Nodes**:
+   `personalInfo`, `experience`, `education`, `projects`, `skills`, `customSections`, `sections`, `theme`.
+2. **Formatting & Validation**:
+   - All date fields (startDate, endDate, date, etc.) are strongly recommended to be exported as strings (e.g., `"2025.01"`, `"2024-02-01"`).
+   - Only output the raw format code itself. Do not wrap it in Markdown code blocks or append unnecessary explanatory text.
+3. **Sections Routing & Mapping**:
+   - The `sections` array dictates the rendering order by referring to the root data nodes via the `key` field.
+   - It must contain at least: `summary`, `experience`, `education`, `projects`, `skills`.
+4. **Custom Sections Strict Rules**:
+   - For non-standard experiences (e.g., Open Source Contributions, Tech Talks, Patents), you must organize them inside `customSections`.
+   - Each custom module must contain a unique `key` (e.g., "Open Source Contributions").
+   - In the bottom `sections` array, the injected key for a custom module must have a `custom:` prefix (e.g., `{"key": "custom:Open Source Contributions", "title": "Open Source", "visible": true}`).
+   - Rich internal item fields available: `title` (Main Title), `subtitle` (Subtitle), `date`, `url` (Proof Link), `repoUrl` (Associated Repository Link), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `showStars` (boolean), `showLogo` (boolean), `showBulletPoints` (boolean). Please enrich the metadata as much as possible using these fields.
+
+Please begin generating the mapped data based on my requests and personal experiences:
 ```
 
 ## 6) Compatibility Boundary
