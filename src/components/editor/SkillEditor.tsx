@@ -1,6 +1,7 @@
 'use client';
 
 import { ChangeEvent, useState } from 'react';
+import NextImage from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Image as ImageIcon, Plus, Trash2, Wrench, Settings2 } from 'lucide-react';
 import { readImageFileAsDataUrl } from '@/lib/image';
@@ -137,7 +138,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                   <Trash2 size={16} />
                 </button>
               }
-              defaultCollapsed
+              initialCollapsed
             >
               <div data-editor-anchor={skillAnchor(skill.id)}>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -198,7 +199,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
                         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                           <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700/50 ${item.showLogo === false ? 'opacity-50' : ''}`}>
                             {item.logo ? (
-                              <img src={item.logo} alt="" className="h-5 w-5 object-contain" />
+                              <NextImage src={item.logo} alt="" width={20} height={20} unoptimized className="h-5 w-5 object-contain" />
                             ) : resolvedLogo ? (
                               <svg viewBox="0 0 24 24" fill={resolvedLogo.color} className="h-4 w-4">
                                 <path d={resolvedLogo.svgPath} />

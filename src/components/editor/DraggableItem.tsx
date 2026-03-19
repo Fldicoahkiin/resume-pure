@@ -14,7 +14,7 @@ interface DraggableItemProps {
   onDragEnd: () => void;
   isDragging: boolean;
   headerActions?: ReactNode;
-  defaultCollapsed?: boolean;
+  initialCollapsed?: boolean;
 }
 
 export function DraggableItem({
@@ -27,9 +27,9 @@ export function DraggableItem({
   onDragEnd,
   isDragging,
   headerActions,
-  defaultCollapsed = false,
+  initialCollapsed = false,
 }: DraggableItemProps) {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const [collapsed, setCollapsed] = useState(() => initialCollapsed);
 
   return (
     <div

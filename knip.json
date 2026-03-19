@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/app/**/*.{ts,tsx}",
+    "src/lib/pdf.tsx",
+    "src/lib/pdfFonts.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true
+}

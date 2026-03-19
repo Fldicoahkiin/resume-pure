@@ -745,7 +745,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
                   <Trash2 size={16} />
                 </button>
               }
-              defaultCollapsed
+              initialCollapsed
             >
               <ProjectCard
                 project={project}

@@ -1,20 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
-import { Settings, RotateCcw, Github, LogOut, Loader2 } from 'lucide-react';
+import { Settings, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FontSelector } from './FontSelector';
 import { PAPER_SIZE_OPTIONS } from '@/lib/paper';
-import {
-  getStoredUser,
-  getStoredToken,
-  clearAuth,
-  setManualToken,
-  requestDeviceCode,
-  completeDeviceFlow,
-} from '@/lib/githubAuth';
-import type { GitHubUser } from '@/lib/githubAuth';
+import { GitHubAuthSection } from './GitHubAuthSection';
 import type { PaperSize } from '@/types';
 
 const presetColors = [
@@ -35,38 +26,6 @@ const THEME_SKELETON_KEYS = ['theme-1', 'theme-2', 'theme-3', 'theme-4'];
 export function ThemeEditor() {
   const { t } = useTranslation();
   const { resume, hasHydrated, updateTheme, reset } = useResumeStore();
-  const [githubUser, setGithubUser] = useState<GitHubUser | null>(() => getStoredUser());
-  const [deviceUserCode, setDeviceUserCode] = useState('');
-  const [deviceVerifyUrl, setDeviceVerifyUrl] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-
-  const handleLogin = useCallback(async () => {
-    setAuthLoading(true);
-    setAuthError('');
-    setDeviceUserCode('');
-    try {
-      const deviceData = await requestDeviceCode();
-      setDeviceUserCode(deviceData.user_code);
-      setDeviceVerifyUrl(deviceData.verification_uri);
-      window.open(deviceData.verification_uri, '_blank');
-      const user = await completeDeviceFlow(deviceData.device_code, deviceData.interval);
-      setGithubUser(user);
-      setDeviceUserCode('');
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : 'unknown';
-      setAuthError(msg === 'expired' ? t('editor.theme.githubAuthExpired') : t('editor.theme.githubAuthFailed'));
-    } finally {
-      setAuthLoading(false);
-    }
-  }, [t]);
-
-  const handleLogout = useCallback(() => {
-    clearAuth();
-    setGithubUser(null);
-    setDeviceUserCode('');
-    setAuthError('');
-  }, []);
 
   if (!hasHydrated) {
     return (
@@ -331,91 +290,7 @@ export function ThemeEditor() {
           </button>
         </div>
 
-        {/* GitHub 账号 */}
-        <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-          <div className="mb-3 flex items-center gap-2">
-            <Github size={16} className="text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
-          </div>
-
-          {githubUser ? (
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-700/40">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={githubUser.avatar_url}
-                  alt={githubUser.login}
-                  className="h-8 w-8 rounded-full"
-                />
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{githubUser.login}</p>
-                  <p className="text-xs text-green-600 dark:text-green-400">{t('editor.theme.githubConnected')}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-red-300 hover:text-red-500 dark:border-gray-600 dark:text-gray-400"
-              >
-                <LogOut size={12} />
-                {t('editor.theme.githubLogout')}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => void handleLogin()}
-                disabled={authLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-              >
-                {authLoading ? <Loader2 size={16} className="animate-spin" /> : <Github size={16} />}
-                {authLoading ? t('editor.theme.githubAuthWaiting') : t('editor.theme.githubLogin')}
-              </button>
-
-              {deviceUserCode && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 dark:border-blue-500/30 dark:bg-blue-500/10">
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
-                    {t('editor.theme.githubDeviceHint')}
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <code className="rounded bg-white px-2 py-1 text-lg font-bold tracking-widest text-gray-900 dark:bg-gray-800 dark:text-white">
-                      {deviceUserCode}
-                    </code>
-                    <a
-                      href={deviceVerifyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 underline hover:text-blue-800 dark:text-blue-400"
-                    >
-                      {t('editor.theme.githubOpenVerify')}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {authError && (
-                <p className="text-xs text-red-500 dark:text-red-400">{authError}</p>
-              )}
-
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {t('editor.theme.githubTokenHint')}
-              </p>
-
-              <details className="group">
-                <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  {t('editor.theme.githubManualToken')}
-                </summary>
-                <input
-                  type="password"
-                  defaultValue={getStoredToken()}
-                  onChange={(e) => setManualToken(e.target.value)}
-                  className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder="ghp_xxxxxxxxxxxx"
-                />
-              </details>
-            </div>
-          )}
-        </div>
+        <GitHubAuthSection />
       </div>
 
       {/* 未来设置提示 */}

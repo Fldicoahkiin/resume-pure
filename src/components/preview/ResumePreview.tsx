@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import NextImage from 'next/image';
 import { useResumeStore } from '@/store/resumeStore';
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, Dribbble, Link, User, Briefcase, Calendar, MessageCircle, AtSign, Star } from 'lucide-react';
 import { ContactIconType, CustomSection, Education, Experience, Project, SectionConfig, Skill, SkillItem, ThemeConfig } from '@/types';
@@ -528,6 +529,43 @@ function ProjectPreviewCard({
   );
 }
 
+function SkillNameDisplay({ item }: { item: SkillItem }) {
+  if (item.showLogo === false) return <span>{item.name}</span>;
+
+  if (item.logo) {
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        <NextImage
+          src={item.logo}
+          alt=""
+          width={16}
+          height={16}
+          unoptimized
+          style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0, objectFit: 'contain' }}
+        />
+        {item.name}
+      </span>
+    );
+  }
+
+  const logo = resolveSkillLogo(item.name);
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {logo && (
+        <svg
+          viewBox="0 0 24 24"
+          fill={logo.color}
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0 }}
+        >
+          <path d={logo.svgPath} />
+        </svg>
+      )}
+      {item.name}
+    </span>
+  );
+}
+
 function SkillCategoryPreview({
   skill,
   fontSize,
@@ -543,39 +581,6 @@ function SkillCategoryPreview({
 }) {
   const categoryAnchor = skillAnchor(skill.id);
 
-  const renderSkillName = (item: SkillItem) => {
-    if (item.showLogo === false) return <span>{item.name}</span>;
-
-    if (item.logo) {
-      return (
-        <span className="inline-flex items-center gap-0.5">
-          <img
-            src={item.logo}
-            alt=""
-            style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0, objectFit: 'contain' }}
-          />
-          {item.name}
-        </span>
-      );
-    }
-
-    const logo = resolveSkillLogo(item.name);
-    return (
-      <span className="inline-flex items-center gap-0.5">
-        {logo && (
-          <svg
-            viewBox="0 0 24 24"
-            fill={logo.color}
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ width: '1em', height: '1em', verticalAlign: 'middle', flexShrink: 0 }}
-          >
-            <path d={logo.svgPath} />
-          </svg>
-        )}
-        {item.name}
-      </span>
-    );
-  };
 
   return (
     <div style={PRINT_SAFE_BLOCK_STYLE} className="mb-2">
@@ -615,7 +620,7 @@ function SkillCategoryPreview({
                 className="inline-flex items-center gap-1 whitespace-nowrap"
                 style={{ ...badgeStyles, fontSize: `${fontSize - 1}pt`, lineHeight: '1.8' }}
               >
-                {renderSkillName(item)}
+                <SkillNameDisplay item={item} />
               </span>
               {item.showContext !== false && item.context && (
                 <span className="text-gray-500 font-normal" style={{ fontSize: `${fontSize - 1.5}pt` }}>
