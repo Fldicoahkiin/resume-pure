@@ -20,7 +20,7 @@ import {
   skillItemAnchor,
 } from '@/lib/previewAnchor';
 import { resolveSkillLogo } from '@/lib/skillLogo';
-import { parseMarkdownLinks } from '@/lib/markdown';
+import { MarkdownWeb } from '@/components/preview/MarkdownWeb';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
 const DEFAULT_PAPER_DIMENSIONS = getPaperDimensions('A4');
@@ -246,7 +246,7 @@ function DescriptionList({
       <div className="mt-1.5 space-y-1">
         {keyedItems.map((item) => (
           <p key={item.key} className="text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${fontSize - 1}pt` }}>
-            {item.value}
+            <MarkdownWeb text={item.value} />
           </p>
         ))}
       </div>
@@ -258,7 +258,7 @@ function DescriptionList({
       {keyedItems.map((item) => (
         <li key={item.key} className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
           <span className="mr-2 text-gray-400 font-bold">•</span>
-          <span className="flex-1">{item.value}</span>
+          <span className="flex-1"><MarkdownWeb text={item.value} /></span>
         </li>
       ))}
     </ul>
@@ -363,23 +363,7 @@ function ProjectContributionList({
               <li className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
                 <span className="mr-2 text-gray-400">•</span>
                 <span className="flex-1">
-                  {parseMarkdownLinks(contribution.summary).map((node, i) => {
-                    if (node.type === 'link' && node.url) {
-                      return (
-                        <a
-                          key={i}
-                          href={sanitizeUrl(node.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-blue-600 hover:underline"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {node.content}
-                        </a>
-                      );
-                    }
-                    return <span key={i}>{node.content}</span>;
-                  })}
+                  <MarkdownWeb text={contribution.summary} />
                   {ref && (
                     <>
                       {' '}
@@ -1079,8 +1063,8 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
                   onSelectAnchor={onSelectAnchor}
                   className="-mx-1 px-1 py-0.5 mt-2"
                 >
-                  <p className="text-gray-600" style={{ fontSize: `${fs}pt` }}>
-                    {personalInfo.summary}
+                  <p className="mt-2 text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                    <MarkdownWeb text={personalInfo.summary} />
                   </p>
                 </SelectableBlock>
               )}

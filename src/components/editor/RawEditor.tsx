@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
-import { exportToJSON, exportToYAML, importFromJSON, importFromYAML, downloadFile } from '@/lib/export';
+import { exportToJSON, exportToYAML, exportToMarkdown, importFromJSON, importFromYAML, importFromMarkdown, downloadFile } from '@/lib/export';
 import { Copy, Check, Save, Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,7 @@ import { getRawJumpDescriptor, getRawSearchPatterns } from '@/lib/previewAnchor'
 import type { RawJumpDescriptor } from '@/lib/previewAnchor';
 import { RAW_SCHEMA_ERROR_MESSAGE } from '@/lib/rawData';
 
-type Format = 'json' | 'yaml';
+type Format = 'json' | 'yaml' | 'markdown';
 
 interface RawJumpRequest {
   id: number;
@@ -644,9 +644,11 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
 
   // 当 resume 或 format 变化时更新内容
   useEffect(() => {
-    const newContent = ui.format === 'json'
-      ? exportToJSON(resume)
-      : exportToYAML(resume);
+    let newContent = '';
+    if (ui.format === 'json') newContent = exportToJSON(resume);
+    else if (ui.format === 'yaml') newContent = exportToYAML(resume);
+    else newContent = exportToMarkdown(resume);
+
     updateUi({
       content: newContent,
       hasChanges: false,
@@ -702,9 +704,11 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
 
   const handleSave = () => {
     try {
-      const data = ui.format === 'json'
-        ? importFromJSON(ui.content)
-        : importFromYAML(ui.content);
+      let data;
+      if (ui.format === 'json') data = importFromJSON(ui.content);
+      else if (ui.format === 'yaml') data = importFromYAML(ui.content);
+      else data = importFromMarkdown(ui.content);
+
       importData(data);
       updateUi({
         hasChanges: false,
@@ -723,8 +727,8 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
   };
 
   const handleDownload = () => {
-    const filename = ui.format === 'json' ? 'resume.json' : 'resume.yaml';
-    const type = ui.format === 'json' ? 'application/json' : 'text/yaml';
+    const filename = ui.format === 'json' ? 'resume.json' : ui.format === 'yaml' ? 'resume.yaml' : 'resume.md';
+    const type = ui.format === 'json' ? 'application/json' : ui.format === 'yaml' ? 'text/yaml' : 'text/markdown';
     downloadFile(ui.content, filename, type);
   };
 
@@ -742,6 +746,9 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
       } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
         data = importFromYAML(text);
         updateUi({ format: 'yaml' });
+      } else if (file.name.endsWith('.md') || file.name.endsWith('.markdown')) {
+        data = importFromMarkdown(text);
+        updateUi({ format: 'markdown' });
       } else {
         updateUi({ error: t('rawEditor.unsupportedFormat') });
         return;
@@ -795,6 +802,16 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
             }`}
           >
             YAML
+          </button>
+          <button
+            onClick={() => updateUi({ format: 'markdown' })}
+            className={`px-3 py-1 text-sm rounded ${
+              ui.format === 'markdown'
+                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Markdown
           </button>
         </div>
 

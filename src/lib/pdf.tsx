@@ -3,7 +3,7 @@ import { ResumeData, SkillLevel } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperPointSize } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
-import { parseMarkdownLinks } from '@/lib/markdown';
+import { parseInlineMarkdown } from '@/lib/markdown';
 
 registerCJKHyphenation();
 
@@ -72,6 +72,32 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
   const paperPointSize = getPaperPointSize(theme.paperSize);
+
+  const isSafePdfUrl = (url: string): boolean => {
+    try {
+      const parsed = new URL(url, 'https://placeholder.invalid');
+      return ['http:', 'https:', 'mailto:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  };
+
+  const renderMarkdown = (text: string) => {
+    return parseInlineMarkdown(text).map((token, i) => {
+      const key = `${token.type}-${i}`;
+      switch (token.type) {
+        case 'text': return token.content;
+        case 'bold': return <Text key={key} style={{ fontWeight: 'bold' }}>{token.content}</Text>;
+        case 'italic': return <Text key={key} style={{ fontStyle: 'italic' }}>{token.content}</Text>;
+        case 'strike': return <Text key={key} style={{ textDecoration: 'line-through' }}>{token.content}</Text>;
+        case 'code': return <Text key={key} style={{ backgroundColor: '#f3f4f6', fontFamily: 'Courier' }}>{token.content}</Text>;
+        case 'link': return (theme.enableLinks !== false && isSafePdfUrl(token.url)) ? (
+            <Link key={key} src={token.url} style={{ color: theme.primaryColor || '#3b82f6', textDecoration: 'none' }}>{token.content}</Link>
+          ) : <Text key={key}>{token.content}</Text>;
+        default: return null;
+      }
+    });
+  };
 
   const styles = StyleSheet.create({
     page: {
@@ -223,7 +249,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
             ))}
           </View>
           {data.personalInfo.summary ? (
-            <Text style={styles.summary}>{data.personalInfo.summary}</Text>
+            <Text style={styles.summary}>{renderMarkdown(data.personalInfo.summary)}</Text>
           ) : null}
         </View>
 
@@ -255,10 +281,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                         </View>
                         {exp.showBulletPoints === false
                           ? getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                              <Text key={desc.key} style={styles.descriptionLine}>{renderMarkdown(desc.value)}</Text>
                             ))
                           : getDescriptionLines(exp.description, `pdf-exp-${exp.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                              <Text key={desc.key} style={styles.bulletPoint}>• {renderMarkdown(desc.value)}</Text>
                             ))}
                       </View>
                     ))}
@@ -286,10 +312,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                         </View>
                         {edu.showBulletPoints === false
                           ? getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                              <Text key={desc.key} style={styles.descriptionLine}>{renderMarkdown(desc.value)}</Text>
                             ))
                           : getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                              <Text key={desc.key} style={styles.bulletPoint}>• {renderMarkdown(desc.value)}</Text>
                             ))}
                       </View>
                     ))}
@@ -354,10 +380,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                         </View>
                         {project.showBulletPoints === false
                           ? getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                              <Text key={desc.key} style={styles.descriptionLine}>{renderMarkdown(desc.value)}</Text>
                             ))
                           : getDescriptionLines(project.description, `pdf-proj-${project.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                              <Text key={desc.key} style={styles.bulletPoint}>• {renderMarkdown(desc.value)}</Text>
                             ))}
                         {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 ? (
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4, gap: 2 }}>
@@ -383,17 +409,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                             {project.contributions.map((contribution) => (
                               <View key={contribution.id} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 1 }}>
                                 <Text style={styles.contributionItem}>
-                                  - {' '}
-                                  {parseMarkdownLinks(contribution.summary).map((node, i) => {
-                                    if (node.type === 'link' && node.url) {
-                                      return (
-                                        <Link key={i} src={node.url} style={{ color: '#4a7cc9', textDecoration: 'none' }}>
-                                          {node.content}
-                                        </Link>
-                                      );
-                                    }
-                                    return <Text key={i}>{node.content}</Text>;
-                                  })}
+                                  - {renderMarkdown(contribution.summary)}
                                 </Text>
                                 {contribution.url ? (
                                   <Link src={contribution.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', textDecoration: 'none', marginLeft: 2, paddingTop: 1.5 }}>
@@ -471,10 +487,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                         </View>
                         {item.showBulletPoints === false
                           ? getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.descriptionLine}>{desc.value}</Text>
+                              <Text key={desc.key} style={styles.descriptionLine}>{renderMarkdown(desc.value)}</Text>
                             ))
                           : getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.bulletPoint}>• {desc.value}</Text>
+                              <Text key={desc.key} style={styles.bulletPoint}>• {renderMarkdown(desc.value)}</Text>
                             ))}
                       </View>
                     ))}

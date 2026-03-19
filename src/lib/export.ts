@@ -2,6 +2,15 @@ import { ResumeData } from '@/types';
 import yaml from 'js-yaml';
 import { normalizeResumeData } from '@/lib/resumeData';
 import { exportRawResumeData, prepareImportedResumeData } from '@/lib/rawData';
+import { exportToMarkdown as rawExportMD, importFromMarkdown as rawImportMD } from '@/lib/markdownFormat';
+
+export const exportToMarkdown = (data: ResumeData): string => {
+  return rawExportMD(data);
+};
+
+export const importFromMarkdown = (content: string): ResumeData => {
+  return rawImportMD(content);
+};
 
 export const exportToJSON = (data: ResumeData): string => {
   return JSON.stringify(exportRawResumeData(data), null, 2);
