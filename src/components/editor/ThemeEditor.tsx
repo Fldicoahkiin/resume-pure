@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw, Github, LogOut, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -35,15 +35,11 @@ const THEME_SKELETON_KEYS = ['theme-1', 'theme-2', 'theme-3', 'theme-4'];
 export function ThemeEditor() {
   const { t } = useTranslation();
   const { resume, hasHydrated, updateTheme, reset } = useResumeStore();
-  const [githubUser, setGithubUser] = useState<GitHubUser | null>(null);
+  const [githubUser, setGithubUser] = useState<GitHubUser | null>(() => getStoredUser());
   const [deviceUserCode, setDeviceUserCode] = useState('');
   const [deviceVerifyUrl, setDeviceVerifyUrl] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
-
-  useEffect(() => {
-    setGithubUser(getStoredUser());
-  }, []);
 
   const handleLogin = useCallback(async () => {
     setAuthLoading(true);

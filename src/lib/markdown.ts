@@ -1,4 +1,4 @@
-export type InlineToken = 
+type InlineToken = 
   | { type: 'text'; content: string }
   | { type: 'bold'; content: string }
   | { type: 'italic'; content: string }

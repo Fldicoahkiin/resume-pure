@@ -1,6 +1,6 @@
 import ICON_DATA from './iconData';
 
-export interface SkillLogoMeta {
+interface SkillLogoMeta {
   color: string;
   svgPath: string;
 }

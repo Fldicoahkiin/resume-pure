@@ -377,7 +377,7 @@ function ProjectTechPanel({
       <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-700">
         {technologies.map((tech, index) => (
           <span
-            key={`${tech}-${index}`}
+            key={tech}
             className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-200"
           >
             {tech}

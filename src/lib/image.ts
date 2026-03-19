@@ -1,4 +1,4 @@
-export const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
+const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
 
 function compressImageToDataUrl(file: File, maxBytes: number): Promise<string> {
   return new Promise((resolve, reject) => {

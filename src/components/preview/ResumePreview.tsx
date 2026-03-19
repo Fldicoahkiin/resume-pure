@@ -289,7 +289,7 @@ function formatGitHubPath(url: string): string {
   return url;
 }
 
-export function formatContributionRef(url: string): string | null {
+function formatContributionRef(url: string): string | null {
   if (!url) return null;
   const prMatch = url.match(/\/pull\/(\d+)/);
   if (prMatch) return `PR #${prMatch[1]}`;
@@ -649,7 +649,7 @@ function SkillCategoryPreview({
           {skill.tags.map((tag, i) => {
             const logo = resolveSkillLogo(tag);
             return (
-              <span key={`${tag}-${i}`} className="inline-flex items-center gap-0.5 text-gray-400">
+              <span key={tag} className="inline-flex items-center gap-0.5 text-gray-400">
                 {i > 0 && <span className="mx-0.5 text-gray-300">·</span>}
                 {logo && (
                   <svg

@@ -1,4 +1,4 @@
-import { ResumeData } from '@/types';
+import { ResumeData, Experience, Education, Project, Skill, SkillLevel } from '@/types';
 import { createInitialResume, normalizeResumeData } from './resumeData';
 import { createEntityId } from './id';
 
@@ -96,7 +96,7 @@ export function importFromMarkdown(md: string): ResumeData {
   const data = createInitialResume();
   const lines = md.split('\n');
   let currentSection = '';
-  let currentItem: any = null;
+  let currentItem: Experience | Education | Project | Skill | null = null;
   let currentContext = '';
 
   for (let i = 0; i < lines.length; i++) {
@@ -117,15 +117,15 @@ export function importFromMarkdown(md: string): ResumeData {
           currentContext = 'summary';
         }
       } else if (currentSection === '工作经历') {
-        currentItem = { id: createEntityId('exp'), company: title, description: [] };
+        currentItem = { id: createEntityId('exp'), company: title, position: '', startDate: '', endDate: '', description: [] };
         data.experience.push(currentItem);
         currentContext = '';
       } else if (currentSection === '教育背景') {
-        currentItem = { id: createEntityId('edu'), school: title, description: [] };
+        currentItem = { id: createEntityId('edu'), school: title, degree: '', major: '', startDate: '', endDate: '', description: [] };
         data.education.push(currentItem);
         currentContext = '';
       } else if (currentSection === '项目经历') {
-        currentItem = { id: createEntityId('proj'), name: title, description: [], contributions: [], technologies: [] };
+        currentItem = { id: createEntityId('proj'), name: title, startDate: '', endDate: '', description: [], contributions: [], technologies: [] };
         data.projects.push(currentItem);
         currentContext = '';
       } else if (currentSection === '专业技能') {
@@ -159,24 +159,19 @@ export function importFromMarkdown(md: string): ResumeData {
         if (key === '描述' || key === '职责' || key === '项') {
           currentContext = key;
         } else if (key === '时间') {
-          const separatorIdx = val.indexOf(' - ');
-          if (separatorIdx !== -1) {
-            currentItem.startDate = val.slice(0, separatorIdx).trim();
-            currentItem.endDate = val.slice(separatorIdx + 3).trim();
-          } else {
-            currentItem.startDate = val.trim();
-            currentItem.endDate = '';
-          }
+          (currentItem as Experience | Education | Project).startDate = val.slice(0, Math.max(0, val.indexOf(' - '))).trim() || val.trim();
+          const sepIdx = val.indexOf(' - ');
+          (currentItem as Experience | Education | Project).endDate = sepIdx !== -1 ? val.slice(sepIdx + 3).trim() : '';
         } else if (key === '职位') {
-          currentItem.position = val;
+          (currentItem as Experience).position = val;
         } else if (key === '学历') {
-          currentItem.degree = val;
+          (currentItem as Education).degree = val;
         } else if (key === '角色') {
-          currentItem.role = val;
+          (currentItem as Project).role = val;
         } else if (key === '链接') {
-          currentItem.url = val;
+          (currentItem as Project).url = val;
         } else if (key === '技术') {
-          currentItem.technologies = val.split(',').map((s: string) => s.trim()).filter(Boolean);
+          (currentItem as Project).technologies = val.split(',').map((s: string) => s.trim()).filter(Boolean);
         }
       }
       continue;
@@ -186,14 +181,16 @@ export function importFromMarkdown(md: string): ResumeData {
       const val = line.substring(2).trim();
       if (currentItem) {
         if (currentContext === '描述') {
-          (currentItem.description = currentItem.description || []).push(val);
+          const withDesc = currentItem as Experience | Education | Project;
+          (withDesc.description = withDesc.description || []).push(val);
         } else if (currentContext === '职责') {
-          (currentItem.contributions = currentItem.contributions || []).push({ id: createEntityId('con'), summary: val });
+          const proj = currentItem as Project;
+          (proj.contributions = proj.contributions || []).push({ id: createEntityId('con'), summary: val, url: '' });
         } else if (currentContext === '项' && currentSection === '专业技能') {
            const match = val.match(/^(.*?)(?:\s*\((.*?)\))?$/);
            const name = match ? match[1].trim() : val;
            const level = match && match[2] ? match[2].trim() : 'proficient';
-           currentItem.items.push({ id: createEntityId('item'), name, level: level as any });
+           (currentItem as Skill).items.push({ id: createEntityId('item'), name, level: level as SkillLevel });
         }
       }
       continue;

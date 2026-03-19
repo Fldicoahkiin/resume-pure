@@ -1,4 +1,4 @@
-export interface GitHubRepoReference {
+interface GitHubRepoReference {
   owner: string;
   repo: string;
   normalizedUrl: string;
@@ -23,7 +23,7 @@ function normalizeInputUrl(input: string): string | null {
   return `https://${trimmed}`;
 }
 
-export function parseGitHubRepoUrl(input: string): GitHubRepoReference | null {
+function parseGitHubRepoUrl(input: string): GitHubRepoReference | null {
   const normalizedInput = normalizeInputUrl(input);
   if (!normalizedInput) return null;
 

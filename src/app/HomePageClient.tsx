@@ -113,9 +113,9 @@ export default function HomePage() {
               title: t('home.features.editingFlow.title'),
               desc: t('home.features.editingFlow.description'),
             },
-          ].map((feat, i) => (
+          ].map((feat) => (
             <div
-              key={i}
+              key={feat.title}
               className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none dark:hover:border-gray-700 transition-all duration-300"
             >
               <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
@@ -141,8 +141,8 @@ export default function HomePage() {
               t('home.why.reasons.free'),
               t('home.why.reasons.professional'),
               t('home.why.reasons.control')
-            ].map((reason, i) => (
-              <div key={i} className="flex items-start gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            ].map((reason) => (
+              <div key={reason} className="flex items-start gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                 <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
