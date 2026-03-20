@@ -105,19 +105,19 @@ docker run -p 3000:80 resume-pure
 
 ## Raw 数据与 AI 工作流
 
-## 1) 支持格式
+### 1) 支持格式
 
 - JSON（推荐）
 - YAML
 
-## 2) 设计原则（当前版本）
+### 2) 设计原则（当前版本）
 
 - 数据会在导入时经过归一化（字段类型修正、缺失默认值补齐）
 - Raw 始终按最新结构处理，不要求 `schemaVersion`
 - Raw 采用纯数据结构，不暴露内部渲染 `id`
 - 未识别字段不会进入当前渲染管线（避免污染状态）
 
-## 3) 最小可用 JSON 示例
+### 3) 最小可用 JSON 示例
 
 ```json
 {
@@ -166,17 +166,18 @@ docker run -p 3000:80 resume-pure
     "fontSize": 11,
     "spacing": 8,
     "lineHeight": 1.5,
-    "enableLinks": true
+    "enableLinks": true,
+    "paperSize": "A4"
   }
 }
 ```
 
-## 4) YAML 使用建议
+### 4) YAML 使用建议
 
 - 日期建议加引号（如 `"2024-02-01"`），避免不同解析器行为差异
 - 保证缩进为 2 空格，避免 tab
 
-## 5) AI 生成 Raw 提示词模板
+### 5) AI 生成 Raw 提示词模板
 
 ```text
 # 角色与目标
@@ -196,12 +197,13 @@ docker run -p 3000:80 resume-pure
    - 每个自定义模块必须包含一个唯一的 `key`（如 "开源贡献"）。
    - **强烈建议**配置 `type` 字段（可选 `"project"`, `"experience"`, `"education"`, `"skill"`，默认 `"project"`），使模块继承对应的内置元信息结构和标准字段。
    - 在底部 `sections` 数组中，对应的模块注入 key 必须添加 `custom:` 前缀映射（如 `{"key": "custom:开源贡献", "title": "开源贡献", "visible": true}`）。
-   - 若 `type` 配置为 `"project"`（最常用），内部层级字段可用：`name`, `role`, `startDate`, `endDate`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`, `description`（描述数组）, `showStars`, `showLogo`, `showBulletPoints`。请尽可能丰富这部分元信息。
+   - 若 `type` 配置为 `"project"`（最常用），内部层级字段可用：`name`, `role`, `startDate`, `endDate`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`, `description`（描述数组）, `technologies`（技术栈数组）, `showStars`, `showLogo`, `showTechnologies`, `showBulletPoints`, `layout`（`"compact"` 或 `"comfortable"`）, `visible`。请尽可能丰富这部分元信息。
+   - 若 `type` 配置为 `"skill"`，内部层级字段可用：`category`（分类名称）, `categoryIcon`（分类图标）, `items`（技能项数组，每项含 `name`, `level`（`"core"` / `"proficient"` / `"familiar"`）, `context`, `logo`, `showLogo`, `showContext`）, `tags`（关联技术标签数组）, `visible`。
 
 请立即开始根据我的诉求和个人经历生成匹配的数据：
 ```
 
-## 6) 当前兼容边界
+### 6) 当前兼容边界
 
 - 支持：字段缺失、字段类型偏差、模块映射不完整的自动修正
 - 不支持：任意未知结构的渲染（未知字段会被忽略）
@@ -219,9 +221,12 @@ src/
 │   └── export/             # 导出能力
 ├── lib/
 │   ├── resumeData.ts       # Raw 归一化与迁移
+│   ├── rawData.ts          # Raw 数据连接层（内部 ↔ Raw 转换）
 │   ├── export.ts           # JSON/YAML 导入导出
+│   ├── markdownFormat.ts   # Markdown 导入导出
 │   ├── pdf.tsx             # PDF 导出
-│   └── image.ts            # PNG 导出
+│   ├── image.ts            # PNG 导出
+│   └── skillLogo.ts        # 技能图标匹配
 ├── store/
 │   └── resumeStore.ts      # Zustand 状态管理
 └── types/
@@ -230,7 +235,7 @@ src/
 
 ## 常见问题
 
-## 导入后内容异常
+### 导入后内容异常
 
 优先检查：
 
@@ -238,9 +243,9 @@ src/
 - 是否包含必需根字段
 - 日期是否为字符串
 
-## 想重置所有本地数据
+### 想重置所有本地数据
 
-在应用内使用重置按钮，或手动清理浏览器 localStorage 中的 `resume-storage-v2`。
+在应用内使用重置按钮，或手动清理浏览器 localStorage 中的 `resume-storage`。
 
 ## 致谢
 

@@ -99,19 +99,19 @@ Trigger rules:
 
 ## Raw Data and AI Workflow
 
-## 1) Supported Formats
+### 1) Supported Formats
 
 - JSON (recommended)
 - YAML
 
-## 2) Current Data Rules
+### 2) Current Data Rules
 
 - Imported data goes through normalization (type fix + defaults)
 - Raw data is always parsed as the latest structure without requiring `schemaVersion`
 - Raw keeps pure domain data and does not expose internal render `id`
 - Unknown fields are ignored by the current rendering pipeline
 
-## 3) Minimal JSON Example
+### 3) Minimal JSON Example
 
 ```json
 {
@@ -160,17 +160,18 @@ Trigger rules:
     "fontSize": 11,
     "spacing": 8,
     "lineHeight": 1.5,
-    "enableLinks": true
+    "enableLinks": true,
+    "paperSize": "A4"
   }
 }
 ```
 
-## 4) YAML Notes
+### 4) YAML Notes
 
 - Quote date-like values (for example `"2024-02-01"`) for parser consistency
 - Use 2-space indentation and avoid tabs
 
-## 5) AI Prompt Template
+### 5) AI Prompt Template
 
 ```text
 # Role & Goal
@@ -190,12 +191,13 @@ You are a senior tech resume consultant and data structure expert. Please genera
    - Each custom module must contain a unique `key` (e.g., "Open Source Contributions").
    - It is **strongly recommended** to supply the `type` field (accepts `"project"`, `"experience"`, `"education"`, or `"skill"`, fallback is `"project"`). That ensures it behaves precisely like an underlying standard section model.
    - In the bottom `sections` array, the injected key for a custom module must have a `custom:` prefix (e.g., `{"key": "custom:Open Source Contributions", "title": "Open Source", "visible": true}`).
-   - If `type` is `"project"` (the default and most used), rich item fields available: `name`, `role`, `startDate`, `endDate`, `url` (Proof Link), `repoUrl` (Associated Repository), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `showStars` (boolean), `showLogo` (boolean), `showBulletPoints` (boolean). Please enrich the metadata as much as possible using these fields.
+   - If `type` is `"project"` (the default and most used), rich item fields available: `name`, `role`, `startDate`, `endDate`, `url` (Proof Link), `repoUrl` (Associated Repository), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `technologies` (Array of tech stack strings), `showStars` (boolean), `showLogo` (boolean), `showTechnologies` (boolean), `showBulletPoints` (boolean), `layout` (`"compact"` or `"comfortable"`), `visible` (boolean). Please enrich the metadata as much as possible using these fields.
+   - If `type` is `"skill"`, item fields available: `category` (category name), `categoryIcon` (category icon), `items` (skill entries array, each with `name`, `level` (`"core"` / `"proficient"` / `"familiar"`), `context`, `logo`, `showLogo`, `showContext`), `tags` (associated technology tags array), `visible` (boolean).
 
 Please begin generating the mapped data based on my requests and personal experiences:
 ```
 
-## 6) Compatibility Boundary
+### 6) Compatibility Boundary
 
 - Supported: missing fields, minor type drift, partial section mapping (auto-normalized)
 - Not supported: arbitrary unknown structures for rendering
@@ -213,9 +215,12 @@ src/
 │   └── export/             # export features
 ├── lib/
 │   ├── resumeData.ts       # raw normalization + migration
+│   ├── rawData.ts          # raw data bridge (internal ↔ raw conversion)
 │   ├── export.ts           # JSON/YAML import/export
+│   ├── markdownFormat.ts   # Markdown import/export
 │   ├── pdf.tsx             # PDF export
-│   └── image.ts            # PNG export
+│   ├── image.ts            # PNG export
+│   └── skillLogo.ts        # skill icon matching
 ├── store/
 │   └── resumeStore.ts      # Zustand store
 └── types/
@@ -224,7 +229,7 @@ src/
 
 ## FAQ
 
-## Imported data looks broken
+### Imported data looks broken
 
 Check the following first:
 
@@ -232,9 +237,9 @@ Check the following first:
 - required root fields exist
 - date values are strings
 
-## Reset all local data
+### Reset all local data
 
-Use the reset action in UI, or clear `resume-storage-v2` in browser localStorage.
+Use the reset action in UI, or clear `resume-storage` in browser localStorage.
 
 ## Credits
 
