@@ -233,10 +233,12 @@ function DescriptionList({
   items,
   fontSize,
   showBulletPoints = true,
+  isCompact = false,
 }: {
   items: string[];
   fontSize: number;
   showBulletPoints?: boolean;
+  isCompact?: boolean;
 }) {
   const filteredItems = items
     .map((item) => item.trim())
@@ -247,7 +249,7 @@ function DescriptionList({
 
   if (!showBulletPoints) {
     return (
-      <div className="mt-1.5 space-y-1">
+      <div className={`${isCompact ? 'mt-0.5 space-y-0.5' : 'mt-1.5 space-y-1'}`}>
         {keyedItems.map((item) => (
           <p key={item.key} className="text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${fontSize - 1}pt` }}>
             <MarkdownWeb text={item.value} />
@@ -258,7 +260,7 @@ function DescriptionList({
   }
 
   return (
-    <ul className="mt-1.5 space-y-1">
+    <ul className={`${isCompact ? 'mt-0.5 space-y-0.5' : 'mt-1.5 space-y-1'}`}>
       {keyedItems.map((item) => (
         <li key={item.key} className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
           <span className="mr-2 text-gray-400 font-bold">•</span>
@@ -304,11 +306,14 @@ function formatContributionRef(url: string): string | null {
   return null;
 }
 
-function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; fontSize: number }) {
+function ProjectTechTags({ technologies, fontSize, isCompact }: { technologies: string[]; fontSize: number, isCompact?: boolean }) {
   if (technologies.length === 0) return null;
+  const maxRender = isCompact ? 4 : technologies.length;
+  const toRender = technologies.slice(0, maxRender);
+  const hiddenCount = technologies.length - maxRender;
   return (
-    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-gray-600" style={{ fontSize: `${fontSize - 2}pt` }}>
-      {withStableStringKey(technologies, 'tech').map((tech) => {
+    <div className={`${isCompact ? 'mt-0.5' : 'mt-1.5'} flex flex-wrap items-center gap-1.5 text-gray-600`} style={{ fontSize: `${fontSize - 2}pt` }}>
+      {withStableStringKey(toRender, 'tech').map((tech) => {
         const logo = resolveSkillLogo(tech.value);
         return (
           <span 
@@ -329,6 +334,11 @@ function ProjectTechTags({ technologies, fontSize }: { technologies: string[]; f
           </span>
         );
       })}
+      {hiddenCount > 0 && (
+         <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 border border-gray-200 text-gray-400">
+           +{hiddenCount}
+         </span>
+      )}
     </div>
   );
 }
@@ -346,13 +356,14 @@ function ProjectContributionList({
   t: (key: string, options?: Record<string, unknown>) => string;
   onSelectAnchor?: (anchor: string) => void;
   activeAnchor?: string | null;
+  isCompact?: boolean;
 }) {
   const contributions = project.contributions || [];
   if (project.showContributions === false || contributions.length === 0) return null;
 
   return (
-    <div className="mt-1.5">
-      <ul className="space-y-0.5">
+    <div className={isCompact ? 'mt-0.5' : 'mt-1.5'}>
+      <ul className={isCompact ? 'space-y-0' : 'space-y-0.5'}>
         {contributions.map((contribution) => {
           const anchor = projectContributionAnchor(project.id, contribution.id);
           const href = sanitizeUrl(contribution.url);
@@ -368,7 +379,7 @@ function ProjectContributionList({
             >
               <li className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
                 <span className="mr-2 text-gray-400">•</span>
-                <span className="flex-1">
+                <span className={`flex-1 ${isCompact ? 'line-clamp-1' : ''}`}>
                   <MarkdownWeb text={contribution.summary} />
                   {ref && (
                     <>
@@ -431,12 +442,12 @@ function ProjectPreviewCard({
               src={project.customLogo || project.repoAvatarUrl}
               alt={project.name}
               label={project.name}
-              size={36}
+              size={project.layout === 'compact' ? 24 : 36}
               variant="round"
             />
           )}
           <div className="min-w-0 flex-1">
-            <div className="flex justify-between gap-3">
+            <div className={`flex justify-between ${project.layout === 'compact' ? 'gap-2' : 'gap-3'}`}>
               <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fontSize}pt` }}>
@@ -510,10 +521,11 @@ function ProjectPreviewCard({
           items={project.description}
           fontSize={fontSize}
           showBulletPoints={project.showBulletPoints !== false}
+          isCompact={project.layout === 'compact'}
         />
 
         {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 && (
-          <ProjectTechTags technologies={project.technologies} fontSize={fontSize} />
+          <ProjectTechTags technologies={project.technologies} fontSize={fontSize} isCompact={project.layout === 'compact'} />
         )}
           </div>
         </div>
@@ -526,6 +538,7 @@ function ProjectPreviewCard({
         t={t}
         onSelectAnchor={onSelectAnchor}
         activeAnchor={activeAnchor}
+        isCompact={project.layout === 'compact'}
       />
     </div>
   );

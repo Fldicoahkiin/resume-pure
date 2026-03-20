@@ -84,6 +84,7 @@ export interface Project {
   showTechnologies?: boolean;
   showContributions?: boolean;
   showBulletPoints?: boolean;
+  layout?: 'compact' | 'comfortable';
   visible?: boolean;
 }
 
