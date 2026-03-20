@@ -590,13 +590,13 @@ function ProjectCard({
       <div className="mt-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
           <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">局部压缩模式</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">紧凑模式下将缩减内外行高、自动截断无用标签、减弱短链接，适合单页简历塞入多项时使用</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">局部紧凑排版</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">开启后将压缩当前项目的行高与间距，并折叠超长标签，适用于一页纸简历排版</p>
           </div>
           <ToggleButton
             active={project.layout === 'compact'}
-            activeLabel="已开启紧凑"
-            inactiveLabel="开启紧凑"
+            activeLabel="已开启"
+            inactiveLabel="未开启"
             onClick={() => updateProject({ layout: project.layout === 'compact' ? 'comfortable' : 'compact' })}
           />
         </div>

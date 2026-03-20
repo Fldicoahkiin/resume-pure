@@ -134,11 +134,8 @@ export async function fetchGitHubContributions(repoUrl: string, authorId: string
   const items = payload.items || [];
 
   return items.map((item: any) => {
-    // 强制过滤双引号以防破坏 Markdown
     const title = (item.title || '').replace(/"/g, "'");
-    const prNumber = item.number;
     const url = item.html_url;
-    // 使用短引用方式包裹链接，同时留有原始 title
     return `${title} ${url}`; 
   });
 }
