@@ -1225,7 +1225,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
                   anchor={personalInfoFieldAnchor('summary')}
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
-                  className="-mx-1 px-1 py-0.5 mt-2"
+                  className="-mx-1 px-1 py-0.5 mt-1"
                 >
                   <p className="text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     <MarkdownWeb text={personalInfo.summary} />
