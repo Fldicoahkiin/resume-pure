@@ -69,7 +69,7 @@ export async function readImageFileAsDataUrl(file: File, maxBytes: number = MAX_
 
 
 export async function exportToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
-  const htmlToImage = await import('html-to-image');
+  const html2canvas = (await import('html2canvas')).default;
 
   const element = document.getElementById(elementId);
   if (!element) {
@@ -77,18 +77,18 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   }
 
   try {
-    const dataUrl = await htmlToImage.toPng(element, {
-      quality: 1,
-      pixelRatio: 2,
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
       backgroundColor: '#ffffff',
-      skipFonts: true,
-      filter: (node) => {
-        if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
-          return false;
-        }
-        return true;
-      }
+      logging: false,
+      ignoreElements: (node) => {
+        return node.classList && node.classList.contains('hide-in-export');
+      },
     });
+
+    const dataUrl = canvas.toDataURL('image/png', 1.0);
 
     const link = document.createElement('a');
     link.download = filename;
@@ -97,6 +97,5 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   } catch (error) {
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
-  } finally {
   }
 }

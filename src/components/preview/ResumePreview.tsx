@@ -349,6 +349,7 @@ function ProjectContributionList({
   fontSize,
   onSelectAnchor,
   activeAnchor,
+  isCompact,
 }: {
   project: Project;
   theme: ThemeConfig;
