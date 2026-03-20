@@ -55,6 +55,8 @@ interface RawProjectItem {
   showTechnologies?: boolean;
   showContributions?: boolean;
   showBulletPoints?: boolean;
+  layout?: 'compact' | 'comfortable';
+  visible?: boolean;
 }
 
 interface RawSkillEntry {
@@ -68,7 +70,10 @@ interface RawSkillEntry {
 
 interface RawSkillItem {
   category: string;
+  categoryIcon?: string;
   items: RawSkillEntry[];
+  tags?: string[];
+  visible?: boolean;
 }
 
 interface RawCustomSection {
@@ -219,6 +224,8 @@ function toRawProjects(items: Project[]): RawProjectItem[] {
     showTechnologies: item.showTechnologies,
     showContributions: item.showContributions,
     showBulletPoints: item.showBulletPoints,
+    layout: item.layout,
+    visible: item.visible,
   }));
 }
 
@@ -236,7 +243,10 @@ function toRawSkillItems(items: SkillItem[]): RawSkillEntry[] {
 function toRawSkills(items: Skill[]): RawSkillItem[] {
   return items.map((item) => ({
     category: item.category,
+    categoryIcon: item.categoryIcon,
     items: toRawSkillItems(item.items),
+    tags: item.tags,
+    visible: item.visible,
   }));
 }
 
