@@ -14,6 +14,7 @@ import {
   SkillItem,
   SkillLevel,
   ThemeConfig,
+  CustomSectionType,
 } from '@/types';
 import { normalizePaperSize } from '@/lib/paper';
 
@@ -403,32 +404,24 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
   return input.reduce<CustomSection[]>((sectionAcc, section, sectionIndex) => {
     if (!isRecord(section)) return sectionAcc;
 
-    const items = (Array.isArray(section.items) ? section.items : []).reduce<CustomSectionItem[]>(
-      (itemAcc, item, itemIndex) => {
-        if (!isRecord(item)) return itemAcc;
-
-        itemAcc.push({
-          id: asString(item.id, createId('custom-item', itemIndex)),
-          title: asOptionalString(item.title),
-          subtitle: asOptionalString(item.subtitle),
-          date: asOptionalString(item.date),
-          url: asOptionalString(item.url),
-          repoUrl: asOptionalString(item.repoUrl),
-          repoStars: typeof item.repoStars === 'number' ? item.repoStars : undefined,
-          repoAvatarUrl: asOptionalString(item.repoAvatarUrl),
-          description: asStringArray(item.description),
-          showStars: typeof item.showStars === 'boolean' ? item.showStars : undefined,
-          showLogo: typeof item.showLogo === 'boolean' ? item.showLogo : undefined,
-          showBulletPoints: asBoolean(item.showBulletPoints, true),
-        });
-
-        return itemAcc;
-      },
-      []
-    );
+    const type = typeof section.type === 'string' && section.type !== 'custom' ? section.type : 'project';
+    
+    let items: any[] = [];
+    const sectionItems = Array.isArray(section.items) ? section.items : [];
+    
+    if (type === 'project') {
+      items = normalizeProjects(sectionItems);
+    } else if (type === 'experience') {
+      items = normalizeExperience(sectionItems);
+    } else if (type === 'education') {
+      items = normalizeEducation(sectionItems);
+    } else if (type === 'skill') {
+      items = normalizeSkills(sectionItems);
+    }
 
     sectionAcc.push({
       id: asString(section.id, createId('custom', sectionIndex)),
+      type: type as CustomSectionType,
       items,
     });
 

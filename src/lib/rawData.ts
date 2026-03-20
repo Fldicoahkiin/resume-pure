@@ -71,20 +71,6 @@ interface RawSkillItem {
   items: RawSkillEntry[];
 }
 
-interface RawCustomSectionItem {
-  title?: string;
-  subtitle?: string;
-  date?: string;
-  url?: string;
-  repoUrl?: string;
-  repoStars?: number;
-  repoAvatarUrl?: string;
-  description: string[];
-  showStars?: boolean;
-  showLogo?: boolean;
-  showBulletPoints?: boolean;
-}
-
 interface RawCustomSection {
   key: string;
   type?: string;
@@ -254,22 +240,6 @@ function toRawSkills(items: Skill[]): RawSkillItem[] {
   }));
 }
 
-function toRawCustomItems(items: CustomSectionItem[]): RawCustomSectionItem[] {
-  return items.map((item) => ({
-    title: item.title,
-    subtitle: item.subtitle,
-    date: item.date,
-    url: item.url,
-    repoUrl: item.repoUrl,
-    repoStars: item.repoStars,
-    repoAvatarUrl: item.repoAvatarUrl,
-    description: item.description,
-    showStars: item.showStars,
-    showLogo: item.showLogo,
-    showBulletPoints: item.showBulletPoints,
-  }));
-}
-
 function toRawSections(data: ResumeData, keyMap: Map<string, string>): RawSectionConfig[] {
   return getOrderedSections(data.sections).map((section) => {
     if (section.isCustom) {
@@ -303,9 +273,9 @@ function toRawCustomSections(data: ResumeData, keyMap: Map<string, string>): Raw
         key: keyMap.get(section.id) || section.id,
         type: type,
         items: type === 'project' ? toRawProjects(section.items) :
-               type === 'experience' ? toRawExperience(section.items) :
-               type === 'education' ? toRawEducation(section.items) :
-               toRawSkills(section.items),
+          type === 'experience' ? toRawExperience(section.items) :
+            type === 'education' ? toRawEducation(section.items) :
+              toRawSkills(section.items),
       };
     });
 }
@@ -543,11 +513,13 @@ export function prepareImportedResumeData(input: unknown): unknown {
           ...item,
           id: `custom-item-${sectionIndex + 1}-${itemIndex + 1}`,
         };
-        
-        if (type === 'project' && Array.isArray(item.contributions)) {
-           baseItem.contributions = mapProjectContributions(item.contributions);
-        } else if (type === 'skill' && Array.isArray(item.items)) {
-           baseItem.items = mapSkillEntries(item.items);
+
+        const resolvedType = type || 'project';
+
+        if (resolvedType === 'project' && Array.isArray(item.contributions)) {
+          baseItem.contributions = mapProjectContributions(item.contributions);
+        } else if (resolvedType === 'skill' && Array.isArray(item.items)) {
+          baseItem.items = mapSkillEntries(item.items);
         }
 
         acc.push(baseItem);

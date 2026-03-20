@@ -136,11 +136,12 @@ docker run -p 3000:80 resume-pure
   "customSections": [
     {
       "key": "开源贡献",
+      "type": "project",
       "items": [
         {
-          "title": "项目名称",
-          "subtitle": "核心贡献或角色",
-          "date": "2024.01",
+          "name": "项目名称",
+          "role": "核心贡献或角色",
+          "startDate": "2024.01",
           "url": "https://github.com/pulls/1",
           "repoUrl": "https://github.com/someone/repo",
           "repoStars": 1000,
@@ -193,8 +194,9 @@ docker run -p 3000:80 resume-pure
 4. **自定义模块强规范 (Custom Sections)**：
    - 对于非标准经历（如：开源贡献、技术分享、获取专利），必须使用 `customSections` 组织。
    - 每个自定义模块必须包含一个唯一的 `key`（如 "开源贡献"）。
+   - **强烈建议**配置 `type` 字段（可选 `"project"`, `"experience"`, `"education"`, `"skill"`，默认 `"project"`），使模块继承对应的内置元信息结构和标准字段。
    - 在底部 `sections` 数组中，对应的模块注入 key 必须添加 `custom:` 前缀映射（如 `{"key": "custom:开源贡献", "title": "开源贡献", "visible": true}`）。
-   - 其内部 item 支持的富文本/元信息字段：`title`（主标题）, `subtitle`（副标题）, `date`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`（仓库 Star 数：纯数字）, `description`（描述数组）, `showStars`（布尔）, `showLogo`（布尔）, `showBulletPoints`（布尔）。请尽可能丰富这部分元信息。
+   - 若 `type` 配置为 `"project"`（最常用），内部层级字段可用：`name`, `role`, `startDate`, `endDate`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`, `description`（描述数组）, `showStars`, `showLogo`, `showBulletPoints`。请尽可能丰富这部分元信息。
 
 请立即开始根据我的诉求和个人经历生成匹配的数据：
 ```

@@ -130,11 +130,12 @@ Trigger rules:
   "customSections": [
     {
       "key": "Open Source",
+      "type": "project",
       "items": [
         {
-          "title": "Project Name",
-          "subtitle": "Core Contribution or Role",
-          "date": "2024.01",
+          "name": "Project Name",
+          "role": "Core Contribution or Role",
+          "startDate": "2024.01",
           "url": "https://github.com/pulls/1",
           "repoUrl": "https://github.com/someone/repo",
           "repoStars": 1000,
@@ -187,8 +188,9 @@ You are a senior tech resume consultant and data structure expert. Please genera
 4. **Custom Sections Strict Rules**:
    - For non-standard experiences (e.g., Open Source Contributions, Tech Talks, Patents), you must organize them inside `customSections`.
    - Each custom module must contain a unique `key` (e.g., "Open Source Contributions").
+   - It is **strongly recommended** to supply the `type` field (accepts `"project"`, `"experience"`, `"education"`, or `"skill"`, fallback is `"project"`). That ensures it behaves precisely like an underlying standard section model.
    - In the bottom `sections` array, the injected key for a custom module must have a `custom:` prefix (e.g., `{"key": "custom:Open Source Contributions", "title": "Open Source", "visible": true}`).
-   - Rich internal item fields available: `title` (Main Title), `subtitle` (Subtitle), `date`, `url` (Proof Link), `repoUrl` (Associated Repository Link), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `showStars` (boolean), `showLogo` (boolean), `showBulletPoints` (boolean). Please enrich the metadata as much as possible using these fields.
+   - If `type` is `"project"` (the default and most used), rich item fields available: `name`, `role`, `startDate`, `endDate`, `url` (Proof Link), `repoUrl` (Associated Repository), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `showStars` (boolean), `showLogo` (boolean), `showBulletPoints` (boolean). Please enrich the metadata as much as possible using these fields.
 
 Please begin generating the mapped data based on my requests and personal experiences:
 ```
