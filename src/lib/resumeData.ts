@@ -435,9 +435,9 @@ function normalizeTheme(input: unknown, fallback: ThemeConfig): ThemeConfig {
   return {
     primaryColor: normalizeColor(theme.primaryColor, fallback.primaryColor),
     fontFamily: asString(theme.fontFamily, fallback.fontFamily),
-    fontSize: asNumber(theme.fontSize, fallback.fontSize, 9, 14),
-    spacing: asNumber(theme.spacing, fallback.spacing, 4, 16),
-    lineHeight: asNumber(theme.lineHeight, fallback.lineHeight, 1.2, 2),
+    fontSize: asNumber(theme.fontSize, fallback.fontSize, 6, 30),
+    spacing: asNumber(theme.spacing, fallback.spacing, 0, 40),
+    lineHeight: asNumber(theme.lineHeight, fallback.lineHeight, 0.8, 3),
     enableLinks: asBoolean(theme.enableLinks, fallback.enableLinks !== false),
     paperSize: normalizePaperSize(theme.paperSize, fallback.paperSize),
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useState, useEffect } from 'react';
 import NextImage from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Image as ImageIcon, Plus, Trash2, Wrench, Settings2 } from 'lucide-react';
@@ -11,6 +11,42 @@ import { resolveSkillLogo } from '@/lib/skillLogo';
 import { useResumeStore } from '@/store/resumeStore';
 import { Skill, SkillItem } from '@/types';
 import { DraggableItem } from './DraggableItem';
+
+interface SkillTagsInputProps {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+  className?: string;
+  placeholder?: string;
+}
+
+function SkillTagsInput({ tags, onChange, className, placeholder }: SkillTagsInputProps) {
+  const [value, setValue] = useState(tags.join(', '));
+
+  useEffect(() => {
+    // Only update local value if the canonical parsed version differs
+    // This allows the user to type trailing spaces/commas freely
+    const parsedValue = value.split(',').map((s) => s.trim()).filter(Boolean);
+    const tagsStr = tags.join(',');
+    const parsedStr = parsedValue.join(',');
+    if (tagsStr !== parsedStr) {
+      setValue(tags.join(', '));
+    }
+  }, [tags, value]);
+
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => {
+        setValue(e.target.value);
+        const newTags = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+        onChange(newTags);
+      }}
+      className={className}
+      placeholder={placeholder}
+    />
+  );
+}
 
 interface SkillEditorProps {
   embedded?: boolean;
@@ -234,13 +270,9 @@ function SkillCard({
         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
           {t('editor.skills.tags')}
         </label>
-        <input
-          type="text"
-          value={(skill.tags || []).join(', ')}
-          onChange={(e) => {
-            const tags = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-            updateSkill(skill.id, { tags });
-          }}
+        <SkillTagsInput
+          tags={skill.tags || []}
+          onChange={(tags) => updateSkill(skill.id, { tags })}
           className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
           placeholder={t('editor.skills.tagsPlaceholder')}
         />
