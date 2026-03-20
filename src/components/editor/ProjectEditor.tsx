@@ -2,9 +2,9 @@
 
 import { ChangeEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Github, Image as ImageIcon, Eye, EyeOff, Lightbulb, Plus, RefreshCw, Star, Trash2 } from 'lucide-react';
+import { Github, Image as ImageIcon, Eye, EyeOff, Lightbulb, Plus, RefreshCw, Star, Trash2, Search } from 'lucide-react';
 import { LogoBadge } from '@/components/LogoBadge';
-import { fetchGitHubRepoMeta } from '@/lib/githubRepo';
+import { fetchGitHubRepoMeta, fetchGitHubContributions } from '@/lib/githubRepo';
 import { readImageFileAsDataUrl } from '@/lib/image';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { createEntityId } from '@/lib/id';
@@ -40,6 +40,8 @@ interface ProjectCardProps {
   onAddContribution: (project: Project) => void;
   onDeleteContribution: (project: Project, contributionId: string) => void;
   onUpdateContribution: (project: Project, contributionId: string, patch: Partial<ProjectContribution>) => void;
+  onFetchContributions?: (project: Project) => Promise<void>;
+  fetchStatus?: { loading: boolean };
 }
 
 
@@ -161,12 +163,16 @@ function ProjectFormFields({
   t,
   onUpdate,
   onSyncRepo,
+  onFetchContributions,
+  fetchStatus,
 }: {
   project: Project;
   repoStatus?: RepoStatus;
   t: TranslationFn;
   onUpdate: (patch: Partial<Project>) => void;
   onSyncRepo: (project: Project, force?: boolean) => Promise<void>;
+  onFetchContributions?: (project: Project) => Promise<void>;
+  fetchStatus?: { loading: boolean };
 }) {
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -214,15 +220,27 @@ function ProjectFormFields({
       <div className="text-sm font-medium text-gray-700 dark:text-gray-300 md:col-span-1">
         <div className="flex items-center justify-between gap-2">
           <span>{t('editor.projects.repoUrl')}</span>
-          <button
-            type="button"
-            onClick={() => void onSyncRepo(project, true)}
-            disabled={repoStatus?.state === 'loading'}
-            className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-          >
-            <RefreshCw size={12} className={repoStatus?.state === 'loading' ? 'animate-spin' : ''} />
-            {t('editor.projects.syncRepo')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void onFetchContributions?.(project)}
+              disabled={fetchStatus?.loading || !project.repoUrl}
+              title="自动提取合并的 PR 到 Markdown 描述末尾"
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            >
+              {fetchStatus?.loading ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
+              提取贡献
+            </button>
+            <button
+              type="button"
+              onClick={() => void onSyncRepo(project, true)}
+              disabled={repoStatus?.state === 'loading'}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            >
+              <RefreshCw size={12} className={repoStatus?.state === 'loading' ? 'animate-spin' : ''} />
+              {t('editor.projects.syncRepo')}
+            </button>
+          </div>
         </div>
         <input
           type="text"
@@ -522,13 +540,14 @@ function ProjectCard({
   project,
   repoStatus,
   logoError,
-  t,
-  onUpdate,
+  t,  onUpdate,
   onSyncRepo,
   onUploadLogo,
   onAddContribution,
   onDeleteContribution,
   onUpdateContribution,
+  onFetchContributions,
+  fetchStatus,
 }: ProjectCardProps) {
   const updateProject = (patch: Partial<Project>) => onUpdate(project.id, patch);
 
@@ -543,6 +562,8 @@ function ProjectCard({
           t={t}
           onUpdate={updateProject}
           onSyncRepo={onSyncRepo}
+          onFetchContributions={onFetchContributions}
+          fetchStatus={fetchStatus}
         />
         <ProjectLogoPanel
           project={project}
@@ -566,7 +587,19 @@ function ProjectCard({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">局部压缩模式</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">紧凑模式下将缩减内外行高、自动截断无用标签、减弱短链接，适合单页简历塞入多项时使用</p>
+          </div>
+          <ToggleButton
+            active={project.layout === 'compact'}
+            activeLabel="已开启紧凑"
+            inactiveLabel="开启紧凑"
+            onClick={() => updateProject({ layout: project.layout === 'compact' ? 'comfortable' : 'compact' })}
+          />
+        </div>
         <BulletListTextarea
           className="col-span-full"
           label={t('editor.projects.description')}
@@ -610,6 +643,7 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
   const [repoStatusMap, setRepoStatusMap] = useState<Record<string, RepoStatus>>({});
   const [logoErrorMap, setLogoErrorMap] = useState<Record<string, string>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [fetchStatusMap, setFetchStatusMap] = useState<Record<string, { loading: boolean }>>({});
 
   if (!hasHydrated) {
     return (

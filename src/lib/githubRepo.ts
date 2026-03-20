@@ -23,7 +23,7 @@ function normalizeInputUrl(input: string): string | null {
   return `https://${trimmed}`;
 }
 
-function parseGitHubRepoUrl(input: string): GitHubRepoReference | null {
+export function parseGitHubRepoUrl(input: string): GitHubRepoReference | null {
   const normalizedInput = normalizeInputUrl(input);
   if (!normalizedInput) return null;
 
@@ -102,4 +102,43 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
     avatarUrl: payload.owner?.avatar_url,
     htmlUrl: payload.html_url || reference.normalizedUrl,
   };
+}
+
+export async function fetchGitHubContributions(repoUrl: string, authorId: string): Promise<string[]> {
+  const reference = parseGitHubRepoUrl(repoUrl);
+  if (!reference) {
+    throw new Error('invalid-url');
+  }
+
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+  const token = getStoredToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const query = encodeURIComponent(`repo:${reference.owner}/${reference.repo} author:${authorId} is:pr is:merged`);
+  const response = await fetch(`https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=10`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('rate-limited');
+    }
+    throw new Error(`request-failed:${response.status}`);
+  }
+
+  const payload = await response.json();
+  const items = payload.items || [];
+
+  return items.map((item: any) => {
+    // 强制过滤双引号以防破坏 Markdown
+    const title = (item.title || '').replace(/"/g, "'");
+    const prNumber = item.number;
+    const url = item.html_url;
+    // 使用短引用方式包裹链接，同时留有原始 title
+    return `${title} ${url}`; 
+  });
 }
