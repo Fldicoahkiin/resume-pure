@@ -133,7 +133,7 @@ export async function fetchGitHubContributions(repoUrl: string, authorId: string
   const payload = await response.json();
   const items = payload.items || [];
 
-  return items.map((item: any) => {
+  return items.map((item: { title?: string; html_url?: string }) => {
     const title = (item.title || '').replace(/"/g, "'");
     const url = item.html_url;
     return `${title} ${url}`; 

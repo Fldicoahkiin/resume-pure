@@ -4,7 +4,7 @@ import { ChangeEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Github, Image as ImageIcon, Eye, EyeOff, Lightbulb, Plus, RefreshCw, Star, Trash2, Search } from 'lucide-react';
 import { LogoBadge } from '@/components/LogoBadge';
-import { fetchGitHubRepoMeta, fetchGitHubContributions } from '@/lib/githubRepo';
+import { fetchGitHubRepoMeta } from '@/lib/githubRepo';
 import { readImageFileAsDataUrl } from '@/lib/image';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { createEntityId } from '@/lib/id';
@@ -643,7 +643,7 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
   const [repoStatusMap, setRepoStatusMap] = useState<Record<string, RepoStatus>>({});
   const [logoErrorMap, setLogoErrorMap] = useState<Record<string, string>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
-  const [fetchStatusMap, setFetchStatusMap] = useState<Record<string, { loading: boolean }>>({});
+
 
   if (!hasHydrated) {
     return (

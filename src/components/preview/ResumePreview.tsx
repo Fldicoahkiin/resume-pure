@@ -10,7 +10,6 @@ import { LogoBadge } from '@/components/LogoBadge';
 import { getPaperDimensions } from '@/lib/paper';
 import {
   customContactAnchor,
-  customItemAnchor,
   educationAnchor,
   experienceAnchor,
   personalInfoFieldAnchor,
@@ -969,10 +968,10 @@ function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNod
               return renderResumeSectionsContent({
                 ...props,
                 visibleSections: [fakeSection],
-                experience: type === 'experience' ? customSection.items : [],
-                education: type === 'education' ? customSection.items : [],
-                projects: type === 'project' ? customSection.items : [],
-                skills: type === 'skill' ? customSection.items : [],
+                experience: type === 'experience' ? customSection.items as Experience[] : [],
+                education: type === 'education' ? customSection.items as Education[] : [],
+                projects: type === 'project' ? customSection.items as Project[] : [],
+                skills: type === 'skill' ? customSection.items as Skill[] : [],
               });
             }
             return null;
@@ -1070,7 +1069,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
 
     // 记录本次清洗和排版后的纯内容度量高度
     lastUpdateHeightRef.current = totalContentHeight;
-  }, [paper.height]);
+  }, [paper.height, paper.width]);
 
   useLayoutEffect(() => {
     if (!hasHydrated) return;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useResumeStore } from '@/store/resumeStore';
-import { CustomSectionType } from '@/types';
+import { CustomSectionType, CustomSection } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { ProjectEditor } from './ProjectEditor';
 import { ExperienceEditor } from './ExperienceEditor';
@@ -26,7 +26,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
       <select
         value={type}
         onChange={(e) => {
-          updateCustomSection(sectionId, { type: e.target.value as CustomSectionType, items: [] as any[] });
+          updateCustomSection(sectionId, { type: e.target.value as CustomSectionType, items: [] as CustomSection['items'] });
         }}
         className="form-select px-3 py-1 text-sm rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
       >

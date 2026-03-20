@@ -145,7 +145,7 @@ export type CustomSectionType = 'custom' | 'project' | 'experience' | 'education
 export interface CustomSection {
   id: string;          // 对应 SectionConfig 的 id
   type?: CustomSectionType; 
-  items: any[];        // 根据 type 的不同，装载不同的项 (Project[], Experience[] 等)
+  items: (Project | Experience | Education | Skill | CustomSectionItem)[];
 }
 
 export interface ThemeConfig {

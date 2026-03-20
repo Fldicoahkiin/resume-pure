@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionItem, CustomSectionType } from '@/types';
+import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionType, CustomSection } from '@/types';
 import { createInitialResume, normalizeResumeData } from '@/lib/resumeData';
 import { createEntityId } from '@/lib/id';
 
@@ -35,11 +35,11 @@ interface ResumeStore {
   // 自定义模块相关
   addCustomSection: (title: string) => string;
   deleteCustomSection: (sectionId: string) => void;
-  addCustomSectionItem: (sectionId: string, item: any) => void;
-  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<any>) => void;
+  addCustomSectionItem: (sectionId: string, item: CustomSection['items'][number]) => void;
+  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<CustomSection['items'][number]>) => void;
   deleteCustomSectionItem: (sectionId: string, itemId: string) => void;
-  updateCustomSection: (sectionId: string, update: Partial<{ type: CustomSectionType, items: any[] }>) => void;
-  reorderCustomSectionItems: (sectionId: string, items: any[]) => void;
+  updateCustomSection: (sectionId: string, update: Partial<{ type: CustomSectionType, items: CustomSection['items'] }>) => void;
+  reorderCustomSectionItems: (sectionId: string, items: CustomSection['items']) => void;
   importData: (data: unknown) => void;
   reset: () => void;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResumeData, SkillLevel, SectionConfig } from '@/types';
+import { ResumeData, SkillLevel, SectionConfig, Experience, Education, Project, Skill } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperPointSize } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
@@ -266,7 +266,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
           .filter((section) => section.visible)
           .sort((a, b) => a.order - b.order)
           .map((section) => {
-            const renderSection = (section: SectionConfig, ctxData: ResumeData): any => {
+            const renderSection = (section: SectionConfig, ctxData: ResumeData): React.ReactNode => {
               switch (section.id) {
                 case 'summary':
                   return null;
@@ -342,6 +342,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       <View key={project.id} style={styles.itemContainer} wrap={false}>
                         <View style={[styles.itemHeader, { alignItems: 'flex-start' }]}>
                           {project.showLogo !== false && (project.customLogo || project.repoAvatarUrl) ? (
+                            // eslint-disable-next-line jsx-a11y/alt-text
                             <Image
                               src={project.customLogo || project.repoAvatarUrl}
                               style={{ width: 24, height: 24, borderRadius: 12, marginRight: 6, objectFit: 'cover' }}
@@ -453,6 +454,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               return (
                                 <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
                                   {item.showLogo === false ? null : item.logo ? (
+                                    // eslint-disable-next-line jsx-a11y/alt-text
                                     <Image src={item.logo} style={{ width: iconSize, height: iconSize, marginRight: 2 }} />
                                   ) : logo ? (
                                     <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 2 }}>
@@ -489,10 +491,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                 
                 return renderSection(fakeSection, {
                   ...ctxData,
-                  experience: type === 'experience' ? customSection.items : [],
-                  education: type === 'education' ? customSection.items : [],
-                  projects: type === 'project' ? customSection.items : [],
-                  skills: type === 'skill' ? customSection.items : [],
+                  experience: type === 'experience' ? customSection.items as Experience[] : [],
+                  education: type === 'education' ? customSection.items as Education[] : [],
+                  projects: type === 'project' ? customSection.items as Project[] : [],
+                  skills: type === 'skill' ? customSection.items as Skill[] : [],
                 });
               }
             };

@@ -1,4 +1,4 @@
-import { ContactItem, CustomSectionItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel, CustomSection } from '@/types';
+import { ContactItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel, CustomSection } from '@/types';
 
 export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw format. Expected latest raw structure.';
 
@@ -79,7 +79,7 @@ interface RawSkillItem {
 interface RawCustomSection {
   key: string;
   type?: string;
-  items: any[];
+  items: (RawProjectItem | RawExperienceItem | RawEducationItem | RawSkillItem)[];
 }
 
 interface RawSectionConfig {
@@ -282,10 +282,10 @@ function toRawCustomSections(data: ResumeData, keyMap: Map<string, string>): Raw
       return {
         key: keyMap.get(section.id) || section.id,
         type: type,
-        items: type === 'project' ? toRawProjects(section.items) :
-          type === 'experience' ? toRawExperience(section.items) :
-            type === 'education' ? toRawEducation(section.items) :
-              toRawSkills(section.items),
+        items: type === 'project' ? toRawProjects(section.items as Project[]) :
+          type === 'experience' ? toRawExperience(section.items as Experience[]) :
+            type === 'education' ? toRawEducation(section.items as Education[]) :
+              toRawSkills(section.items as Skill[]),
       };
     });
 }

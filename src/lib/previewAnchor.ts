@@ -576,8 +576,8 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
       } else if (parsed.kind === 'custom' && parsed.sectionId) {
         const section = resume.customSections.find((record) => record.id === parsed.sectionId);
         const item = section?.items.find((record) => record.id === parsed.itemId);
-        if (item) {
-          push(...getValueSearchPatterns(item.title), ...getValueSearchPatterns(item.subtitle), ...getValueSearchPatterns(item.date));
+        if (item && 'title' in item) {
+          push(...getValueSearchPatterns(item.title), ...getValueSearchPatterns('subtitle' in item ? item.subtitle : undefined), ...getValueSearchPatterns('date' in item ? item.date : undefined));
         }
       }
     }

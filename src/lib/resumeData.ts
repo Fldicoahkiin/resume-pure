@@ -2,7 +2,6 @@ import {
   ContactIconType,
   ContactItem,
   CustomSection,
-  CustomSectionItem,
   Education,
   Experience,
   PersonalInfo,
@@ -406,7 +405,7 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
 
     const type = typeof section.type === 'string' && section.type !== 'custom' ? section.type : 'project';
     
-    let items: any[] = [];
+    let items: CustomSection['items'] = [];
     const sectionItems = Array.isArray(section.items) ? section.items : [];
     
     if (type === 'project') {
