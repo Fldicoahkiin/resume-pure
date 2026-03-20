@@ -444,33 +444,34 @@ function ProjectPreviewCard({
               </h3>
               {project.role && (
                 <span className="text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
-                  · {project.role}
+                  {project.role}
                 </span>
               )}
-              {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 && (
-                <span
-                  className="inline-flex items-center gap-0.5 text-amber-600"
-                  style={{ fontSize: `${fontSize - 2}pt` }}
-                >
-                  <Star size={12} />
-                  {formatCompactNumber(project.repoStars)}
-                </span>
-              )}
-              {repoPath && (
-                <span className="inline-flex items-center gap-1 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
-                  <Github size={12} />
-                  {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
-                    <a
-                      href={repoHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-blue-600 hover:underline"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {repoPath}
-                    </a>
-                  ) : (
-                    <span>{repoPath}</span>
+              {(repoPath || (project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0)) && (
+                <span className="inline-flex items-center gap-1.5 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
+                  {repoPath && (
+                    <span className="inline-flex items-center gap-1">
+                      <Github size={12} />
+                      {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
+                        <a
+                          href={repoHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-blue-600 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {repoPath}
+                        </a>
+                      ) : (
+                        <span>{repoPath}</span>
+                      )}
+                    </span>
+                  )}
+                  {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 && (
+                    <span className="inline-flex items-center gap-0.5 text-amber-600">
+                      <Star size={12} />
+                      {formatCompactNumber(project.repoStars)}
+                    </span>
                   )}
                 </span>
               )}
