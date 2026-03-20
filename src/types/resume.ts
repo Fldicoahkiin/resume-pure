@@ -138,10 +138,13 @@ export interface CustomSectionItem {
   showLogo?: boolean;     // 是否展示 Logo
 }
 
-// 自定义模块
+export type CustomSectionType = 'custom' | 'project' | 'experience' | 'education' | 'skill';
+
+// 自定义模块容器
 export interface CustomSection {
   id: string;          // 对应 SectionConfig 的 id
-  items: CustomSectionItem[];
+  type?: CustomSectionType; 
+  items: any[];        // 根据 type 的不同，装载不同的项 (Project[], Experience[] 等)
 }
 
 export interface ThemeConfig {

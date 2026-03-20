@@ -16,6 +16,7 @@ import { DraggableItem } from './DraggableItem';
 
 interface ProjectEditorProps {
   embedded?: boolean;
+  sectionId?: string;
 }
 
 type SyncState = 'idle' | 'loading' | 'success' | 'error';
@@ -582,9 +583,30 @@ function ProjectCard({
   );
 }
 
-export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
+export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addProject, updateProject, deleteProject, reorderProjects } = useResumeStore();
+  const store = useResumeStore();
+  const { resume, hasHydrated } = store;
+
+  const projects = sectionId
+    ? (resume.customSections.find((s) => s.id === sectionId)?.items as Project[] || [])
+    : resume.projects;
+
+  const addProject = sectionId
+    ? (proj: Project) => store.addCustomSectionItem(sectionId, proj)
+    : store.addProject;
+
+  const updateProject = sectionId
+    ? (id: string, proj: Partial<Project>) => store.updateCustomSectionItem(sectionId, id, proj)
+    : store.updateProject;
+
+  const deleteProject = sectionId
+    ? (id: string) => store.deleteCustomSectionItem(sectionId, id)
+    : store.deleteProject;
+
+  const reorderProjects = sectionId
+    ? (items: Project[]) => store.reorderCustomSectionItems(sectionId, items)
+    : store.reorderProjects;
   const [repoStatusMap, setRepoStatusMap] = useState<Record<string, RepoStatus>>({});
   const [logoErrorMap, setLogoErrorMap] = useState<Record<string, string>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
@@ -714,7 +736,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
   const handleDragOver = (e: React.DragEvent, idx: number) => {
     e.preventDefault();
     if (draggedIdx === null || draggedIdx === idx) return;
-    const items = [...resume.projects];
+    const items = [...projects];
     const [removed] = items.splice(draggedIdx, 1);
     items.splice(idx, 0, removed);
     reorderProjects(items);
@@ -727,7 +749,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
 
   const content = (
     <>
-      {resume.projects.length === 0 ? (
+      {projects.length === 0 ? (
         <div className="py-8 text-center text-gray-500 dark:text-gray-400">
           <Lightbulb className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
           <p className="text-sm">{t('editor.projects.noProjects')}</p>
@@ -735,7 +757,7 @@ export function ProjectEditor({ embedded = false }: ProjectEditorProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {resume.projects.map((project, idx) => (
+          {projects.map((project, idx) => (
             <DraggableItem
               key={project.id}
               id={project.id}

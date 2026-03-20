@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResumeData, SkillLevel } from '@/types';
+import { ResumeData, SkillLevel, SectionConfig } from '@/types';
 import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperPointSize } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
@@ -266,16 +266,18 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
           .filter((section) => section.visible)
           .sort((a, b) => a.order - b.order)
           .map((section) => {
-            switch (section.id) {
-              case 'summary':
+            const renderSection = (section: SectionConfig, ctxData: ResumeData): any => {
+              switch (section.id) {
+                case 'summary':
+                  return null;
                 return null;
 
               case 'experience':
-                if (data.experience.length === 0) return null;
+                if (ctxData.experience.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{translations.experience}</Text>
-                    {data.experience.map((exp) => (
+                    <Text style={styles.sectionTitle}>{section.title || translations.experience}</Text>
+                    {ctxData.experience.map((exp) => (
                       <View key={exp.id} style={styles.itemContainer} wrap={false}>
                         <View style={styles.itemHeader}>
                           <View style={styles.itemHeaderMain}>
@@ -301,11 +303,11 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                 );
 
               case 'education':
-                if (data.education.length === 0) return null;
+                if (ctxData.education.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{translations.education}</Text>
-                    {data.education.map((edu) => (
+                    <Text style={styles.sectionTitle}>{section.title || translations.education}</Text>
+                    {ctxData.education.map((edu) => (
                       <View key={edu.id} style={styles.itemContainer} wrap={false}>
                         <View style={styles.itemHeader}>
                           <View style={styles.itemHeaderMain}>
@@ -331,13 +333,12 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                   </View>
                 );
 
-              case 'projects': {
-                const activeProjects = data.projects.filter(p => p.visible !== false);
-                if (activeProjects.length === 0) return null;
+              case 'projects':
+                if (ctxData.projects.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{translations.projects}</Text>
-                    {activeProjects.map((project) => (
+                    <Text style={styles.sectionTitle}>{section.title || translations.projects}</Text>
+                    {ctxData.projects.map((project) => (
                       <View key={project.id} style={styles.itemContainer} wrap={false}>
                         <View style={[styles.itemHeader, { alignItems: 'flex-start' }]}>
                           {project.showLogo !== false && (project.customLogo || project.repoAvatarUrl) ? (
@@ -432,15 +433,13 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     ))}
                   </View>
                 );
-              }
 
-              case 'skills': {
-                const activeSkills = data.skills.filter(s => s.visible !== false);
-                if (activeSkills.length === 0) return null;
+              case 'skills':
+                if (ctxData.skills.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{translations.skills}</Text>
-                    {activeSkills.map((skill) => {
+                    <Text style={styles.sectionTitle}>{section.title || translations.skills}</Text>
+                    {ctxData.skills.map((skill) => {
                       if (skill.items.length === 0) return null;
 
                       const iconSize = theme.fontSize - 1;
@@ -474,75 +473,30 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     })}
                   </View>
                 );
-              }
 
               default:
                 if (!section.isCustom) return null;
                 const customSection = data.customSections.find((record) => record.id === section.id);
                 if (!customSection || customSection.items.length === 0) return null;
 
-                return (
-                  <View key={section.id} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{section.title}</Text>
-                    {customSection.items.map((item) => (
-                      <View key={item.id} style={styles.customSectionItem} wrap={false}>
-                        <View style={[styles.itemHeader, { alignItems: 'flex-start' }]}>
-                          {item.showLogo !== false && item.repoAvatarUrl ? (
-                            <Image
-                              src={item.repoAvatarUrl}
-                              style={{ width: 24, height: 24, borderRadius: 12, marginRight: 6, objectFit: 'cover' }}
-                            />
-                          ) : null}
-                          <View style={{ flex: 1 }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                              <View style={styles.itemHeaderMain}>
-                                {item.title ? <Text style={styles.itemTitle}>{item.title}</Text> : null}
-                                <Text style={styles.itemSubtitle}>
-                                  {item.repoUrl ? (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2, marginBottom: -1 }}>
-                                        <Path d="M15 22v-4a4.8 4.8 0 0 0-1-3.03c3.18-.35 6.5-1.5 6.5-7a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3V3a11 11 0 0 0-11 0c-2.4-1.6-3.5-1.3-3.5-1.3a4.2 4.2 0 0 0-.1 3.2 4.6 4.6 0 0 0-1.3 3.2c0 5.4 3.3 6.6 6.5 7a4.8 4.8 0 0 0-1 3.03V22M9 18c-auto 0-3-1-4-3-1-2-3-2-3-2" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                      </Svg>
-                                      <Link src={item.repoUrl} style={{ color: '#666', textDecoration: 'none' }}>
-                                        {item.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
-                                      </Link>
-                                    </View>
-                                  ) : null}
-                                  {item.showStars !== false && typeof item.repoStars === 'number' && item.repoStars > 0 ? (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                      <Text style={{ color: '#ccc', marginRight: 4, marginLeft: 4 }}>·</Text>
-                                      <Text style={{ color: '#d97706' }}>
-                                        ★ {item.repoStars}
-                                      </Text>
-                                    </View>
-                                  ) : null}
-                                  {item.url ? (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                      <Text style={{ color: '#ccc', marginRight: 4, marginLeft: 4 }}>·</Text>
-                                      <Link src={item.url.startsWith('http') ? item.url : `https://${item.url}`} style={{ color: '#666', textDecoration: 'none' }}>
-                                        {item.url}
-                                      </Link>
-                                    </View>
-                                  ) : null}
-                                </Text>
-                                {item.subtitle ? <Text style={styles.itemSubtitle}>{item.subtitle}</Text> : null}
-                              </View>
-                              {item.date ? <Text style={styles.itemDate}>{item.date}</Text> : null}
-                            </View>
-                          </View>
-                        </View>
-                        {item.showBulletPoints === false
-                          ? getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.descriptionLine}>{md(desc.value)}</Text>
-                            ))
-                          : getDescriptionLines(item.description, `pdf-custom-${section.id}-${item.id}`).map((desc) => (
-                              <Text key={desc.key} style={styles.bulletPoint}>• {md(desc.value)}</Text>
-                            ))}
-                      </View>
-                    ))}
-                  </View>
-                );
-            }
+                const type = customSection.type && customSection.type !== 'custom' ? customSection.type : 'project';
+                
+                const fakeSection = { ...section, id: type + 's' };
+                if (type === 'experience') fakeSection.id = 'experience';
+                if (type === 'education') fakeSection.id = 'education';
+                if (type === 'project') fakeSection.id = 'projects';
+                if (type === 'skill') fakeSection.id = 'skills';
+                
+                return renderSection(fakeSection, {
+                  ...ctxData,
+                  experience: type === 'experience' ? customSection.items : [],
+                  education: type === 'education' ? customSection.items : [],
+                  projects: type === 'project' ? customSection.items : [],
+                  skills: type === 'skill' ? customSection.items : [],
+                });
+              }
+            };
+            return renderSection(section, data);
           })}
       </Page>
     </Document>

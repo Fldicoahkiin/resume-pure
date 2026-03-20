@@ -10,11 +10,29 @@ import { BulletListTextarea } from './BulletListTextarea';
 
 interface EducationEditorProps {
   embedded?: boolean;
+  sectionId?: string;
 }
 
-export function EducationEditor({ embedded = false }: EducationEditorProps) {
+export function EducationEditor({ embedded = false, sectionId }: EducationEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addEducation, updateEducation, deleteEducation } = useResumeStore();
+  const store = useResumeStore();
+  const { resume, hasHydrated } = store;
+
+  const education = sectionId
+    ? (resume.customSections.find((s) => s.id === sectionId)?.items as Education[] || [])
+    : resume.education;
+
+  const addEducation = sectionId
+    ? (edu: Education) => store.addCustomSectionItem(sectionId, edu)
+    : store.addEducation;
+
+  const updateEducation = sectionId
+    ? (id: string, edu: Partial<Education>) => store.updateCustomSectionItem(sectionId, id, edu)
+    : store.updateEducation;
+
+  const deleteEducation = sectionId
+    ? (id: string) => store.deleteCustomSectionItem(sectionId, id)
+    : store.deleteEducation;
 
   if (!hasHydrated) {
     return (
@@ -43,14 +61,15 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
 
   const content = (
     <>
-      {resume.education.length === 0 ? (
+      {education.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
           <p className="text-sm">{t('editor.education.noEducation')}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t('editor.education.addHint')}</p>
         </div>
       ) : (
-        resume.education.map((edu, idx) => (
+        <div className="space-y-4">
+          {education.map((edu, idx) => (
           <div key={edu.id} data-editor-anchor={educationAnchor(edu.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
@@ -126,10 +145,11 @@ export function EducationEditor({ embedded = false }: EducationEditorProps) {
             />
           </div>
         </div>
-      ))
-      )}
+      ))}
+    </div>
+  )}
 
-      <div className="mt-4 flex justify-end">
+  <div className="mt-4 flex justify-end">
         <button
           onClick={handleAdd}
           className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"

@@ -1,4 +1,4 @@
-import { ContactItem, CustomSectionItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel } from '@/types';
+import { ContactItem, CustomSectionItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel, CustomSection } from '@/types';
 
 export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw format. Expected latest raw structure.';
 
@@ -87,7 +87,8 @@ interface RawCustomSectionItem {
 
 interface RawCustomSection {
   key: string;
-  items: RawCustomSectionItem[];
+  type?: string;
+  items: any[];
 }
 
 interface RawSectionConfig {
@@ -289,17 +290,24 @@ function toRawSections(data: ResumeData, keyMap: Map<string, string>): RawSectio
 }
 
 function toRawCustomSections(data: ResumeData, keyMap: Map<string, string>): RawCustomSection[] {
-  const sectionOrder = new Map<string, number>();
-  getOrderedSections(data.sections).forEach((section, index) => {
-    sectionOrder.set(section.id, index);
-  });
+  const customSections = data.sections.filter((s) => s.isCustom);
+  const sectionOrder = new Map(data.sections.map((s, i) => [s.id, i]));
 
-  return [...data.customSections]
+  return customSections
+    .map((section) => data.customSections.find((cs) => cs.id === section.id))
+    .filter((section): section is CustomSection => section !== undefined)
     .sort((a, b) => (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER))
-    .map((section) => ({
-      key: keyMap.get(section.id) || section.id,
-      items: toRawCustomItems(section.items),
-    }));
+    .map((section) => {
+      const type = section.type && section.type !== 'custom' ? section.type : 'project';
+      return {
+        key: keyMap.get(section.id) || section.id,
+        type: type,
+        items: type === 'project' ? toRawProjects(section.items) :
+               type === 'experience' ? toRawExperience(section.items) :
+               type === 'education' ? toRawEducation(section.items) :
+               toRawSkills(section.items),
+      };
+    });
 }
 
 export function getRawSectionKeyMap(data: ResumeData): Map<string, string> {
@@ -523,16 +531,26 @@ export function prepareImportedResumeData(input: unknown): unknown {
     if (!internalId) return null;
 
     const items = Array.isArray(section.items) ? section.items : [];
+    const type = typeof section.type === 'string' ? section.type : undefined;
 
     return {
       id: internalId,
+      type,
       items: items.reduce<Record<string, unknown>[]>((acc, item, itemIndex) => {
         if (!isRecord(item)) return acc;
 
-        acc.push({
+        const baseItem: Record<string, unknown> = {
           ...item,
           id: `custom-item-${sectionIndex + 1}-${itemIndex + 1}`,
-        });
+        };
+        
+        if (type === 'project' && Array.isArray(item.contributions)) {
+           baseItem.contributions = mapProjectContributions(item.contributions);
+        } else if (type === 'skill' && Array.isArray(item.items)) {
+           baseItem.items = mapSkillEntries(item.items);
+        }
+
+        acc.push(baseItem);
         return acc;
       }, []),
     };

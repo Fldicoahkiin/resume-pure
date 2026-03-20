@@ -735,19 +735,20 @@ interface ResumeSectionsProps {
   activeAnchor?: string | null;
 }
 
-function renderResumeSectionsContent({
-  visibleSections,
-  experience,
-  education,
-  projects,
-  skills,
-  customSections,
-  theme,
-  fs,
-  t,
-  onSelectAnchor,
-  activeAnchor,
-}: ResumeSectionsProps) {
+function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNode {
+  const {
+    visibleSections,
+    experience,
+    education,
+    projects,
+    skills,
+    customSections,
+    theme,
+    fs,
+    t,
+    onSelectAnchor,
+    activeAnchor,
+  } = props;
   return (
     <>
       {visibleSections.map(section => {
@@ -944,121 +945,24 @@ function renderResumeSectionsContent({
               const customSection = customSections.find(cs => cs.id === section.id);
               if (!customSection || customSection.items.length === 0) return null;
 
-              return (
-                <section key={section.id} style={{ marginBottom: `${theme.spacing * 2}pt` }}>
-                  <SectionTitle
-                    title={section.title}
-                    themeColor={theme.primaryColor}
-                    fontSize={fs}
-                    anchor={sectionTitleAnchor}
-                    activeAnchor={activeAnchor}
-                    onSelectAnchor={onSelectAnchor}
-                  />
-                  <div className="space-y-3">
-                    {customSection.items.map(item => {
-                      const itemAnchor = customItemAnchor(section.id, item.id);
-                      const repoPath = item.repoUrl ? formatGitHubPath(item.repoUrl) : null;
-                      const repoHref = item.repoUrl ? sanitizeUrl(item.repoUrl) : undefined;
+              const type = customSection.type && customSection.type !== 'custom' ? customSection.type : 'project';
 
-                      return (
-                        <SelectableBlock
-                          key={item.id}
-                          anchor={itemAnchor}
-                          activeAnchor={activeAnchor}
-                          onSelectAnchor={onSelectAnchor}
-                          className="-mx-1 px-1 py-0.5"
-                          data-page-breakable={true}
-                        >
-                          <div className="flex gap-3">
-                            {item.showLogo !== false && item.repoAvatarUrl && (
-                              <LogoBadge
-                                src={item.repoAvatarUrl}
-                                alt={item.title || ''}
-                                label={item.title || ''}
-                                size={36}
-                                variant="round"
-                              />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    {item.title && (
-                                      <h3 className="font-semibold text-gray-800" style={{ fontSize: `${fs}pt` }}>
-                                        {item.title}
-                                      </h3>
-                                    )}
-                                    {item.showStars !== false && typeof item.repoStars === 'number' && item.repoStars > 0 && (
-                                      <span
-                                        className="inline-flex items-center gap-0.5 text-amber-600"
-                                        style={{ fontSize: `${fs - 2}pt` }}
-                                      >
-                                        <Star size={12} />
-                                        {formatCompactNumber(item.repoStars)}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {item.subtitle && (
-                                    <p className="text-gray-600 mt-0.5" style={{ fontSize: `${fs - 1}pt` }}>{item.subtitle}</p>
-                                  )}
-                                  {(repoPath || item.url) && (
-                                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-gray-400" style={{ fontSize: `${fs - 2}pt` }}>
-                                      {repoPath && (
-                                        <span className="inline-flex items-center gap-1">
-                                          <Github size={12} />
-                                          {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
-                                            <a
-                                              href={repoHref}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="hover:text-blue-600 hover:underline"
-                                              onClick={(event) => event.stopPropagation()}
-                                            >
-                                              {repoPath}
-                                            </a>
-                                          ) : (
-                                            <span>{repoPath}</span>
-                                          )}
-                                        </span>
-                                      )}
-                                      {item.url && (
-                                        <span className="inline-flex items-center gap-1">
-                                          <Link size={12} />
-                                          {!onSelectAnchor && theme.enableLinks !== false ? (
-                                            <a
-                                              href={sanitizeUrl(item.url) || '#'}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="hover:text-blue-600 hover:underline"
-                                              onClick={(event) => event.stopPropagation()}
-                                            >
-                                              {item.url}
-                                            </a>
-                                          ) : (
-                                            <span>{item.url}</span>
-                                          )}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                {item.date && (
-                                  <span className="shrink-0 text-gray-500" style={{ fontSize: `${fs - 1}pt` }}>{item.date}</span>
-                                )}
-                              </div>
-                              <DescriptionList
-                                items={item.description}
-                                fontSize={fs}
-                                showBulletPoints={item.showBulletPoints !== false}
-                              />
-                            </div>
-                          </div>
-                        </SelectableBlock>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
+              // 复用已有渲染逻辑，假装这是一个对应的原生 section
+              const fakeSection = { ...section, id: type + 's' }; // 'projects', 'skills'
+              if (type === 'experience') fakeSection.id = 'experience';
+              if (type === 'education') fakeSection.id = 'education';
+              if (type === 'project') fakeSection.id = 'projects';
+              if (type === 'skill') fakeSection.id = 'skills';
+                 
+              // 代理渲染，但 anchor 依然指向原本的 sectionId（非常重要，不然后续点击联动会坏）
+              return renderResumeSectionsContent({
+                ...props,
+                visibleSections: [fakeSection],
+                experience: type === 'experience' ? customSection.items : [],
+                education: type === 'education' ? customSection.items : [],
+                projects: type === 'project' ? customSection.items : [],
+                skills: type === 'skill' ? customSection.items : [],
+              });
             }
             return null;
         }

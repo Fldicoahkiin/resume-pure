@@ -14,6 +14,7 @@ import { DraggableItem } from './DraggableItem';
 
 interface SkillEditorProps {
   embedded?: boolean;
+  sectionId?: string;
 }
 
 function createEmptySkillItem(): SkillItem {
@@ -37,9 +38,30 @@ function createEmptySkill(): Skill {
   };
 }
 
-export function SkillEditor({ embedded = false }: SkillEditorProps) {
+export function SkillEditor({ embedded = false, sectionId }: SkillEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addSkill, updateSkill, deleteSkill, reorderSkills } = useResumeStore();
+  const store = useResumeStore();
+  const { resume, hasHydrated } = store;
+
+  const skills = sectionId
+    ? (resume.customSections.find((s) => s.id === sectionId)?.items as Skill[] || [])
+    : resume.skills;
+
+  const addSkill = sectionId
+    ? (skill: Skill) => store.addCustomSectionItem(sectionId, skill)
+    : store.addSkill;
+
+  const updateSkill = sectionId
+    ? (id: string, skill: Partial<Skill>) => store.updateCustomSectionItem(sectionId, id, skill)
+    : store.updateSkill;
+
+  const deleteSkill = sectionId
+    ? (id: string) => store.deleteCustomSectionItem(sectionId, id)
+    : store.deleteSkill;
+
+  const reorderSkills = sectionId
+    ? (items: Skill[]) => store.reorderCustomSectionItems(sectionId, items)
+    : store.reorderSkills;
   const [openSettings, setOpenSettings] = useState<Record<string, boolean>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
@@ -98,7 +120,7 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
   const handleDragOver = (e: React.DragEvent, idx: number) => {
     e.preventDefault();
     if (draggedIdx === null || draggedIdx === idx) return;
-    const items = [...resume.skills];
+    const items = [...skills];
     const [removed] = items.splice(draggedIdx, 1);
     items.splice(idx, 0, removed);
     reorderSkills(items);
@@ -111,13 +133,14 @@ export function SkillEditor({ embedded = false }: SkillEditorProps) {
 
   const content = (
     <>
-      {resume.skills.length === 0 ? (
-        <div className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
-          {t('editor.skills.noSkills')}
+      {skills.length === 0 ? (
+        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+          <Wrench className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
+          <p className="text-sm">{t('editor.skills.noSkills')}</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {resume.skills.map((skill, idx) => (
+          {skills.map((skill, idx) => (
             <DraggableItem
               key={skill.id}
               id={skill.id}

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionItem } from '@/types';
+import { ResumeData, ThemeConfig, SectionConfig, Experience, Education, Project, Skill, ContactItem, ContactIconConfig, CustomSectionItem, CustomSectionType } from '@/types';
 import { createInitialResume, normalizeResumeData } from '@/lib/resumeData';
 import { createEntityId } from '@/lib/id';
 
@@ -35,9 +35,11 @@ interface ResumeStore {
   // 自定义模块相关
   addCustomSection: (title: string) => string;
   deleteCustomSection: (sectionId: string) => void;
-  addCustomSectionItem: (sectionId: string, item: CustomSectionItem) => void;
-  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<CustomSectionItem>) => void;
+  addCustomSectionItem: (sectionId: string, item: any) => void;
+  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<any>) => void;
   deleteCustomSectionItem: (sectionId: string, itemId: string) => void;
+  updateCustomSection: (sectionId: string, update: Partial<{ type: CustomSectionType, items: any[] }>) => void;
+  reorderCustomSectionItems: (sectionId: string, items: any[]) => void;
   importData: (data: unknown) => void;
   reset: () => void;
 }
@@ -288,6 +290,26 @@ export const useResumeStore = create<ResumeStore>()(
             ...state.resume,
             sections: state.resume.sections.filter((s) => s.id !== sectionId),
             customSections: state.resume.customSections.filter((s) => s.id !== sectionId),
+          },
+        })),
+
+      updateCustomSection: (sectionId, update) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            customSections: state.resume.customSections.map((section) =>
+              section.id === sectionId ? { ...section, ...update } : section
+            ),
+          },
+        })),
+
+      reorderCustomSectionItems: (sectionId, items) =>
+        set((state) => ({
+          resume: {
+            ...state.resume,
+            customSections: state.resume.customSections.map((section) =>
+              section.id === sectionId ? { ...section, items } : section
+            ),
           },
         })),
 

@@ -10,11 +10,29 @@ import { BulletListTextarea } from './BulletListTextarea';
 
 interface ExperienceEditorProps {
   embedded?: boolean;
+  sectionId?: string;
 }
 
-export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
+export function ExperienceEditor({ embedded = false, sectionId }: ExperienceEditorProps) {
   const { t } = useTranslation();
-  const { resume, hasHydrated, addExperience, updateExperience, deleteExperience } = useResumeStore();
+  const store = useResumeStore();
+  const { resume, hasHydrated } = store;
+
+  const experience = sectionId
+    ? (resume.customSections.find((s) => s.id === sectionId)?.items as Experience[] || [])
+    : resume.experience;
+
+  const addExperience = sectionId
+    ? (exp: Experience) => store.addCustomSectionItem(sectionId, exp)
+    : store.addExperience;
+
+  const updateExperience = sectionId
+    ? (id: string, exp: Partial<Experience>) => store.updateCustomSectionItem(sectionId, id, exp)
+    : store.updateExperience;
+
+  const deleteExperience = sectionId
+    ? (id: string) => store.deleteCustomSectionItem(sectionId, id)
+    : store.deleteExperience;
 
   if (!hasHydrated) {
     return (
@@ -42,14 +60,14 @@ export function ExperienceEditor({ embedded = false }: ExperienceEditorProps) {
 
   const content = (
     <>
-      {resume.experience.length === 0 ? (
+      {experience.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Briefcase className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
           <p className="text-sm">{t('editor.experience.noExperience')}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t('editor.experience.addHint')}</p>
         </div>
       ) : (
-        resume.experience.map((exp, idx) => (
+        experience.map((exp, idx) => (
           <div key={exp.id} data-editor-anchor={experienceAnchor(exp.id)}>
             {idx !== 0 && <div className="my-4 border-t-2 border-dotted border-gray-200 dark:border-gray-600" />}
 
