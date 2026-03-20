@@ -108,26 +108,48 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
 
   await document.fonts.ready;
 
+  // 移动端预览区可能被隐藏，临时展示以获取正确布局
+  const previewArea = document.getElementById('builder-preview-area');
+  const wasHidden = previewArea && window.getComputedStyle(previewArea).display === 'none';
+  if (wasHidden && previewArea) {
+    previewArea.style.display = 'flex';
+    previewArea.style.position = 'fixed';
+    previewArea.style.left = '-99999px';
+    previewArea.style.top = '0';
+  }
 
+  // 临时移除缩放 transform 以获取正确尺寸
   const scaleWrapper = document.getElementById('resume-preview-scale-wrapper');
   const savedTransform = scaleWrapper?.style.transform ?? '';
   if (scaleWrapper) scaleWrapper.style.transform = 'none';
 
-  // 外部图片预转 data URL，避免 html-to-image 的 CORS 错误
-  const images = element.querySelectorAll('img');
-  const savedSrcs = new Map<HTMLImageElement, string>();
+  const width = element.offsetWidth;
+  const height = element.offsetHeight;
 
+  // 在同级父容器放置克隆，继承完整 CSS 上下文（变量、主题等）
+  const cloned = element.cloneNode(true) as HTMLElement;
+  cloned.style.position = 'absolute';
+  cloned.style.left = '-99999px';
+  cloned.style.top = '0';
+  cloned.style.width = `${width}px`;
+  cloned.style.height = `${height}px`;
+  cloned.style.pointerEvents = 'none';
+  element.after(cloned);
+
+  // 在克隆副本上做图片预处理，原始 DOM 零变动
+  const images = cloned.querySelectorAll('img');
   await Promise.all(
     Array.from(images).map(async (img) => {
       const src = img.src;
       if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
-      savedSrcs.set(img, src);
       img.src = await toDataUrl(src);
     }),
   );
 
   try {
-    const blob = await toBlob(element, {
+    const blob = await toBlob(cloned, {
+      width,
+      height,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
       skipFonts: true,
@@ -154,8 +176,12 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
     throw new Error('PNG 导出失败');
   } finally {
     if (scaleWrapper) scaleWrapper.style.transform = savedTransform;
-    savedSrcs.forEach((src, img) => {
-      img.src = src;
-    });
+    cloned.remove();
+    if (wasHidden && previewArea) {
+      previewArea.style.display = '';
+      previewArea.style.position = '';
+      previewArea.style.left = '';
+      previewArea.style.top = '';
+    }
   }
 }
