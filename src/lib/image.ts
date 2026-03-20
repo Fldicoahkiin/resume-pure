@@ -82,6 +82,12 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
       pixelRatio: 2,
       backgroundColor: '#ffffff',
       skipFonts: true,
+      filter: (node) => {
+        if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
+          return false;
+        }
+        return true;
+      }
     });
 
     const link = document.createElement('a');
@@ -91,5 +97,6 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   } catch (error) {
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
+  } finally {
   }
 }

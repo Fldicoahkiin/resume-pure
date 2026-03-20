@@ -87,28 +87,32 @@ body {
     display: none !important;
   }
 
-  html, body, #__next {
+  html,
+  body,
+  #__next {
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
     height: auto !important;
+    min-height: auto !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  #builder-page {
-    min-height: auto !important;
-    background: white !important;
-  }
-
+  #builder-page,
   #builder-grid {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: white !important;
     display: block !important;
   }
 
   #builder-preview-area {
     display: block !important;
     height: auto !important;
+    overflow: visible !important;
     background: white !important;
     position: static !important;
   }
