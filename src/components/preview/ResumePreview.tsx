@@ -456,47 +456,43 @@ function ProjectPreviewCard({
                   {formatCompactNumber(project.repoStars)}
                 </span>
               )}
+              {repoPath && (
+                <span className="inline-flex items-center gap-1 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
+                  <Github size={12} />
+                  {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
+                    <a
+                      href={repoHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-600 hover:underline"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {repoPath}
+                    </a>
+                  ) : (
+                    <span>{repoPath}</span>
+                  )}
+                </span>
+              )}
+              {project.url && (
+                <span className="inline-flex items-center gap-1 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
+                  <Link size={12} />
+                  {!onSelectAnchor && theme.enableLinks !== false ? (
+                    <a
+                      href={sanitizeUrl(project.url) || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-600 hover:underline"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {project.url}
+                    </a>
+                  ) : (
+                    <span>{project.url}</span>
+                  )}
+                </span>
+              )}
             </div>
-            {(repoPath || project.url) && (
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
-                {repoPath && (
-                  <span className="inline-flex items-center gap-1">
-                    <Github size={12} />
-                    {!onSelectAnchor && repoHref && theme.enableLinks !== false ? (
-                      <a
-                        href={repoHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-blue-600 hover:underline"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        {repoPath}
-                      </a>
-                    ) : (
-                      <span>{repoPath}</span>
-                    )}
-                  </span>
-                )}
-                {project.url && (
-                  <span className="inline-flex items-center gap-1">
-                    <Link size={12} />
-                    {!onSelectAnchor && theme.enableLinks !== false ? (
-                      <a
-                        href={sanitizeUrl(project.url) || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-blue-600 hover:underline"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        {project.url}
-                      </a>
-                    ) : (
-                      <span>{project.url}</span>
-                    )}
-                  </span>
-                )}
-              </div>
-            )}
               </div>
               <span className="shrink-0 text-gray-500" style={{ fontSize: `${fontSize - 1}pt` }}>
                 {project.startDate || project.endDate || project.current ? (
