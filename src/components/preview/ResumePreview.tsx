@@ -1227,7 +1227,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
                   onSelectAnchor={onSelectAnchor}
                   className="-mx-1 px-1 py-0.5 mt-2"
                 >
-                  <p className="mt-2 text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                  <p className="text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     <MarkdownWeb text={personalInfo.summary} />
                   </p>
                 </SelectableBlock>
