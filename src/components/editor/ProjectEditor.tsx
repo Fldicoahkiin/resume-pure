@@ -4,7 +4,7 @@ import { ChangeEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Github, Image as ImageIcon, Eye, EyeOff, Lightbulb, Plus, RefreshCw, Star, Trash2, Search } from 'lucide-react';
 import { LogoBadge } from '@/components/LogoBadge';
-import { fetchGitHubRepoMeta } from '@/lib/githubRepo';
+import { fetchGitHubRepoMeta, fetchGitHubPullRequests } from '@/lib/githubRepo';
 import { readImageFileAsDataUrl, toDataUrl } from '@/lib/image';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { createEntityId } from '@/lib/id';
@@ -710,6 +710,7 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
     : store.reorderProjects;
   const [repoStatusMap, setRepoStatusMap] = useState<Record<string, RepoStatus>>({});
   const [logoErrorMap, setLogoErrorMap] = useState<Record<string, string>>({});
+  const [fetchStatusMap, setFetchStatusMap] = useState<Record<string, { loading: boolean }>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
 
@@ -858,6 +859,34 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
     });
   };
 
+  const handleFetchPullRequests = async (project: Project) => {
+    const repoUrl = project.repoUrl?.trim();
+    if (!repoUrl) return;
+
+    const githubRaw = resume.personalInfo.github?.trim() || '';
+    const authorLogin = githubRaw.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/+$/, '');
+    if (!authorLogin) return;
+
+    setFetchStatusMap((prev) => ({ ...prev, [project.id]: { loading: true } }));
+
+    try {
+      const refs = await fetchGitHubPullRequests(repoUrl, authorLogin);
+      if (refs.length === 0) return;
+
+      const newProofs = refs.map((ref) => ({
+        id: createEntityId('proof'),
+        summary: ref.title || `PR #${ref.number}`,
+        refs: [{ ...ref, id: createEntityId('ref') }],
+      }));
+
+      updateProject(project.id, {
+        proofs: [...(project.proofs || []), ...newProofs],
+      });
+    } finally {
+      setFetchStatusMap((prev) => ({ ...prev, [project.id]: { loading: false } }));
+    }
+  };
+
   const handleDragStart = (idx: number) => {
     setDraggedIdx(idx);
   };
@@ -923,6 +952,8 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
                 onAddProofRef={handleAddProofRef}
                 onDeleteProofRef={handleDeleteProofRef}
                 onUpdateProofRef={handleUpdateProofRef}
+                onFetchPullRequests={handleFetchPullRequests}
+                fetchStatus={fetchStatusMap[project.id]}
               />
             </DraggableItem>
           ))}
