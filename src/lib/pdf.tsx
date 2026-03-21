@@ -104,9 +104,18 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
   const theme = data.theme;
   const fontFamily = getPDFFontFamily(theme.fontFamily);
   const paperPointSize = getPaperPointSize(theme.paperSize);
+  const linksEnabled = theme.enableLinks !== false;
 
   const md = (text: string) =>
-    renderInlineMarkdown(text, Text, Link, theme.enableLinks !== false, theme.primaryColor);
+    renderInlineMarkdown(text, Text, Link, linksEnabled, theme.primaryColor);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PdfLink = ({ src, style, children }: { src: string; style?: any; children: React.ReactNode }) => {
+    if (linksEnabled && isSafePdfUrl(src)) {
+      return <Link src={src} style={{ textDecoration: 'none', ...style }}>{children}</Link>;
+    }
+    return <Text style={style}>{children}</Text>;
+  };
 
   const styles = StyleSheet.create({
     page: {
@@ -247,15 +256,17 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
             <Text style={styles.title}>{data.personalInfo.title}</Text>
           ) : null}
           <View style={styles.contactInfo}>
-            {data.personalInfo.email ? <Link src={`mailto:${data.personalInfo.email}`} style={styles.contactItem}>{data.personalInfo.email}</Link> : null}
+            {data.personalInfo.email ? <PdfLink src={`mailto:${data.personalInfo.email}`} style={styles.contactItem}>{data.personalInfo.email}</PdfLink> : null}
             {data.personalInfo.phone ? <Text style={styles.contactItem}>{data.personalInfo.phone}</Text> : null}
             {data.personalInfo.location ? <Text style={styles.contactItem}>{data.personalInfo.location}</Text> : null}
-            {data.personalInfo.website ? <Link src={data.personalInfo.website.startsWith('http') ? data.personalInfo.website : `https://${data.personalInfo.website}`} style={styles.contactItem}>{data.personalInfo.website}</Link> : null}
-            {data.personalInfo.linkedin ? <Link src={data.personalInfo.linkedin.startsWith('http') ? data.personalInfo.linkedin : `https://${data.personalInfo.linkedin}`} style={styles.contactItem}>{data.personalInfo.linkedin}</Link> : null}
-            {data.personalInfo.github ? <Link src={data.personalInfo.github.startsWith('http') ? data.personalInfo.github : `https://${data.personalInfo.github}`} style={styles.contactItem}>{data.personalInfo.github}</Link> : null}
-            {(data.personalInfo.contacts || []).map((contact) => (
-              <Text key={contact.id} style={styles.contactItem}>{contact.value}</Text>
-            ))}
+            {data.personalInfo.website ? <PdfLink src={data.personalInfo.website.startsWith('http') ? data.personalInfo.website : `https://${data.personalInfo.website}`} style={styles.contactItem}>{data.personalInfo.website}</PdfLink> : null}
+            {data.personalInfo.linkedin ? <PdfLink src={data.personalInfo.linkedin.startsWith('http') ? data.personalInfo.linkedin : `https://${data.personalInfo.linkedin}`} style={styles.contactItem}>{data.personalInfo.linkedin}</PdfLink> : null}
+            {data.personalInfo.github ? <PdfLink src={data.personalInfo.github.startsWith('http') ? data.personalInfo.github : `https://${data.personalInfo.github}`} style={styles.contactItem}>{data.personalInfo.github}</PdfLink> : null}
+            {(data.personalInfo.contacts || []).map((contact) => {
+              const contactHref = contact.href || contact.value;
+              const contactSrc = contactHref.startsWith('http') || contactHref.startsWith('mailto:') ? contactHref : `https://${contactHref}`;
+              return <PdfLink key={contact.id} src={contactSrc} style={styles.contactItem}>{contact.value}</PdfLink>;
+            })}
           </View>
           {data.personalInfo.summary ? (
             <Text style={styles.summary}>{md(data.personalInfo.summary)}</Text>
@@ -360,9 +371,9 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                                       <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2, marginBottom: -1 }}>
                                         <Path d="M15 22v-4a4.8 4.8 0 0 0-1-3.03c3.18-.35 6.5-1.5 6.5-7a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3V3a11 11 0 0 0-11 0c-2.4-1.6-3.5-1.3-3.5-1.3a4.2 4.2 0 0 0-.1 3.2 4.6 4.6 0 0 0-1.3 3.2c0 5.4 3.3 6.6 6.5 7a4.8 4.8 0 0 0-1 3.03V22M9 18c-auto 0-3-1-4-3-1-2-3-2-3-2" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                       </Svg>
-                                      <Link src={project.repoUrl} style={{ color: '#666', textDecoration: 'none' }}>
+                                      <PdfLink src={project.repoUrl} style={{ color: '#666' }}>
                                         {project.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
-                                      </Link>
+                                      </PdfLink>
                                     </View>
                                   ) : null}
                                   {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 ? (
@@ -376,9 +387,9 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                                   {project.url ? (
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                       <Text style={{ color: '#ccc', marginRight: 4, marginLeft: 4 }}>·</Text>
-                                      <Link src={project.url.startsWith('http') ? project.url : `https://${project.url}`} style={{ color: '#666', textDecoration: 'none' }}>
+                                      <PdfLink src={project.url.startsWith('http') ? project.url : `https://${project.url}`} style={{ color: '#666' }}>
                                         {project.url}
-                                      </Link>
+                                      </PdfLink>
                                     </View>
                                   ) : null}
                                 </Text>
@@ -422,9 +433,9 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                                   - {md(contribution.summary)}
                                 </Text>
                                 {contribution.url ? (
-                                  <Link src={contribution.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', textDecoration: 'none', marginLeft: 2, paddingTop: 1.5 }}>
+                                  <PdfLink src={contribution.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', marginLeft: 2, paddingTop: 1.5 }}>
                                     {contribution.url.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/commit\/([a-f0-9]{7})[a-f0-9]+$/, '/commit/$1')}
-                                  </Link>
+                                  </PdfLink>
                                 ) : null}
                               </View>
                             ))}
