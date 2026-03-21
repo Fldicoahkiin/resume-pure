@@ -100,7 +100,14 @@ body {
     print-color-adjust: exact !important;
   }
 
-  #builder-page,
+  #builder-page {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    display: block !important;
+  }
+
   #builder-grid {
     height: auto !important;
     min-height: auto !important;
@@ -112,9 +119,11 @@ body {
   #builder-preview-area {
     display: block !important;
     height: auto !important;
+    min-height: auto !important;
     overflow: visible !important;
     background: white !important;
     position: static !important;
+    padding: 0 !important;
   }
 
   #resume-preview-viewport {
@@ -127,6 +136,7 @@ body {
 
   #resume-preview-scale-wrapper {
     transform: none !important;
+    margin: 0 !important;
   }
 
   #resume-preview {

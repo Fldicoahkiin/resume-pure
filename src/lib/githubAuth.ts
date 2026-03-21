@@ -12,6 +12,8 @@ export interface GitHubUser {
   html_url: string;
 }
 
+const GITHUB_CLIENT_ID = 'Ov23liQEMBP6qi66U653';
+
 const TOKEN_KEY = 'resume-pure:github-token';
 const USER_KEY = 'resume-pure:github-user';
 
@@ -50,7 +52,17 @@ export function setManualToken(token: string) {
 }
 
 export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
-  const response = await fetch('/api/github/device', { method: 'POST' });
+  const response = await fetch('https://github.com/login/device/code', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      client_id: GITHUB_CLIENT_ID,
+      scope: 'read:user',
+    }),
+  });
   if (!response.ok) {
     throw new Error('device-code-failed');
   }
@@ -67,10 +79,17 @@ async function pollForToken(deviceCode: string, interval: number): Promise<strin
   for (;;) {
     await delay(pollMs);
 
-    const response = await fetch('/api/github/token', {
+    const response = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ device_code: deviceCode }),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        device_code: deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      }),
     });
 
     if (!response.ok) {

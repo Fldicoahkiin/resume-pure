@@ -71,31 +71,60 @@ export async function readImageFileAsDataUrl(file: File, maxBytes: number = MAX_
 const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==';
 
-/** 外部图片 → data URL，直连失败时回退到 /api/image-proxy 同源代理 */
-async function toDataUrl(src: string): Promise<string> {
-  async function fetchAsDataUrl(url: string): Promise<string | null> {
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) return null;
-      const blob = await resp.blob();
-      return await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string || TRANSPARENT_PX);
-        reader.onerror = () => resolve(TRANSPARENT_PX);
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+/** 通过 img+canvas 将外部图片转为 data URL，支持跟随 302 重定向 */
+function loadImageAsDataUrl(src: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+/** 将 github.com/xxx.png 转为支持 CORS 的 avatars.githubusercontent.com 地址 */
+function normalizeCorsUrl(src: string): string {
+  const ghMatch = src.match(/^https?:\/\/github\.com\/([^/]+)\.png/);
+  if (ghMatch) {
+    return `https://avatars.githubusercontent.com/${ghMatch[1]}`;
   }
+  return src;
+}
 
+/** 外部图片 → data URL，失败时返回透明像素占位 */
+export async function toDataUrl(src: string): Promise<string> {
+  const corsUrl = normalizeCorsUrl(src);
 
-  const direct = await fetchAsDataUrl(src);
-  if (direct) return direct;
+  // img+canvas：crossOrigin=anonymous 请求支持 CORS 的服务器
+  const viaImg = await loadImageAsDataUrl(corsUrl);
+  if (viaImg) return viaImg;
 
-
-  const proxied = await fetchAsDataUrl(`/api/image-proxy?url=${encodeURIComponent(src)}`);
-  return proxied || TRANSPARENT_PX;
+  // fallback：直接 fetch（同源或已有 CORS 头的场景）
+  try {
+    const resp = await fetch(src);
+    if (!resp.ok) return TRANSPARENT_PX;
+    const blob = await resp.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string || TRANSPARENT_PX);
+      reader.onerror = () => resolve(TRANSPARENT_PX);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return TRANSPARENT_PX;
+  }
 }
 
 export async function exportToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
@@ -126,33 +155,25 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   const width = element.offsetWidth;
   const height = element.offsetHeight;
 
-  // 在同级父容器放置克隆，继承完整 CSS 上下文（变量、主题等）
-  const cloned = element.cloneNode(true) as HTMLElement;
-  cloned.style.position = 'absolute';
-  cloned.style.left = '-99999px';
-  cloned.style.top = '0';
-  cloned.style.width = `${width}px`;
-  cloned.style.height = `${height}px`;
-  cloned.style.pointerEvents = 'none';
-  element.after(cloned);
-
-  // 在克隆副本上做图片预处理，原始 DOM 零变动
-  const images = cloned.querySelectorAll('img');
+  // 在原始 DOM 上做图片预处理：保存原始 src，替换为 data URL，导出后恢复
+  const images = element.querySelectorAll('img');
+  const savedSrcs: { img: HTMLImageElement; src: string }[] = [];
   await Promise.all(
     Array.from(images).map(async (img) => {
       const src = img.src;
       if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+      savedSrcs.push({ img, src });
       img.src = await toDataUrl(src);
     }),
   );
 
   try {
-    const blob = await toBlob(cloned, {
+    const blob = await toBlob(element, {
       width,
       height,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
-      skipFonts: true,
+      skipFonts: false,
       cacheBust: false,
       imagePlaceholder: TRANSPARENT_PX,
       filter: (node: Node) => {
@@ -175,8 +196,106 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
   } finally {
+    // 恢复原始图片 src
+    for (const { img, src } of savedSrcs) {
+      img.src = src;
+    }
     if (scaleWrapper) scaleWrapper.style.transform = savedTransform;
-    cloned.remove();
+    if (wasHidden && previewArea) {
+      previewArea.style.display = '';
+      previewArea.style.position = '';
+      previewArea.style.left = '';
+      previewArea.style.top = '';
+    }
+  }
+}
+
+export async function exportToPDF(
+  elementId: string,
+  filename: string = 'resume.pdf',
+  paperSize: import('@/types').PaperSize = 'A4'
+): Promise<void> {
+  const { toCanvas } = await import('html-to-image');
+  const { default: jsPDF } = await import('jspdf');
+  const { getPaperDimensions } = await import('@/lib/paper');
+
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error('未找到要导出的元素');
+  }
+
+  await document.fonts.ready;
+
+  const previewArea = document.getElementById('builder-preview-area');
+  const wasHidden = previewArea && window.getComputedStyle(previewArea).display === 'none';
+  if (wasHidden && previewArea) {
+    previewArea.style.display = 'flex';
+    previewArea.style.position = 'fixed';
+    previewArea.style.left = '-99999px';
+    previewArea.style.top = '0';
+  }
+
+  const scaleWrapper = document.getElementById('resume-preview-scale-wrapper');
+  const savedTransform = scaleWrapper?.style.transform ?? '';
+  if (scaleWrapper) scaleWrapper.style.transform = 'none';
+
+  const paper = getPaperDimensions(paperSize);
+  const width = paper.width;
+  const height = paper.height;
+
+  const images = element.querySelectorAll('img');
+  const savedSrcs: { img: HTMLImageElement; src: string }[] = [];
+  await Promise.all(
+    Array.from(images).map(async (img) => {
+      const src = img.src;
+      if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+      savedSrcs.push({ img, src });
+      img.src = await toDataUrl(src);
+    }),
+  );
+
+  try {
+    const canvas = await toCanvas(element, {
+      width,
+      height,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      skipFonts: false,
+      cacheBust: false,
+      imagePlaceholder: TRANSPARENT_PX,
+      filter: (node: Node) => {
+        if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
+          return false;
+        }
+        return true;
+      },
+    });
+
+    const pdf = new jsPDF({
+      orientation: paper.mmWidth > paper.mmHeight ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [paper.mmWidth, paper.mmHeight],
+    });
+
+    pdf.addImage(
+      canvas.toDataURL('image/png'),
+      'PNG',
+      0, 0,
+      paper.mmWidth,
+      paper.mmHeight,
+      undefined,
+      'FAST',
+    );
+
+    pdf.save(filename);
+  } catch (error) {
+    console.error('PDF 导出失败:', error);
+    throw new Error('PDF 导出失败');
+  } finally {
+    for (const { img, src } of savedSrcs) {
+      img.src = src;
+    }
+    if (scaleWrapper) scaleWrapper.style.transform = savedTransform;
     if (wasHidden && previewArea) {
       previewArea.style.display = '';
       previewArea.style.position = '';

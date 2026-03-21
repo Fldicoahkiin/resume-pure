@@ -14,7 +14,7 @@ export function ExportButtons() {
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
-      const { exportToPDF } = await import('@/lib/pdfCapture');
+      const { exportToPDF } = await import('@/lib/image');
       await exportToPDF('resume-preview', 'resume.pdf', resume.theme.paperSize);
     } catch (error) {
       alert(t('export.pdfExportFailed') + (error as Error).message);

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Github, Image as ImageIcon, Eye, EyeOff, Lightbulb, Plus, RefreshCw, Star, Trash2, Search } from 'lucide-react';
 import { LogoBadge } from '@/components/LogoBadge';
 import { fetchGitHubRepoMeta } from '@/lib/githubRepo';
-import { readImageFileAsDataUrl } from '@/lib/image';
+import { readImageFileAsDataUrl, toDataUrl } from '@/lib/image';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { createEntityId } from '@/lib/id';
 import { projectAnchor, projectContributionAnchor } from '@/lib/previewAnchor';
@@ -709,10 +709,11 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
 
     try {
       const meta = await fetchGitHubRepoMeta(repoUrl);
+      const avatarDataUrl = meta.avatarUrl ? await toDataUrl(meta.avatarUrl) : undefined;
       updateProject(project.id, {
         repoUrl: meta.normalizedUrl,
         repoStars: meta.stars,
-        repoAvatarUrl: meta.avatarUrl,
+        repoAvatarUrl: avatarDataUrl,
       });
       updateRepoStatus(project.id, {
         state: 'success',

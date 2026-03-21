@@ -4,6 +4,7 @@ import { getPDFFontFamily, registerCJKHyphenation } from '@/lib/pdfFonts';
 import { getPaperPointSize } from '@/lib/paper';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { parseInlineMarkdown } from '@/lib/markdown';
+import { toDataUrl } from '@/lib/image';
 
 registerCJKHyphenation();
 
@@ -112,7 +113,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PdfLink = ({ src, style, children }: { src: string; style?: any; children: React.ReactNode }) => {
     if (linksEnabled && isSafePdfUrl(src)) {
-      return <Link src={src} style={{ textDecoration: 'none', ...style }}>{children}</Link>;
+      return <Link src={src} style={{ color: '#666', textDecoration: 'none', ...style }}>{children}</Link>;
     }
     return <Text style={style}>{children}</Text>;
   };
@@ -148,6 +149,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
     },
     contactItem: {
       marginRight: 10,
+      color: '#666',
     },
     summary: {
       fontSize: theme.fontSize,
@@ -408,11 +410,11 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               <Text key={desc.key} style={styles.bulletPoint}>• {md(desc.value)}</Text>
                             ))}
                         {project.showTechnologies !== false && project.technologies && project.technologies.length > 0 ? (
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4, gap: 4 }}>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
                             {project.technologies.map((tech, techIndex) => {
                               const logo = resolveSkillLogo(tech);
                               return (
-                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1.5, border: '0.5px solid #e5e7eb' }}>
+                                <View key={`${tech}-${techIndex}`} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1.5, border: '0.5px solid #e5e7eb', marginRight: 4, marginBottom: 2 }}>
                                   {logo ? (
                                     <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 3 }}>
                                       <Path d={logo.svgPath} fill={logo.color} />
@@ -455,28 +457,44 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       if (skill.items.length === 0) return null;
 
                       const iconSize = theme.fontSize - 1;
+                      const coreItems = skill.items.filter(i => i.level === 'core');
+                      const proficientItems = skill.items.filter(i => i.level === 'proficient');
+                      const familiarItems = skill.items.filter(i => i.level === 'familiar');
+                      const orderedItems = [...coreItems, ...proficientItems, ...familiarItems];
+
+                      const capsuleStyle = (level: SkillLevel) => {
+                        switch (level) {
+                          case 'core': return { backgroundColor: '#ffffff', color: '#111827', border: `1px solid ${theme.primaryColor}`, fontWeight: 600 as const };
+                          case 'proficient': return { backgroundColor: '#ffffff', color: '#4b5563', border: '1px solid #d1d5db', fontWeight: 500 as const };
+                          case 'familiar': return { backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid transparent', fontWeight: 400 as const };
+                        }
+                      };
 
                       return (
                         <View key={skill.id} style={styles.itemContainer} wrap={false}>
                           <Text style={styles.skillCategory}>{skill.category}</Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 2 }}>
-                            {skill.items.map((item, index) => {
+                            {orderedItems.map((item) => {
                               const logo = resolveSkillLogo(item.name);
+                              const cs = capsuleStyle(item.level);
                               return (
-                                <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                                <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 100, paddingHorizontal: 7, paddingVertical: 2, marginRight: 4, marginBottom: 3, ...cs }}>
                                   {item.showLogo === false ? null : item.logo ? (
                                     // eslint-disable-next-line jsx-a11y/alt-text
-                                    <Image src={item.logo} style={{ width: iconSize, height: iconSize, marginRight: 2 }} />
+                                    <Image src={item.logo} style={{ width: iconSize, height: iconSize, marginRight: 3 }} />
                                   ) : logo ? (
-                                    <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 2 }}>
+                                    <Svg viewBox="0 0 24 24" style={{ width: iconSize, height: iconSize, marginRight: 3 }}>
                                       <Path d={logo.svgPath} fill={logo.color} />
                                     </Svg>
                                   ) : null}
-                                  <Text style={{ fontSize: theme.fontSize - 1, color: '#333' }}>
+                                  <Text style={{ fontSize: theme.fontSize - 0.5, color: cs.color, fontWeight: cs.fontWeight }}>
                                     {item.name}
-                                    {item.showContext !== false && item.context ? ` (${item.context})` : ''}
-                                    {index < skill.items.length - 1 ? '  ·  ' : ''}
                                   </Text>
+                                  {item.showContext !== false && item.context ? (
+                                    <Text style={{ fontSize: theme.fontSize - 1.5, color: '#9ca3af', marginLeft: 4 }}>
+                                      {item.context}
+                                    </Text>
+                                  ) : null}
                                 </View>
                               );
                             })}
@@ -522,10 +540,35 @@ export async function exportToPDF(
   translations: PDFTranslations = defaultTranslations
 ): Promise<void> {
   try {
+    // 预转换头像 URL 为 data URL，避免 react-pdf 的 CORS 问题
+    const processedData = JSON.parse(JSON.stringify(data)) as ResumeData;
+    const imageUrls: Array<{ obj: Record<string, string>; key: string }> = [];
+    for (const project of processedData.projects) {
+      if (project.repoAvatarUrl) imageUrls.push({ obj: project as unknown as Record<string, string>, key: 'repoAvatarUrl' });
+      if (project.customLogo) imageUrls.push({ obj: project as unknown as Record<string, string>, key: 'customLogo' });
+    }
+    for (const skill of processedData.skills) {
+      for (const item of skill.items) {
+        if (item.logo) imageUrls.push({ obj: item as unknown as Record<string, string>, key: 'logo' });
+      }
+    }
+    await Promise.all(
+      imageUrls.map(async ({ obj, key }) => {
+        const url = obj[key];
+        if (url && !url.startsWith('data:')) {
+          try {
+            obj[key] = await toDataUrl(url);
+          } catch {
+            // 转换失败时保留原始 URL
+          }
+        }
+      })
+    );
+
     const renderer = await import('@react-pdf/renderer');
     const { pdf } = renderer;
 
-    const blob = await pdf(createResumePDF(renderer, data, translations)).toBlob();
+    const blob = await pdf(createResumePDF(renderer, processedData, translations)).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
