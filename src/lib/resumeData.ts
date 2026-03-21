@@ -6,7 +6,8 @@ import {
   Experience,
   PersonalInfo,
   Project,
-  ProjectContribution,
+  ProjectProof,
+  ProjectProofRef,
   ResumeData,
   SectionConfig,
   Skill,
@@ -178,18 +179,44 @@ function createId(prefix: string, index: number): string {
   return `${prefix}-${index + 1}`;
 }
 
-function normalizeProjectContributions(value: unknown): ProjectContribution[] {
+function normalizeProofRefs(value: unknown): ProjectProofRef[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value.reduce<ProjectContribution[]>((acc, item, index) => {
+  const PROOF_REF_TYPES = new Set(['pr', 'commit', 'issue', 'link']);
+
+  return value.reduce<ProjectProofRef[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    const rawType = asString(item.type, 'link');
+    const type = PROOF_REF_TYPES.has(rawType) ? rawType as ProjectProofRef['type'] : 'link';
+
+    acc.push({
+      id: asString(item.id, createId('ref', index)),
+      type,
+      url: asString(item.url, ''),
+      number: asOptionalNumber(item.number, 1),
+      title: asOptionalString(item.title),
+      mergedAt: asOptionalString(item.mergedAt),
+    });
+
+    return acc;
+  }, []);
+}
+
+function normalizeProjectProofs(value: unknown): ProjectProof[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<ProjectProof[]>((acc, item, index) => {
     if (!isRecord(item)) return acc;
 
     acc.push({
-      id: asString(item.id, createId('contribution', index)),
+      id: asString(item.id, createId('proof', index)),
       summary: asString(item.summary, ''),
-      url: asString(item.url, ''),
+      refs: normalizeProofRefs(item.refs),
     });
 
     return acc;
@@ -341,7 +368,7 @@ function normalizeProjects(input: unknown): Project[] {
     if (!isRecord(item)) return acc;
 
     const technologies = asStringArray(item.technologies);
-    const contributions = normalizeProjectContributions(item.contributions);
+    const proofs = normalizeProjectProofs(item.proofs);
 
     acc.push({
       id: asString(item.id, createId('proj', index)),
@@ -357,11 +384,11 @@ function normalizeProjects(input: unknown): Project[] {
       customLogo: asOptionalString(item.customLogo),
       description: asStringArray(item.description),
       technologies: technologies.length > 0 ? technologies : undefined,
-      contributions: contributions.length > 0 ? contributions : undefined,
+      proofs: proofs.length > 0 ? proofs : undefined,
       showLogo: asBoolean(item.showLogo, true),
       showStars: asBoolean(item.showStars, true),
       showTechnologies: asBoolean(item.showTechnologies, true),
-      showContributions: asBoolean(item.showContributions, true),
+      showProofs: asBoolean(item.showProofs, true),
       showBulletPoints: asBoolean(item.showBulletPoints, true),
     });
 

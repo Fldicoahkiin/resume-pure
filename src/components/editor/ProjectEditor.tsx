@@ -8,9 +8,9 @@ import { fetchGitHubRepoMeta } from '@/lib/githubRepo';
 import { readImageFileAsDataUrl, toDataUrl } from '@/lib/image';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import { createEntityId } from '@/lib/id';
-import { projectAnchor, projectContributionAnchor } from '@/lib/previewAnchor';
+import { projectAnchor, projectProofAnchor } from '@/lib/previewAnchor';
 import { useResumeStore } from '@/store/resumeStore';
-import { Project, ProjectContribution } from '@/types';
+import { Project, ProjectProof, ProjectProofRef } from '@/types';
 import { BulletListTextarea } from './BulletListTextarea';
 import { DraggableItem } from './DraggableItem';
 
@@ -37,10 +37,13 @@ interface ProjectCardProps {
   onUpdate: (projectId: string, patch: Partial<Project>) => void;
   onSyncRepo: (project: Project, force?: boolean) => Promise<void>;
   onUploadLogo: (projectId: string, event: ChangeEvent<HTMLInputElement>) => Promise<void>;
-  onAddContribution: (project: Project) => void;
-  onDeleteContribution: (project: Project, contributionId: string) => void;
-  onUpdateContribution: (project: Project, contributionId: string, patch: Partial<ProjectContribution>) => void;
-  onFetchContributions?: (project: Project) => Promise<void>;
+  onAddProof: (project: Project) => void;
+  onDeleteProof: (project: Project, proofId: string) => void;
+  onUpdateProof: (project: Project, proofId: string, patch: Partial<ProjectProof>) => void;
+  onAddProofRef: (project: Project, proofId: string) => void;
+  onDeleteProofRef: (project: Project, proofId: string, refId: string) => void;
+  onUpdateProofRef: (project: Project, proofId: string, refId: string, patch: Partial<ProjectProofRef>) => void;
+  onFetchPullRequests?: (project: Project) => Promise<void>;
   fetchStatus?: { loading: boolean };
 }
 
@@ -85,10 +88,18 @@ function parseDateValue(value: string, presentLabel: string) {
   };
 }
 
-function createEmptyContribution(): ProjectContribution {
+function createEmptyProof(): ProjectProof {
   return {
-    id: createEntityId('contribution'),
+    id: createEntityId('proof'),
     summary: '',
+    refs: [],
+  };
+}
+
+function createEmptyProofRef(): ProjectProofRef {
+  return {
+    id: createEntityId('ref'),
+    type: 'link',
     url: '',
   };
 }
@@ -163,7 +174,7 @@ function ProjectFormFields({
   t,
   onUpdate,
   onSyncRepo,
-  onFetchContributions,
+  onFetchPullRequests,
   fetchStatus,
 }: {
   project: Project;
@@ -171,7 +182,7 @@ function ProjectFormFields({
   t: TranslationFn;
   onUpdate: (patch: Partial<Project>) => void;
   onSyncRepo: (project: Project, force?: boolean) => Promise<void>;
-  onFetchContributions?: (project: Project) => Promise<void>;
+  onFetchPullRequests?: (project: Project) => Promise<void>;
   fetchStatus?: { loading: boolean };
 }) {
   return (
@@ -223,13 +234,13 @@ function ProjectFormFields({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => void onFetchContributions?.(project)}
+              onClick={() => void onFetchPullRequests?.(project)}
               disabled={fetchStatus?.loading || !project.repoUrl}
-              title="自动提取合并的 PR 到 Markdown 描述末尾"
+              title="从 GitHub 导入 merged PR 作为贡献证明"
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
             >
               {fetchStatus?.loading ? <RefreshCw size={12} className="animate-spin" /> : <Search size={12} />}
-              提取贡献
+              导入 PR
             </button>
             <button
               type="button"
@@ -439,22 +450,28 @@ function ProjectTechPanel({
   );
 }
 
-function ProjectContributionsPanel({
+function ProjectProofsPanel({
   project,
   t,
   onUpdate,
-  onAddContribution,
-  onDeleteContribution,
-  onUpdateContribution,
+  onAddProof,
+  onDeleteProof,
+  onUpdateProof,
+  onAddProofRef,
+  onDeleteProofRef,
+  onUpdateProofRef,
 }: {
   project: Project;
   t: TranslationFn;
   onUpdate: (patch: Partial<Project>) => void;
-  onAddContribution: (project: Project) => void;
-  onDeleteContribution: (project: Project, contributionId: string) => void;
-  onUpdateContribution: (project: Project, contributionId: string, patch: Partial<ProjectContribution>) => void;
+  onAddProof: (project: Project) => void;
+  onDeleteProof: (project: Project, proofId: string) => void;
+  onUpdateProof: (project: Project, proofId: string, patch: Partial<ProjectProof>) => void;
+  onAddProofRef: (project: Project, proofId: string) => void;
+  onDeleteProofRef: (project: Project, proofId: string, refId: string) => void;
+  onUpdateProofRef: (project: Project, proofId: string, refId: string, patch: Partial<ProjectProofRef>) => void;
 }) {
-  const contributions = project.contributions || [];
+  const proofs = project.proofs || [];
 
   return (
     <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800/60">
@@ -465,14 +482,14 @@ function ProjectContributionsPanel({
         </div>
         <div className="flex flex-wrap gap-2">
           <ToggleButton
-            active={project.showContributions !== false}
+            active={project.showProofs !== false}
             activeLabel={t('editor.projects.showContributions')}
             inactiveLabel={t('editor.projects.hideContributions')}
-            onClick={() => onUpdate({ showContributions: project.showContributions === false })}
+            onClick={() => onUpdate({ showProofs: project.showProofs === false })}
           />
           <button
             type="button"
-            onClick={() => onAddContribution(project)}
+            onClick={() => onAddProof(project)}
             className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
           >
             <Plus size={12} />
@@ -481,16 +498,16 @@ function ProjectContributionsPanel({
         </div>
       </div>
 
-      {contributions.length === 0 ? (
+      {proofs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 px-3 py-4 text-center text-xs text-gray-400 dark:border-gray-600 dark:text-gray-500">
           {t('editor.projects.noContributions')}
         </div>
       ) : (
         <div className="space-y-2">
-          {contributions.map((contribution, index) => (
+          {proofs.map((proof, index) => (
             <div
-              key={contribution.id}
-              data-editor-anchor={projectContributionAnchor(project.id, contribution.id)}
+              key={proof.id}
+              data-editor-anchor={projectProofAnchor(project.id, proof.id)}
               className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/40"
             >
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -499,7 +516,7 @@ function ProjectContributionsPanel({
                 </p>
                 <button
                   type="button"
-                  onClick={() => onDeleteContribution(project, contribution.id)}
+                  onClick={() => onDeleteProof(project, proof.id)}
                   className="rounded-full p-1 text-gray-400 transition hover:bg-white hover:text-red-500 dark:hover:bg-gray-800"
                   title={t('editor.projects.deleteContribution')}
                 >
@@ -511,22 +528,67 @@ function ProjectContributionsPanel({
                   {t('editor.projects.contributionSummary')}
                   <input
                     type="text"
-                    value={contribution.summary}
-                    onChange={(event) => onUpdateContribution(project, contribution.id, { summary: event.target.value })}
+                    value={proof.summary}
+                    onChange={(event) => onUpdateProof(project, proof.id, { summary: event.target.value })}
                     className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder={t('editor.projects.contributionSummaryPlaceholder')}
                   />
                 </label>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('editor.projects.contributionUrl')}
-                  <input
-                    type="text"
-                    value={contribution.url}
-                    onChange={(event) => onUpdateContribution(project, contribution.id, { url: event.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    placeholder={t('editor.projects.contributionUrlPlaceholder')}
-                  />
-                </label>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">引用</p>
+                    <button
+                      type="button"
+                      onClick={() => onAddProofRef(project, proof.id)}
+                      className="inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-500 transition hover:border-gray-300 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                    >
+                      <Plus size={10} />
+                      添加
+                    </button>
+                  </div>
+                  {proof.refs.length === 0 ? (
+                    <p className="text-xs text-gray-400 dark:text-gray-500">无引用</p>
+                  ) : (
+                    proof.refs.map((ref) => (
+                      <div key={ref.id} className="flex items-center gap-2">
+                        <select
+                          value={ref.type}
+                          onChange={(event) => onUpdateProofRef(project, proof.id, ref.id, { type: event.target.value as ProjectProofRef['type'] })}
+                          className="w-20 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="pr">PR</option>
+                          <option value="commit">Commit</option>
+                          <option value="issue">Issue</option>
+                          <option value="link">Link</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={ref.url}
+                          onChange={(event) => onUpdateProofRef(project, proof.id, ref.id, { url: event.target.value })}
+                          className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          placeholder="URL"
+                        />
+                        {(ref.type === 'pr' || ref.type === 'issue') && (
+                          <input
+                            type="number"
+                            value={ref.number ?? ''}
+                            onChange={(event) => onUpdateProofRef(project, proof.id, ref.id, { number: event.target.value ? Number(event.target.value) : undefined })}
+                            className="w-16 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            placeholder="#"
+                          />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onDeleteProofRef(project, proof.id, ref.id)}
+                          className="rounded-full p-0.5 text-gray-400 transition hover:text-red-500"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -543,10 +605,13 @@ function ProjectCard({
   t,  onUpdate,
   onSyncRepo,
   onUploadLogo,
-  onAddContribution,
-  onDeleteContribution,
-  onUpdateContribution,
-  onFetchContributions,
+  onAddProof,
+  onDeleteProof,
+  onUpdateProof,
+  onAddProofRef,
+  onDeleteProofRef,
+  onUpdateProofRef,
+  onFetchPullRequests,
   fetchStatus,
 }: ProjectCardProps) {
   const updateProject = (patch: Partial<Project>) => onUpdate(project.id, patch);
@@ -562,7 +627,7 @@ function ProjectCard({
           t={t}
           onUpdate={updateProject}
           onSyncRepo={onSyncRepo}
-          onFetchContributions={onFetchContributions}
+          onFetchPullRequests={onFetchPullRequests}
           fetchStatus={fetchStatus}
         />
         <ProjectLogoPanel
@@ -577,13 +642,16 @@ function ProjectCard({
           t={t}
           onUpdate={updateProject}
         />
-        <ProjectContributionsPanel
+        <ProjectProofsPanel
           project={project}
           t={t}
           onUpdate={updateProject}
-          onAddContribution={onAddContribution}
-          onDeleteContribution={onDeleteContribution}
-          onUpdateContribution={onUpdateContribution}
+          onAddProof={onAddProof}
+          onDeleteProof={onDeleteProof}
+          onUpdateProof={onUpdateProof}
+          onAddProofRef={onAddProofRef}
+          onDeleteProofRef={onDeleteProofRef}
+          onUpdateProofRef={onUpdateProofRef}
         />
       </div>
 
@@ -666,11 +734,11 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
       repoUrl: '',
       description: [''],
       technologies: [],
-      contributions: [],
+      proofs: [],
       showLogo: true,
       showStars: true,
       showTechnologies: true,
-      showContributions: true,
+      showProofs: true,
       showBulletPoints: true,
     };
 
@@ -744,23 +812,49 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
     }
   };
 
-  const handleUpdateContribution = (project: Project, contributionId: string, patch: Partial<ProjectContribution>) => {
+  const handleUpdateProof = (project: Project, proofId: string, patch: Partial<ProjectProof>) => {
     updateProject(project.id, {
-      contributions: (project.contributions || []).map((item) => (
-        item.id === contributionId ? { ...item, ...patch } : item
+      proofs: (project.proofs || []).map((item) => (
+        item.id === proofId ? { ...item, ...patch } : item
       )),
     });
   };
 
-  const handleAddContribution = (project: Project) => {
+  const handleAddProof = (project: Project) => {
     updateProject(project.id, {
-      contributions: [...(project.contributions || []), createEmptyContribution()],
+      proofs: [...(project.proofs || []), createEmptyProof()],
     });
   };
 
-  const handleDeleteContribution = (project: Project, contributionId: string) => {
+  const handleDeleteProof = (project: Project, proofId: string) => {
     updateProject(project.id, {
-      contributions: (project.contributions || []).filter((item) => item.id !== contributionId),
+      proofs: (project.proofs || []).filter((item) => item.id !== proofId),
+    });
+  };
+
+  const handleAddProofRef = (project: Project, proofId: string) => {
+    updateProject(project.id, {
+      proofs: (project.proofs || []).map((proof) =>
+        proof.id === proofId ? { ...proof, refs: [...proof.refs, createEmptyProofRef()] } : proof
+      ),
+    });
+  };
+
+  const handleDeleteProofRef = (project: Project, proofId: string, refId: string) => {
+    updateProject(project.id, {
+      proofs: (project.proofs || []).map((proof) =>
+        proof.id === proofId ? { ...proof, refs: proof.refs.filter((r) => r.id !== refId) } : proof
+      ),
+    });
+  };
+
+  const handleUpdateProofRef = (project: Project, proofId: string, refId: string, patch: Partial<ProjectProofRef>) => {
+    updateProject(project.id, {
+      proofs: (project.proofs || []).map((proof) =>
+        proof.id === proofId
+          ? { ...proof, refs: proof.refs.map((r) => (r.id === refId ? { ...r, ...patch } : r)) }
+          : proof
+      ),
     });
   };
 
@@ -823,9 +917,12 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
                 onUpdate={updateProject}
                 onSyncRepo={handleRepoSync}
                 onUploadLogo={handleProjectLogoUpload}
-                onAddContribution={handleAddContribution}
-                onDeleteContribution={handleDeleteContribution}
-                onUpdateContribution={handleUpdateContribution}
+                onAddProof={handleAddProof}
+                onDeleteProof={handleDeleteProof}
+                onUpdateProof={handleUpdateProof}
+                onAddProofRef={handleAddProofRef}
+                onDeleteProofRef={handleDeleteProofRef}
+                onUpdateProofRef={handleUpdateProofRef}
               />
             </DraggableItem>
           ))}

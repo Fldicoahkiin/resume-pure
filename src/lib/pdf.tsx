@@ -426,19 +426,19 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                             })}
                           </View>
                         ) : null}
-                        {project.showContributions !== false && project.contributions && project.contributions.length > 0 ? (
+                        {project.showProofs !== false && project.proofs && project.proofs.length > 0 ? (
                           <View>
                             <Text style={styles.contributionTitle}>{translations.contributions}</Text>
-                            {project.contributions.map((contribution) => (
-                              <View key={contribution.id} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 1 }}>
+                            {project.proofs.map((proof) => (
+                              <View key={proof.id} style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 1, alignItems: 'flex-start' }}>
                                 <Text style={styles.contributionItem}>
-                                  - {md(contribution.summary)}
+                                  - {md(proof.summary)}
                                 </Text>
-                                {contribution.url ? (
-                                  <PdfLink src={contribution.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', marginLeft: 2, paddingTop: 1.5 }}>
-                                    {contribution.url.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/commit\/([a-f0-9]{7})[a-f0-9]+$/, '/commit/$1')}
+                                {proof.refs.map((ref) => (
+                                  <PdfLink key={ref.id} src={ref.url} style={{ fontSize: theme.fontSize - 2, color: '#4a7cc9', marginLeft: 2, paddingTop: 1.5 }}>
+                                    {ref.type === 'pr' && ref.number ? `PR #${ref.number}` : ref.url.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\/commit\/([a-f0-9]{7})[a-f0-9]+$/, '/commit/$1')}
                                   </PdfLink>
-                                ) : null}
+                                ))}
                               </View>
                             ))}
                           </View>

@@ -68,9 +68,9 @@ export function exportToMarkdown(data: ResumeData): string {
         lines.push('描述:');
         proj.description.forEach(desc => lines.push(`- ${desc}`));
       }
-      if (proj.contributions && proj.contributions.length > 0) {
-        lines.push('职责:');
-        proj.contributions.forEach(contrib => lines.push(`- ${contrib.summary}`));
+      if (proj.proofs && proj.proofs.length > 0) {
+        lines.push('贡献证明:');
+        proj.proofs.forEach(proof => lines.push(`- ${proof.summary}`));
       }
       lines.push('');
     });
@@ -125,7 +125,7 @@ export function importFromMarkdown(md: string): ResumeData {
         data.education.push(currentItem);
         currentContext = '';
       } else if (currentSection === '项目经历') {
-        currentItem = { id: createEntityId('proj'), name: title, startDate: '', endDate: '', description: [], contributions: [], technologies: [] };
+        currentItem = { id: createEntityId('proj'), name: title, startDate: '', endDate: '', description: [], proofs: [], technologies: [] };
         data.projects.push(currentItem);
         currentContext = '';
       } else if (currentSection === '专业技能') {
@@ -156,7 +156,7 @@ export function importFromMarkdown(md: string): ResumeData {
            // Maybe custom contact
         }
       } else if (currentItem) {
-        if (key === '描述' || key === '职责' || key === '项') {
+        if (key === '描述' || key === '贡献证明' || key === '项') {
           currentContext = key;
         } else if (key === '时间') {
           (currentItem as Experience | Education | Project).startDate = val.slice(0, Math.max(0, val.indexOf(' - '))).trim() || val.trim();
@@ -183,9 +183,9 @@ export function importFromMarkdown(md: string): ResumeData {
         if (currentContext === '描述') {
           const withDesc = currentItem as Experience | Education | Project;
           (withDesc.description = withDesc.description || []).push(val);
-        } else if (currentContext === '职责') {
+        } else if (currentContext === '贡献证明') {
           const proj = currentItem as Project;
-          (proj.contributions = proj.contributions || []).push({ id: createEntityId('con'), summary: val, url: '' });
+          (proj.proofs = proj.proofs || []).push({ id: createEntityId('proof'), summary: val, refs: [] });
         } else if (currentContext === '项' && currentSection === '专业技能') {
            const match = val.match(/^(.*?)(?:\s*\((.*?)\))?$/);
            const name = match ? match[1].trim() : val;

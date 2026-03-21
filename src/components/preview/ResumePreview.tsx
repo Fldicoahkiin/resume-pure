@@ -14,7 +14,7 @@ import {
   experienceAnchor,
   personalInfoFieldAnchor,
   projectAnchor,
-  projectContributionAnchor,
+  projectProofAnchor,
   sectionAnchor,
   skillAnchor,
   skillItemAnchor,
@@ -294,15 +294,18 @@ function formatGitHubPath(url: string): string {
   return url;
 }
 
-function formatContributionRef(url: string): string | null {
-  if (!url) return null;
-  const prMatch = url.match(/\/pull\/(\d+)/);
+function formatProofRefLabel(ref: import('@/types').ProjectProofRef): string {
+  if (ref.type === 'pr' && ref.number) return `PR #${ref.number}`;
+  if (ref.type === 'issue' && ref.number) return `#${ref.number}`;
+  if (ref.type === 'commit') {
+    const commitMatch = ref.url.match(/\/commit\/([a-f0-9]{7,})/i);
+    if (commitMatch) return commitMatch[1].substring(0, 7);
+  }
+  const prMatch = ref.url.match(/\/pull\/(\d+)/);
   if (prMatch) return `PR #${prMatch[1]}`;
-  const commitMatch = url.match(/\/commit\/([a-f0-9]{7,})/i);
-  if (commitMatch) return commitMatch[1].substring(0, 7);
-  const issueMatch = url.match(/\/issues\/(\d+)/);
+  const issueMatch = ref.url.match(/\/issues\/(\d+)/);
   if (issueMatch) return `#${issueMatch[1]}`;
-  return null;
+  return ref.title || ref.url.replace(/^https?:\/\/(www\.)?github\.com\//, '');
 }
 
 function ProjectTechTags({ technologies, fontSize, isCompact }: { technologies: string[]; fontSize: number, isCompact?: boolean }) {
@@ -342,7 +345,7 @@ function ProjectTechTags({ technologies, fontSize, isCompact }: { technologies: 
   );
 }
 
-function ProjectContributionList({
+function ProjectProofList({
   project,
   theme,
   fontSize,
@@ -358,32 +361,33 @@ function ProjectContributionList({
   activeAnchor?: string | null;
   isCompact?: boolean;
 }) {
-  const contributions = project.contributions || [];
-  if (project.showContributions === false || contributions.length === 0) return null;
+  const proofs = project.proofs || [];
+  if (project.showProofs === false || proofs.length === 0) return null;
 
   return (
     <div className={isCompact ? 'mt-0.5' : 'mt-1.5'}>
       <ul className={isCompact ? 'space-y-0' : 'space-y-0.5'}>
-        {contributions.map((contribution) => {
-          const anchor = projectContributionAnchor(project.id, contribution.id);
-          const href = sanitizeUrl(contribution.url);
-          const ref = formatContributionRef(contribution.url);
+        {proofs.map((proof) => {
+          const anchor = projectProofAnchor(project.id, proof.id);
 
           return (
             <SelectableBlock
-              key={contribution.id}
+              key={proof.id}
               anchor={anchor}
               activeAnchor={activeAnchor}
               onSelectAnchor={onSelectAnchor}
               className="-mx-1 rounded-sm px-1"
             >
-              <li className="flex text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
+              <li className="flex flex-wrap items-baseline text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
                 <span className="mr-2 text-gray-400">•</span>
-                <span className={`flex-1 ${isCompact ? 'line-clamp-1' : ''}`}>
-                  <MarkdownWeb text={contribution.summary} />
-                  {ref && (
-                    <>
-                      {' '}
+                <span className={`${isCompact ? 'line-clamp-1' : ''}`}>
+                  <MarkdownWeb text={proof.summary} />
+                </span>
+                {proof.refs.map((ref) => {
+                  const label = formatProofRefLabel(ref);
+                  const href = sanitizeUrl(ref.url);
+                  return (
+                    <span key={ref.id} className="ml-1">
                       {!onSelectAnchor && href && theme.enableLinks !== false ? (
                         <a
                           href={href}
@@ -392,14 +396,14 @@ function ProjectContributionList({
                           className="text-gray-400 hover:text-blue-600 hover:underline"
                           onClick={(event) => event.stopPropagation()}
                         >
-                          {ref}
+                          {label}
                         </a>
                       ) : (
-                        <span className="text-gray-400">{ref}</span>
+                        <span className="text-gray-400">{label}</span>
                       )}
-                    </>
-                  )}
-                </span>
+                    </span>
+                  );
+                })}
               </li>
             </SelectableBlock>
           );
@@ -531,7 +535,7 @@ function ProjectPreviewCard({
         </div>
       </SelectableBlock>
 
-      <ProjectContributionList
+      <ProjectProofList
         project={project}
         theme={theme}
         fontSize={fontSize}

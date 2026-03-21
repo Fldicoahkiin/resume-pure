@@ -8,7 +8,7 @@ const SECTION_PREFIX = 'section:';
 const EXPERIENCE_PREFIX = 'experience:';
 const EDUCATION_PREFIX = 'education:';
 const PROJECT_PREFIX = 'projects:';
-const PROJECT_CONTRIBUTION_PREFIX = 'projectContribution:';
+const PROJECT_PROOF_PREFIX = 'projectProof:';
 const SKILL_PREFIX = 'skills:';
 const SKILL_ITEM_PREFIX = 'skillItem:';
 const CUSTOM_PREFIX = 'custom:';
@@ -39,8 +39,8 @@ export function projectAnchor(id: string): string {
   return `${PROJECT_PREFIX}${id}`;
 }
 
-export function projectContributionAnchor(projectId: string, contributionId: string): string {
-  return `${PROJECT_CONTRIBUTION_PREFIX}${projectId}:${contributionId}`;
+export function projectProofAnchor(projectId: string, proofId: string): string {
+  return `${PROJECT_PROOF_PREFIX}${projectId}:${proofId}`;
 }
 
 export function skillAnchor(id: string): string {
@@ -63,7 +63,7 @@ type ParsedKind =
   | 'experience'
   | 'education'
   | 'projects'
-  | 'projectContribution'
+  | 'projectProof'
   | 'skills'
   | 'skillItem'
   | 'custom'
@@ -127,10 +127,10 @@ function parsePreviewAnchor(anchor: string): ParsedPreviewAnchor {
     };
   }
 
-  if (anchor.startsWith(PROJECT_CONTRIBUTION_PREFIX)) {
-    const { parentId, itemId } = parseNestedAnchor(anchor.slice(PROJECT_CONTRIBUTION_PREFIX.length));
+  if (anchor.startsWith(PROJECT_PROOF_PREFIX)) {
+    const { parentId, itemId } = parseNestedAnchor(anchor.slice(PROJECT_PROOF_PREFIX.length));
     return {
-      kind: 'projectContribution',
+      kind: 'projectProof',
       sectionId: 'projects',
       parentId,
       itemId,
@@ -186,7 +186,7 @@ export function getEditorAnchorCandidates(anchor: string): string[] {
   const parsed = parsePreviewAnchor(anchor);
   const candidates = [anchor];
 
-  if (parsed.kind === 'projectContribution' && parsed.parentId) {
+  if (parsed.kind === 'projectProof' && parsed.parentId) {
     candidates.push(projectAnchor(parsed.parentId));
   }
 
@@ -313,21 +313,20 @@ export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJu
     }
   }
 
-  if (parsed.kind === 'projectContribution' && parsed.parentId && parsed.itemId && resume) {
+  if (parsed.kind === 'projectProof' && parsed.parentId && parsed.itemId && resume) {
     const projectIndex = resume.projects.findIndex((item) => item.id === parsed.parentId);
     if (projectIndex < 0) return null;
 
     const project = resume.projects[projectIndex];
-    const contributionIndex = (project.contributions || []).findIndex((item) => item.id === parsed.itemId);
-    if (contributionIndex < 0) return null;
+    const proofIndex = (project.proofs || []).findIndex((item) => item.id === parsed.itemId);
+    if (proofIndex < 0) return null;
 
     return {
       arrayPath: ['projects'],
       itemIndex: projectIndex,
-      nestedArrayPath: ['contributions'],
-      nestedItemIndex: contributionIndex,
+      nestedArrayPath: ['proofs'],
+      nestedItemIndex: proofIndex,
       focusKey: 'summary',
-      fallbackFocusKey: 'url',
     };
   }
 
@@ -547,14 +546,17 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
           push(...getValueSearchPatterns(item.name), ...getValueSearchPatterns(item.role));
           push(...getValueSearchPatterns(item.repoUrl), ...getValueSearchPatterns(item.url));
         }
-      } else if (parsed.kind === 'projectContribution' && parsed.parentId) {
+      } else if (parsed.kind === 'projectProof' && parsed.parentId) {
         const project = resume.projects.find((record) => record.id === parsed.parentId);
-        const contribution = project?.contributions?.find((record) => record.id === parsed.itemId);
+        const proof = project?.proofs?.find((record) => record.id === parsed.itemId);
         if (project) {
           push(...getValueSearchPatterns(project.name));
         }
-        if (contribution) {
-          push(...getValueSearchPatterns(contribution.summary), ...getValueSearchPatterns(contribution.url));
+        if (proof) {
+          push(...getValueSearchPatterns(proof.summary));
+          for (const ref of proof.refs) {
+            push(...getValueSearchPatterns(ref.url));
+          }
         }
       } else if (parsed.kind === 'skills') {
         const item = resume.skills.find((record) => record.id === parsed.itemId);

@@ -78,20 +78,29 @@ export interface Project {
   customLogo?: string;
   description: string[];
   technologies?: string[];
-  contributions?: ProjectContribution[];
+  proofs?: ProjectProof[];
   showLogo?: boolean;
   showStars?: boolean;
   showTechnologies?: boolean;
-  showContributions?: boolean;
+  showProofs?: boolean;
   showBulletPoints?: boolean;
   layout?: 'compact' | 'comfortable';
   visible?: boolean;
 }
 
-export interface ProjectContribution {
+export interface ProjectProofRef {
+  id: string;
+  type: 'pr' | 'commit' | 'issue' | 'link';
+  url: string;
+  number?: number;
+  title?: string;
+  mergedAt?: string;
+}
+
+export interface ProjectProof {
   id: string;
   summary: string;
-  url: string;
+  refs: ProjectProofRef[];
 }
 
 export type SkillLevel = 'core' | 'proficient' | 'familiar';

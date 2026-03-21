@@ -104,7 +104,7 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
   };
 }
 
-export async function fetchGitHubContributions(repoUrl: string, authorId: string): Promise<string[]> {
+export async function fetchGitHubPullRequests(repoUrl: string, authorLogin: string): Promise<import('@/types').ProjectProofRef[]> {
   const reference = parseGitHubRepoUrl(repoUrl);
   if (!reference) {
     throw new Error('invalid-url');
@@ -118,8 +118,8 @@ export async function fetchGitHubContributions(repoUrl: string, authorId: string
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const query = encodeURIComponent(`repo:${reference.owner}/${reference.repo} author:${authorId} is:pr is:merged`);
-  const response = await fetch(`https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=10`, {
+  const query = encodeURIComponent(`repo:${reference.owner}/${reference.repo} author:${authorLogin} is:pr is:merged`);
+  const response = await fetch(`https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=100`, {
     headers,
   });
 
@@ -133,9 +133,13 @@ export async function fetchGitHubContributions(repoUrl: string, authorId: string
   const payload = await response.json();
   const items = payload.items || [];
 
-  return items.map((item: { title?: string; html_url?: string }) => {
-    const title = (item.title || '').replace(/"/g, "'");
-    const url = item.html_url;
-    return `${title} ${url}`; 
-  });
+  return items.map((item: { number?: number; title?: string; html_url?: string; pull_request?: { merged_at?: string } }, index: number) => ({
+    id: `pr-${index + 1}`,
+    type: 'pr' as const,
+    url: item.html_url || '',
+    number: item.number,
+    title: item.title,
+    mergedAt: item.pull_request?.merged_at,
+  }));
 }
+

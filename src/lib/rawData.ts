@@ -31,9 +31,17 @@ interface RawEducationItem {
   showBulletPoints?: boolean;
 }
 
-interface RawProjectContribution {
-  summary: string;
+interface RawProjectProofRef {
+  type: 'pr' | 'commit' | 'issue' | 'link';
   url: string;
+  number?: number;
+  title?: string;
+  mergedAt?: string;
+}
+
+interface RawProjectProof {
+  summary: string;
+  refs: RawProjectProofRef[];
 }
 
 interface RawProjectItem {
@@ -49,11 +57,11 @@ interface RawProjectItem {
   customLogo?: string;
   description: string[];
   technologies?: string[];
-  contributions?: RawProjectContribution[];
+  proofs?: RawProjectProof[];
   showLogo?: boolean;
   showStars?: boolean;
   showTechnologies?: boolean;
-  showContributions?: boolean;
+  showProofs?: boolean;
   showBulletPoints?: boolean;
   layout?: 'compact' | 'comfortable';
   visible?: boolean;
@@ -215,14 +223,20 @@ function toRawProjects(items: Project[]): RawProjectItem[] {
     customLogo: item.customLogo,
     description: item.description,
     technologies: item.technologies,
-    contributions: item.contributions?.map((contribution) => ({
-      summary: contribution.summary,
-      url: contribution.url,
+    proofs: item.proofs?.map((proof) => ({
+      summary: proof.summary,
+      refs: proof.refs.map((ref) => ({
+        type: ref.type,
+        url: ref.url,
+        number: ref.number,
+        title: ref.title,
+        mergedAt: ref.mergedAt,
+      })),
     })),
     showLogo: item.showLogo,
     showStars: item.showStars,
     showTechnologies: item.showTechnologies,
-    showContributions: item.showContributions,
+    showProofs: item.showProofs,
     showBulletPoints: item.showBulletPoints,
     layout: item.layout,
     visible: item.visible,
@@ -403,7 +417,7 @@ function createSectionKeyMap(raw: Record<string, unknown>): Map<string, string> 
   return map;
 }
 
-function mapProjectContributions(value: unknown): Record<string, unknown>[] | undefined {
+function mapProjectProofs(value: unknown): Record<string, unknown>[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
   }
@@ -411,9 +425,18 @@ function mapProjectContributions(value: unknown): Record<string, unknown>[] | un
   const mapped = value.reduce<Record<string, unknown>[]>((acc, item, index) => {
     if (!isRecord(item)) return acc;
 
+    const refs = Array.isArray(item.refs)
+      ? item.refs.reduce<Record<string, unknown>[]>((refAcc, ref, refIndex) => {
+          if (!isRecord(ref)) return refAcc;
+          refAcc.push({ ...ref, id: `ref-${refIndex + 1}` });
+          return refAcc;
+        }, [])
+      : [];
+
     acc.push({
       ...item,
-      id: `contribution-${index + 1}`,
+      id: `proof-${index + 1}`,
+      refs,
     });
     return acc;
   }, []);
@@ -526,8 +549,8 @@ export function prepareImportedResumeData(input: unknown): unknown {
 
         const resolvedType = type || 'project';
 
-        if (resolvedType === 'project' && Array.isArray(item.contributions)) {
-          baseItem.contributions = mapProjectContributions(item.contributions);
+        if (resolvedType === 'project' && Array.isArray(item.proofs)) {
+          baseItem.proofs = mapProjectProofs(item.proofs);
         } else if (resolvedType === 'skill' && Array.isArray(item.items)) {
           baseItem.items = mapSkillEntries(item.items);
         }
@@ -575,7 +598,7 @@ export function prepareImportedResumeData(input: unknown): unknown {
     acc.push({
       ...item,
       id: `proj-${index + 1}`,
-      contributions: mapProjectContributions(item.contributions),
+      proofs: mapProjectProofs(item.proofs),
     });
     return acc;
   }, []);
