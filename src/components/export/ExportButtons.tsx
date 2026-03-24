@@ -14,8 +14,22 @@ export function ExportButtons() {
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
-      const { exportToPDF } = await import('@/lib/image');
-      await exportToPDF('resume-preview', 'resume.pdf', resume.theme.paperSize);
+      const { exportToPDF } = await import('@/lib/pdf');
+      await exportToPDF(resume, 'resume.pdf', {
+        summary: t('pdf.summary'),
+        experience: t('pdf.experience'),
+        education: t('pdf.education'),
+        projects: t('pdf.projects'),
+        skills: t('pdf.skills'),
+        technologies: t('pdf.technologies'),
+        contributions: t('pdf.contributions'),
+        present: t('pdf.present'),
+        skillLevel: {
+          core: t('pdf.skillLevel.core'),
+          proficient: t('pdf.skillLevel.proficient'),
+          familiar: t('pdf.skillLevel.familiar'),
+        },
+      });
     } catch (error) {
       alert(t('export.pdfExportFailed') + (error as Error).message);
     } finally {

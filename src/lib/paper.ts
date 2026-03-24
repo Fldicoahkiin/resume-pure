@@ -58,12 +58,12 @@ export function normalizePaperSize(value: unknown, fallback: PaperSize = 'A4'): 
 export function getPaperDimensions(size: PaperSize): PaperDimensions {
   return PAPER_DIMENSIONS[size] || PAPER_DIMENSIONS.A4;
 }
-
 /** 返回 72 DPI 的 PDF 坐标（供 @react-pdf/renderer 使用） */
 export function getPaperPointSize(size: PaperSize): [number, number] {
   const paper = PAPER_DIMENSIONS[size] || PAPER_DIMENSIONS.A4;
   const MM_TO_PT = 72 / 25.4;
   return [Math.round(paper.mmWidth * MM_TO_PT), Math.round(paper.mmHeight * MM_TO_PT)];
 }
+
 
 export const PAPER_SIZE_OPTIONS: PaperSize[] = ['A4', 'Letter', 'Legal', 'A3'];
