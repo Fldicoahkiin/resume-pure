@@ -101,14 +101,33 @@ function getDateRange(startDate: string, endDate: string, current: boolean | und
   return `${startDate}${startDate && (endDate || current) ? ' - ' : ''}${current ? presentLabel : endDate}`;
 }
 
-function isSafePdfUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url, 'https://placeholder.invalid');
-    return ['http:', 'https:', 'mailto:'].includes(parsed.protocol);
-  } catch {
-    return false;
+export function sanitizeUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
+    return trimmed;
   }
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return `mailto:${trimmed}`;
+  }
+
+  if (/^[\d\s\-+()]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 7) {
+    return `tel:${trimmed.replace(/\s/g, '')}`;
+  }
+
+  if (/^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  return undefined;
 }
+
+const isSafePdfUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  return /^(https?:\/\/|mailto:|tel:)/i.test(url);
+};
 
 function renderInlineMarkdown(
   text: string,
@@ -193,7 +212,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
       color: '#374151',
     },
     section: {
-      marginTop: theme.spacing,
+      marginBottom: theme.spacing * 2,
     },
     sectionTitle: {
       fontSize: theme.fontSize + 2,
@@ -210,10 +229,10 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
     sectionTitleRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     itemContainer: {
-      marginBottom: theme.spacing * 1.5,
+      marginBottom: 9,
     },
     itemHeader: {
       flexDirection: 'row',
@@ -242,14 +261,14 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
       fontSize: theme.fontSize - 1,
       color: '#374151',
       marginBottom: 1.5,
-      lineHeight: 1.4,
+      lineHeight: theme.lineHeight,
     },
     bulletPoint: {
       fontSize: theme.fontSize - 1,
       color: '#374151',
       marginBottom: 1.5,
       marginLeft: 8,
-      lineHeight: 1.4,
+      lineHeight: theme.lineHeight,
     },
     itemMeta: {
       fontSize: theme.fontSize - 2,
@@ -310,14 +329,14 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
           ) : null}
           <View style={[styles.contactInfo, { marginTop: data.personalInfo.summary ? 8 : 4 }]}>
             {[
-              { type: data.personalInfo.iconConfig?.emailIcon || 'mail', value: data.personalInfo.email, href: data.personalInfo.email ? `mailto:${data.personalInfo.email}` : undefined },
-              { type: data.personalInfo.iconConfig?.phoneIcon || 'phone', value: data.personalInfo.phone, href: data.personalInfo.phone ? `tel:${data.personalInfo.phone.replace(/\\s/g, '')}` : undefined },
+              { type: data.personalInfo.iconConfig?.emailIcon || 'mail', value: data.personalInfo.email, href: sanitizeUrl(data.personalInfo.email) },
+              { type: data.personalInfo.iconConfig?.phoneIcon || 'phone', value: data.personalInfo.phone, href: sanitizeUrl(data.personalInfo.phone) },
               { type: data.personalInfo.iconConfig?.locationIcon || 'map-pin', value: data.personalInfo.location, href: undefined },
-              { type: data.personalInfo.iconConfig?.websiteIcon || 'globe', value: data.personalInfo.website, href: data.personalInfo.website?.startsWith('http') ? data.personalInfo.website : `https://${data.personalInfo.website}` },
-              { type: data.personalInfo.iconConfig?.linkedinIcon || 'linkedin', value: data.personalInfo.linkedin, href: data.personalInfo.linkedin?.startsWith('http') ? data.personalInfo.linkedin : `https://${data.personalInfo.linkedin}` },
-              { type: data.personalInfo.iconConfig?.githubIcon || 'github', value: data.personalInfo.github, href: data.personalInfo.github?.startsWith('http') ? data.personalInfo.github : `https://${data.personalInfo.github}` },
+              { type: data.personalInfo.iconConfig?.websiteIcon || 'globe', value: data.personalInfo.website, href: sanitizeUrl(data.personalInfo.website) },
+              { type: data.personalInfo.iconConfig?.linkedinIcon || 'linkedin', value: data.personalInfo.linkedin, href: sanitizeUrl(data.personalInfo.linkedin) },
+              { type: data.personalInfo.iconConfig?.githubIcon || 'github', value: data.personalInfo.github, href: sanitizeUrl(data.personalInfo.github) },
               ...(data.personalInfo.contacts || []).filter(c => c.value).sort((a, b) => a.order - b.order).map(c => ({
-                type: c.type, value: c.value, href: c.href || undefined
+                type: c.type, value: c.value, href: c.href ? sanitizeUrl(c.href) : sanitizeUrl(c.value)
               }))
             ].filter(c => c.value).map((contact, idx) => {
               let iconSvg = null;
@@ -375,12 +394,14 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       <View style={styles.sectionTitleBar} />
                       <Text style={styles.sectionTitle}>{section.title || translations.experience}</Text>
                     </View>
-                    {ctxData.experience.map((exp) => (
+                    {ctxData.experience.map((exp, idx, arr) => {
+                      const hideCompany = idx > 0 && exp.company === arr[idx - 1].company;
+                      return (
                       <View key={exp.id} style={styles.itemContainer} wrap={false}>
                         <View style={styles.itemHeader}>
                           <View style={styles.itemHeaderMain}>
-                            <Text style={styles.itemTitle}>{exp.company}</Text>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 1 }}>
+                            {!hideCompany && <Text style={styles.itemTitle}>{exp.company}</Text>}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: hideCompany ? 0 : 1 }}>
                               <Text style={{ fontSize: theme.fontSize - 1, color: '#374151' }}>
                                 {exp.position}
                                 {exp.location ? <Text style={{ color: '#6b7280' }}> · {exp.location}</Text> : null}
@@ -402,7 +423,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               </View>
                             ))}
                       </View>
-                    ))}
+                    );})}
                   </View>
                 );
 
@@ -414,12 +435,14 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       <View style={styles.sectionTitleBar} />
                       <Text style={styles.sectionTitle}>{section.title || translations.education}</Text>
                     </View>
-                    {ctxData.education.map((edu) => (
+                    {ctxData.education.map((edu, idx, arr) => {
+                      const hideSchool = idx > 0 && edu.school === arr[idx - 1].school;
+                      return (
                       <View key={edu.id} style={styles.itemContainer} wrap={false}>
                         <View style={styles.itemHeader}>
                           <View style={styles.itemHeaderMain}>
-                            <Text style={styles.itemTitle}>{edu.school}</Text>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 1 }}>
+                            {!hideSchool && <Text style={styles.itemTitle}>{edu.school}</Text>}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: hideSchool ? 0 : 1 }}>
                               <Text style={{ fontSize: theme.fontSize - 1, color: '#374151' }}>
                                 {edu.degree}
                                 {edu.major ? <Text> - {edu.major}</Text> : null}
@@ -437,24 +460,25 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                             ))
                           : getDescriptionLines(edu.description || [], `pdf-edu-${edu.id}`).map((desc) => (
                               <View key={desc.key} style={{ flexDirection: 'row', marginBottom: 2.5 }}>
-                                <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', fontWeight: 700, width: 8, flexShrink: 0, lineHeight: 1.4 }}>•</Text>
-                                <Text style={{ fontSize: theme.fontSize - 1, color: '#374151', flex: 1, lineHeight: 1.4 }}>{md(desc.value)}</Text>
+                                <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', fontWeight: 700, width: 8, flexShrink: 0, lineHeight: theme.lineHeight }}>•</Text>
+                                <Text style={{ fontSize: theme.fontSize - 1, color: '#374151', flex: 1, lineHeight: theme.lineHeight }}>{md(desc.value)}</Text>
                               </View>
                             ))}
                       </View>
-                    ))}
+                    );})}
                   </View>
                 );
 
-              case 'projects':
-                if (ctxData.projects.length === 0) return null;
+              case 'projects': {
+                const visibleProjects = ctxData.projects.filter(p => p.visible !== false);
+                if (visibleProjects.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
                     <View style={styles.sectionTitleRow}>
                       <View style={styles.sectionTitleBar} />
                       <Text style={styles.sectionTitle}>{section.title || translations.projects}</Text>
                     </View>
-                    {ctxData.projects.map((project) => {
+                    {visibleProjects.map((project) => {
                       const isCompact = project.layout === 'compact';
                       const projectLogoSize = isCompact ? 18 : 27;
                       const listTopMargin = isCompact ? 1.5 : 4.5;
@@ -462,6 +486,8 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                       const proofGap = isCompact ? 0 : 1.5;
                       const projectDescriptions = getDescriptionLines(project.description, `pdf-proj-${project.id}`);
                       const projectProofs = project.proofs || [];
+                      const repoHref = sanitizeUrl(project.repoUrl);
+                      const projectHref = sanitizeUrl(project.url ? (project.url.startsWith('http') ? project.url : `https://${project.url}`) : undefined);
 
                       return (
                         <View key={project.id} style={styles.itemContainer} wrap={false}>
@@ -474,8 +500,8 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                               />
                             ) : null}
                             <View style={{ flex: 1 }}>
-                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', flex: 1, paddingRight: 8 }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', flex: 1, paddingRight: 8 }}>
                                   <Text style={styles.itemTitle}>{project.name}</Text>
                                   {project.role ? (
                                     <Text style={{ fontSize: theme.fontSize - 1, color: '#6b7280', marginLeft: 6 }}>
@@ -484,40 +510,48 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                                   ) : null}
                                   {project.repoUrl ? (
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 6 }}>
-                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2 }}>
+                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 2 }}>
                                         <Path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill="#9ca3af" />
                                       </Svg>
-                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#9ca3af' }}>
-                                        <PdfLink src={project.repoUrl} style={{ color: '#9ca3af' }}>
-                                          {formatGitHubPath(project.repoUrl)}
-                                        </PdfLink>
+                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
+                                        {repoHref ? (
+                                          <PdfLink src={repoHref} style={{ color: '#9ca3af' }}>
+                                            {formatGitHubPath(project.repoUrl)}
+                                          </PdfLink>
+                                        ) : (
+                                          formatGitHubPath(project.repoUrl)
+                                        )}
                                       </Text>
                                     </View>
                                   ) : null}
                                   {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 ? (
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 6 }}>
-                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2 }}>
+                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 2 }}>
                                         <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
                                       </Svg>
-                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#d97706' }}>
+                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#d97706', lineHeight: theme.lineHeight }}>
                                         {formatCompactNumber(project.repoStars)}
                                       </Text>
                                     </View>
                                   ) : null}
                                   {project.url ? (
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 6 }}>
-                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 3, height: theme.fontSize - 3, marginRight: 2 }}>
+                                      <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: 3 }}>
                                         <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
                                       </Svg>
-                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#9ca3af' }}>
-                                        <PdfLink src={project.url.startsWith('http') ? project.url : `https://${project.url}`} style={{ color: '#9ca3af' }}>
-                                          {project.url}
-                                        </PdfLink>
+                                      <Text style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
+                                        {projectHref ? (
+                                          <PdfLink src={projectHref} style={{ color: '#9ca3af' }}>
+                                            {project.url}
+                                          </PdfLink>
+                                        ) : (
+                                          project.url
+                                        )}
                                       </Text>
                                     </View>
                                   ) : null}
                                 </View>
-                                <Text style={[styles.itemDate, { flexShrink: 0 }]}>
+                                <Text style={[styles.itemDate, { flexShrink: 0, marginTop: 1 }]}>
                                   {getDateRange(project.startDate, project.endDate, project.current, translations.present)}
                                 </Text>
                               </View>
@@ -534,8 +568,8 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                                   ))
                                 : projectDescriptions.map((desc, descIndex) => (
                                     <View key={desc.key} style={{ flexDirection: 'row', marginBottom: descIndex === projectDescriptions.length - 1 ? 0 : descriptionGap }}>
-                                      <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', fontWeight: 700, width: 8, flexShrink: 0, lineHeight: 1.4 }}>•</Text>
-                                      <Text style={{ fontSize: theme.fontSize - 1, color: '#374151', flex: 1, lineHeight: 1.4 }}>{md(desc.value)}</Text>
+                                      <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', fontWeight: 700, width: 8, flexShrink: 0, lineHeight: theme.lineHeight }}>•</Text>
+                                      <Text style={{ fontSize: theme.fontSize - 1, color: '#374151', flex: 1, lineHeight: theme.lineHeight }}>{md(desc.value)}</Text>
                                     </View>
                                   ))}
                             </View>
@@ -571,25 +605,40 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                             </View>
 
                           {project.showProofs !== false && projectProofs.length > 0 ? (
-                            <View style={{ marginTop: listTopMargin }}>
-                              {projectProofs.map((proof, proofIndex) => (
-                                <View key={proof.id} style={{ flexDirection: 'row', marginBottom: proofIndex === projectProofs.length - 1 ? 0 : proofGap }}>
-                                  <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', width: 8, flexShrink: 0, lineHeight: 1.4 }}>•</Text>
-                                  <Text style={{ fontSize: theme.fontSize - 1, color: '#374151', flex: 1, lineHeight: 1.4 }}>
-                                    {md(proof.summary)}{' '}
-                                    {proof.refs.map((ref) => (
-                                      <React.Fragment key={ref.id}>
-                                        {' '}
-                                        {theme.enableLinks !== false ? (
-                                          <Link src={ref.url} style={{ color: '#9ca3af', textDecoration: 'none' }}>
-                                            {formatProofRefLabel(ref)}
-                                          </Link>
-                                        ) : (
-                                          <Text style={{ color: '#9ca3af' }}>{formatProofRefLabel(ref)}</Text>
-                                        )}
-                                      </React.Fragment>
-                                    ))}
-                                  </Text>
+                            <View style={{ marginTop: proofGap }}>
+                              {projectProofs.map((proof) => (
+                                <View key={proof.id} style={{ flexDirection: 'row', marginBottom: 2.5, marginLeft: isCompact ? 0 : 8 }}>
+                                  {!isCompact && (
+                                    <Text style={{ fontSize: theme.fontSize - 1.5, color: '#9ca3af', width: 12, flexShrink: 0 }}>↳</Text>
+                                  )}
+                                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', flex: 1 }}>
+                                    <Text
+                                      style={{
+                                        fontSize: theme.fontSize - 1.5,
+                                        color: '#4b5563',
+                                        lineHeight: theme.lineHeight,
+                                        marginRight: 4,
+                                        ...(isCompact ? { maxLines: 1, textOverflow: 'ellipsis' } : {}),
+                                      }}
+                                    >
+                                      {proof.summary}
+                                    </Text>
+                                    {proof.refs && proof.refs.length > 0 && (
+                                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                                        {proof.refs.map((ref) => (
+                                          <View key={ref.id} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 4 }}>
+                                            {theme.enableLinks !== false && sanitizeUrl(ref.url) ? (
+                                              <Link src={sanitizeUrl(ref.url)!} style={{ color: '#9ca3af', textDecoration: 'none', fontSize: theme.fontSize - 1.5 }}>
+                                                {formatProofRefLabel(ref)}
+                                              </Link>
+                                            ) : (
+                                              <Text style={{ color: '#9ca3af', fontSize: theme.fontSize - 1.5 }}>{formatProofRefLabel(ref)}</Text>
+                                            )}
+                                          </View>
+                                        ))}
+                                      </View>
+                                    )}
+                                  </View>
                                 </View>
                               ))}
                             </View>
@@ -599,16 +648,18 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     })}
                   </View>
                 );
+              }
 
-              case 'skills':
-                if (ctxData.skills.length === 0) return null;
+              case 'skills': {
+                const visibleSkills = ctxData.skills.filter(s => s.visible !== false);
+                if (visibleSkills.length === 0) return null;
                 return (
                   <View key={section.id} style={styles.section}>
                     <View style={styles.sectionTitleRow}>
                       <View style={styles.sectionTitleBar} />
                       <Text style={styles.sectionTitle}>{section.title || translations.skills}</Text>
                     </View>
-                    {ctxData.skills.map((skill) => {
+                    {visibleSkills.map((skill) => {
                       if (skill.items.length === 0) return null;
 
                       const iconSize = theme.fontSize - 1;
@@ -664,6 +715,7 @@ function createResumePDF(renderer: PDFRenderer, data: ResumeData, translations: 
                     })}
                   </View>
                 );
+              }
 
               default:
                 if (!section.isCustom) return null;
