@@ -365,8 +365,8 @@ function ProjectProofList({
   if (project.showProofs === false || proofs.length === 0) return null;
 
   return (
-    <div className={isCompact ? 'mt-0.5' : 'mt-1.5'}>
-      <ul className={isCompact ? 'space-y-0' : 'space-y-0.5'}>
+    <div className={isCompact ? 'mt-0.5' : 'mt-0.5'}>
+      <ul className="space-y-0">
         {proofs.map((proof) => {
           const anchor = projectProofAnchor(project.id, proof.id);
 
@@ -378,32 +378,32 @@ function ProjectProofList({
               onSelectAnchor={onSelectAnchor}
               className="-mx-1 rounded-sm px-1"
             >
-              <li className="flex flex-wrap items-baseline text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
-                <span className="mr-2 text-gray-400">•</span>
-                <span className={`${isCompact ? 'line-clamp-1' : ''}`}>
+              <li className="flex items-baseline text-gray-700" style={{ fontSize: `${fontSize - 1}pt` }}>
+                <span className="mr-1 text-gray-400">•</span>
+                <span className={`min-w-0 flex-1 ${isCompact ? 'line-clamp-1' : ''}`}>
                   <MarkdownWeb text={proof.summary} />
+                  {proof.refs.map((ref) => {
+                    const label = formatProofRefLabel(ref);
+                    const href = sanitizeUrl(ref.url);
+                    return (
+                      <span key={ref.id} className="ml-0.5 text-gray-400" style={{ fontSize: `${fontSize - 2}pt` }}>
+                        {!onSelectAnchor && href && theme.enableLinks !== false ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-blue-600 hover:underline"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {label}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">{label}</span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </span>
-                {proof.refs.map((ref) => {
-                  const label = formatProofRefLabel(ref);
-                  const href = sanitizeUrl(ref.url);
-                  return (
-                    <span key={ref.id} className="ml-1">
-                      {!onSelectAnchor && href && theme.enableLinks !== false ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-blue-600 hover:underline"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {label}
-                        </a>
-                      ) : (
-                        <span className="text-gray-400">{label}</span>
-                      )}
-                    </span>
-                  );
-                })}
               </li>
             </SelectableBlock>
           );
@@ -637,9 +637,9 @@ function SkillBadge({
       onSelectAnchor={onSelectAnchor}
       className="inline-block"
     >
-      <div 
-        className="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 transition-all hover:shadow-sm"
-        style={{ ...levelStyles, fontSize: `${fontSize - 0.5}pt`, lineHeight: '1.6' }}
+      <div
+        className="inline-flex items-center gap-2 rounded-full px-2.5 py-[1px] transition-all hover:shadow-sm"
+        style={{ ...levelStyles, fontSize: `${fontSize - 0.5}pt`, lineHeight: '1.5' }}
       >
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
           <SkillNameDisplay item={item} />
@@ -785,7 +785,7 @@ function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNod
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
                 />
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {experience.map((exp, idx) => {
                     const hideCompany = idx > 0 && exp.company === experience[idx - 1].company;
                     const itemAnchor = experienceAnchor(exp.id);
@@ -843,7 +843,7 @@ function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNod
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
                 />
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {education.map((edu, idx) => {
                     const hideSchool = idx > 0 && edu.school === education[idx - 1].school;
                     const itemAnchor = educationAnchor(edu.id);
@@ -905,7 +905,7 @@ function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNod
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
                 />
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {activeProjects.map((project) => (
                     <div key={project.id} data-page-breakable="true">
                       <ProjectPreviewCard
@@ -936,7 +936,7 @@ function renderResumeSectionsContent(props: ResumeSectionsProps): React.ReactNod
                   activeAnchor={activeAnchor}
                   onSelectAnchor={onSelectAnchor}
                 />
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {activeSkills.map((skill) => (
                      <div key={skill.id} data-page-breakable="true">
                         <SkillCategoryPreview
@@ -1192,7 +1192,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
       <div id="resume-preview-content" className="relative w-full h-full">
         <div className="h-2 w-full shrink-0" style={{ backgroundColor: theme.primaryColor }} />
 
-        <div className="px-12 py-8">
+        <div className="px-12 pt-8 pb-7.5">
           <header data-page-breakable="true" style={{ marginBottom: `${theme.spacing * 2}pt` }}>
             {hasHeaderInfo && (
               <>
@@ -1204,7 +1204,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
                   className="-mx-1 px-1 py-0.5"
                 >
                   <h1
-                    className="font-bold tracking-wide"
+                    className="font-bold tracking-wide leading-none"
                     style={{ color: theme.primaryColor, fontSize: `${fs + 8}pt` }}
                   >
                     {personalInfo.name}
@@ -1239,7 +1239,7 @@ export function ResumePreview({ onSelectAnchor, activeAnchor }: ResumePreviewPro
           )}
 
           {allContactItems.length > 0 && (
-            <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-2.5">
               {keyedContactItems.map(({ key, anchor, type, value, href }) => (
                 <SelectableBlock
                   key={key}
