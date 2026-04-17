@@ -22,12 +22,17 @@ export default function PrintPageClient() {
 
   useEffect(() => {
     const exportId = new URLSearchParams(window.location.search).get('id');
+    const isEmbedded = window.parent !== window;
 
     const closeOrRedirect = () => {
       setState({ status: 'redirecting' });
 
       if (window.opener && !window.opener.closed) {
         window.close();
+        return;
+      }
+
+      if (isEmbedded) {
         return;
       }
 
@@ -56,6 +61,7 @@ export default function PrintPageClient() {
     hasStartedRef.current = true;
     const payload = state.payload;
     const exportId = payload.id;
+    const isEmbedded = window.parent !== window;
 
     document.title = payload.filename;
 
@@ -66,6 +72,10 @@ export default function PrintPageClient() {
     const closeOrRedirect = () => {
       if (window.opener && !window.opener.closed) {
         window.close();
+        return;
+      }
+
+      if (isEmbedded) {
         return;
       }
 

@@ -6,7 +6,6 @@ export interface ResumeSelectableBlockProps {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
-  pageBreakable?: boolean;
 }
 
 export interface ResumeLayoutTranslations {

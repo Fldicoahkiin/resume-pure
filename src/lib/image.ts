@@ -1,11 +1,3 @@
-import {
-  createResumeExportUrl,
-  openResumeExportWindow,
-  removeResumeExportPayload,
-  saveResumeExportPayload,
-} from '@/lib/exportPayload';
-import type { PDFTranslations, ResumeData } from '@/types';
-
 const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
 
 function compressImageToDataUrl(file: File, maxBytes: number): Promise<string> {
@@ -227,6 +219,24 @@ function createExportClone(
   };
 }
 
+function normalizeCloneForResumeExport(clone: HTMLElement) {
+  clone.style.boxShadow = 'none';
+  clone.style.border = 'none';
+
+  clone.querySelectorAll('[role="button"]').forEach((node) => {
+    if (!(node instanceof HTMLElement)) {
+      return;
+    }
+
+    node.removeAttribute('role');
+    node.removeAttribute('tabindex');
+    node.style.cursor = 'default';
+    node.style.background = 'transparent';
+    node.style.boxShadow = 'none';
+    node.style.outline = 'none';
+  });
+}
+
 export async function downloadElementToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
   const { getFontEmbedCSS, toBlob } = await import('html-to-image');
 
@@ -244,6 +254,7 @@ export async function downloadElementToPNG(elementId: string, filename: string =
     let blob: Blob | null = null;
 
     try {
+      normalizeCloneForResumeExport(clone);
       const restoreImages = await replaceImagesWithDataUrls(clone);
 
       try {
@@ -292,26 +303,7 @@ export async function downloadElementToPNG(elementId: string, filename: string =
 }
 
 export async function exportToPNG(
-  data: ResumeData,
-  filename: string = 'resume.png',
-  translations: PDFTranslations
+  filename: string = 'resume.png'
 ): Promise<void> {
-  let exportId: string | null = null;
-
-  try {
-    exportId = saveResumeExportPayload({
-      resume: data,
-      translations,
-      format: 'png',
-      filename,
-    });
-    const exportUrl = createResumeExportUrl(exportId);
-    openResumeExportWindow(exportUrl);
-  } catch (error) {
-    if (exportId) {
-      removeResumeExportPayload(exportId);
-    }
-    console.error('PNG 导出失败:', error);
-    throw new Error('PNG 导出失败');
-  }
+  await downloadElementToPNG('resume-preview', filename);
 }

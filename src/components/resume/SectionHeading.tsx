@@ -12,7 +12,7 @@ export function SectionHeading({ anchor, title, shared }: SectionHeadingProps) {
   const { theme, metrics, SelectableBlock } = shared;
 
   return (
-    <SelectableBlock anchor={anchor} pageBreakable>
+    <SelectableBlock anchor={anchor}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: metrics.sectionHeadingMarginBottom }}>
         <View
           style={{

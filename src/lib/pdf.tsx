@@ -1,6 +1,6 @@
 import {
   createResumeExportUrl,
-  openResumeExportWindow,
+  openResumeExportFrame,
   removeResumeExportPayload,
   saveResumeExportPayload,
   waitForResumeExport,
@@ -39,8 +39,8 @@ export async function exportToPDF(
       filename,
     });
     const exportUrl = createResumeExportUrl(exportId);
-    const exportWindow = openResumeExportWindow(exportUrl);
-    await waitForResumeExport(exportId, 'pdf', exportWindow);
+    const exportFrame = openResumeExportFrame(exportUrl);
+    await waitForResumeExport(exportId, 'pdf', exportFrame);
   } catch (error) {
     if (exportId) {
       removeResumeExportPayload(exportId);

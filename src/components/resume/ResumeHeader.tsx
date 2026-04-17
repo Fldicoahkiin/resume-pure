@@ -110,7 +110,6 @@ export function ResumeHeader({ data, shared }: ResumeHeaderProps) {
   return (
     <SelectableBlock
       anchor="personalInfo"
-      pageBreakable
       style={{ marginBottom: headerMarginBottom }}
     >
       <Text style={{ fontSize: theme.fontSize + 8, fontWeight: 'bold', color: theme.primaryColor, lineHeight: headingLineHeight }}>

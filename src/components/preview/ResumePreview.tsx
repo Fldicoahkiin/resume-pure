@@ -27,7 +27,6 @@ interface SelectableBlockProps {
   className?: string;
   children: ReactNode;
   style?: CSSProperties;
-  pageBreakable?: boolean;
 }
 
 interface PreviewSelectionContextValue {

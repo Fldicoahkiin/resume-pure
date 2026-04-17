@@ -5,6 +5,7 @@ const EXPORT_PAYLOAD_TTL_MS = 10 * 60 * 1000;
 
 export type ExportFormat = 'png' | 'pdf';
 export type ExportStatus = 'success' | 'error';
+export type ResumeExportTarget = Window | HTMLIFrameElement;
 
 export interface ResumeExportResult {
   exportId: string;
@@ -114,13 +115,27 @@ export function createResumeExportUrl(id: string): string {
   return url.toString();
 }
 
-export function openResumeExportWindow(url: string): Window {
-  const nextWindow = window.open(url, '_blank');
-  if (!nextWindow) {
-    throw new Error('export-window-blocked');
+export function openResumeExportFrame(url: string): HTMLIFrameElement {
+  if (typeof window === 'undefined') {
+    throw new Error('export-frame-window-unavailable');
   }
 
-  return nextWindow;
+  const iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.title = 'resume-export-frame';
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.tabIndex = -1;
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '1px';
+  iframe.style.height = '1px';
+  iframe.style.opacity = '0';
+  iframe.style.pointerEvents = 'none';
+  iframe.style.border = '0';
+  iframe.style.zIndex = '-1';
+  document.body.appendChild(iframe);
+  return iframe;
 }
 
 function isResumeExportResult(value: unknown): value is ResumeExportResult {
@@ -143,10 +158,26 @@ export function postResumeExportResult(result: ResumeExportResult) {
 
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage(result, window.location.origin);
+    return;
+  }
+
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage(result, window.location.origin);
   }
 }
 
-export function waitForResumeExport(exportId: string, format: ExportFormat, exportWindow: Window): Promise<void> {
+function disposeResumeExportTarget(target: ResumeExportTarget) {
+  if (target instanceof HTMLIFrameElement) {
+    target.remove();
+    return;
+  }
+
+  if (!target.closed) {
+    target.close();
+  }
+}
+
+export function waitForResumeExport(exportId: string, format: ExportFormat, exportTarget: ResumeExportTarget): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       reject(new Error('export-window-unavailable'));
@@ -159,16 +190,19 @@ export function waitForResumeExport(exportId: string, format: ExportFormat, expo
     const cleanup = () => {
       window.removeEventListener('message', handleMessage);
       window.clearTimeout(timeoutId);
-      window.clearInterval(closeWatcherId);
+      window.clearInterval(targetWatcherId);
     };
 
-    const finish = (callback: () => void) => {
+    const finish = (callback: () => void, shouldDispose: boolean = true) => {
       if (settled) {
         return;
       }
 
       settled = true;
       cleanup();
+      if (shouldDispose) {
+        disposeResumeExportTarget(exportTarget);
+      }
       callback();
     };
 
@@ -194,8 +228,12 @@ export function waitForResumeExport(exportId: string, format: ExportFormat, expo
       finish(() => reject(new Error(`${format}-export-timeout`)));
     }, timeoutMs);
 
-    const closeWatcherId = window.setInterval(() => {
-      if (!exportWindow.closed) {
+    const targetWatcherId = window.setInterval(() => {
+      if (exportTarget instanceof HTMLIFrameElement) {
+        if (document.body.contains(exportTarget)) {
+          return;
+        }
+      } else if (!exportTarget.closed) {
         return;
       }
 

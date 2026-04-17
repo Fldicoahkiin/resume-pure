@@ -44,7 +44,7 @@ export function ExportButtons() {
   const handleExportPNG = async () => {
     setLoadingPNG(true);
     try {
-      await exportToPNG(resume, 'resume.png', translations);
+      await exportToPNG('resume.png');
     } catch (error) {
       alert(t('export.pngExportFailed') + (error as Error).message);
     } finally {
