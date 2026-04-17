@@ -1,5 +1,6 @@
 import { Circle, Path, Svg, Text, View } from '@/components/core/Universal';
 import { InlineMetadataItem } from '@/components/resume/InlineMetadataItem';
+import { ResumeMarkdown } from '@/components/resume/ResumeMarkdown';
 import { pxToPt } from '@/components/resume/layoutMetrics';
 import type { ResumeLayoutProps, ResumeSectionSharedProps } from '@/components/resume/layoutTypes';
 import {
@@ -104,7 +105,7 @@ function getContactIconSvg(type: string) {
 }
 
 export function ResumeHeader({ data, shared }: ResumeHeaderProps) {
-  const { theme, linksEnabled, metrics, SelectableBlock, renderMarkdown } = shared;
+  const { theme, linksEnabled, metrics, SelectableBlock } = shared;
   const { headerMarginBottom, headingLineHeight, detailLineHeight, metadataLineHeight, contactIconSize, contactIconBoxSize, isDenseLayout } = metrics;
 
   return (
@@ -122,7 +123,7 @@ export function ResumeHeader({ data, shared }: ResumeHeaderProps) {
       ) : null}
       {data.personalInfo.summary ? (
         <Text style={{ fontSize: theme.fontSize - 1, marginTop: pxToPt(isDenseLayout ? 4 : 6), lineHeight: detailLineHeight, color: '#374151' }}>
-          {renderMarkdown(data.personalInfo.summary)}
+          <ResumeMarkdown text={data.personalInfo.summary} theme={theme} enableLinks={linksEnabled} />
         </Text>
       ) : null}
       <View

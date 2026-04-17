@@ -237,6 +237,20 @@ function normalizeCloneForResumeExport(clone: HTMLElement) {
   });
 }
 
+async function resolveOptionalFontEmbedCSS(
+  getFontEmbedCSS: (node: HTMLElement, options: { preferredFontFormat: 'woff2' }) => Promise<string>,
+  clone: HTMLElement
+): Promise<string | undefined> {
+  try {
+    return await getFontEmbedCSS(clone, {
+      preferredFontFormat: 'woff2',
+    });
+  } catch (error) {
+    console.warn('PNG 字体内联失败，改用已加载字体继续导出。', error);
+    return undefined;
+  }
+}
+
 export async function downloadElementToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
   const { getFontEmbedCSS, toBlob } = await import('html-to-image');
 
@@ -248,8 +262,16 @@ export async function downloadElementToPNG(elementId: string, filename: string =
   await document.fonts.ready;
 
   try {
-    const width = Math.ceil(element.offsetWidth);
-    const height = Math.ceil(element.offsetHeight);
+    const width = Math.max(
+      Math.ceil(element.getBoundingClientRect().width),
+      Math.ceil(element.scrollWidth),
+      1
+    );
+    const height = Math.max(
+      Math.ceil(element.getBoundingClientRect().height),
+      Math.ceil(element.scrollHeight),
+      1
+    );
     const { clone, cleanup } = createExportClone(element, width, height);
     let blob: Blob | null = null;
 
@@ -258,16 +280,11 @@ export async function downloadElementToPNG(elementId: string, filename: string =
       const restoreImages = await replaceImagesWithDataUrls(clone);
 
       try {
-        const fontEmbedCSS = await getFontEmbedCSS(clone, {
-          preferredFontFormat: 'woff2',
-        });
-
-        blob = await toBlob(clone, {
+        const exportOptions = {
           width,
           height,
           pixelRatio: PNG_EXPORT_PIXEL_RATIO,
           backgroundColor: '#ffffff',
-          fontEmbedCSS,
           cacheBust: false,
           imagePlaceholder: TRANSPARENT_PX,
           filter: (node: Node) => {
@@ -276,7 +293,22 @@ export async function downloadElementToPNG(elementId: string, filename: string =
             }
             return true;
           },
-        });
+        };
+        const fontEmbedCSS = await resolveOptionalFontEmbedCSS(getFontEmbedCSS, clone);
+
+        try {
+          blob = await toBlob(clone, {
+            ...exportOptions,
+            fontEmbedCSS,
+          });
+        } catch (error) {
+          if (!fontEmbedCSS) {
+            throw error;
+          }
+
+          console.warn('PNG 导出回退到非字体内联模式。', error);
+          blob = await toBlob(clone, exportOptions);
+        }
       } finally {
         restoreImages();
       }

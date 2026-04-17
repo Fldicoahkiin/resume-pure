@@ -53,5 +53,4 @@ export interface ResumeSectionSharedProps {
   translations: ResumeLayoutTranslations;
   metrics: ResumeLayoutMetrics;
   SelectableBlock: React.ComponentType<ResumeSelectableBlockProps>;
-  renderMarkdown: (text: string) => ReactNode;
 }

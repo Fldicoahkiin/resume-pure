@@ -109,7 +109,7 @@ export function GenericCustomSection({
   customSection,
   shared,
 }: GenericCustomSectionProps) {
-  const { theme, translations, metrics, SelectableBlock, renderMarkdown } = shared;
+  const { theme, linksEnabled, translations, metrics, SelectableBlock } = shared;
   const customItems = customSection.items.filter(isCustomSectionItem);
 
   if (customItems.length === 0) {
@@ -176,7 +176,7 @@ export function GenericCustomSection({
                     items={item.description}
                     keyPrefix={keyPrefix}
                     theme={theme}
-                    renderMarkdown={renderMarkdown}
+                    enableLinks={linksEnabled}
                     lineHeight={metrics.detailLineHeight}
                     showBulletPoints={item.showBulletPoints !== false}
                     itemGap={metrics.isDenseLayout ? 1 : 1.5}

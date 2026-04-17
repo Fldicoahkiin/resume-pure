@@ -8,7 +8,6 @@ import {
   removeResumeExportPayload,
   type ResumeExportPayload,
 } from '@/lib/exportPayload';
-import { downloadElementToPNG } from '@/lib/image';
 import { convertPxToMm, getPaperDimensions } from '@/lib/paper';
 
 type PrintPageState =
@@ -16,9 +15,69 @@ type PrintPageState =
   | { status: 'redirecting' }
   | { status: 'ready'; payload: ResumeExportPayload };
 
+function getPrintPageStyleRule(paperWidthMm: number, pageHeightMm: number) {
+  return `
+    @page {
+      size: ${paperWidthMm}mm ${pageHeightMm}mm;
+      margin: 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: ${paperWidthMm}mm;
+      min-width: ${paperWidthMm}mm;
+      background: #ffffff;
+      overflow: visible;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    #resume-print-root {
+      width: ${paperWidthMm}mm;
+      min-width: ${paperWidthMm}mm;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+
+    #resume-print-surface {
+      width: ${paperWidthMm}mm !important;
+      min-width: ${paperWidthMm}mm !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
+    }
+  `;
+}
+
+function waitForNextPaint() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+function isHeadlessPrintEnvironment() {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return navigator.userAgent.includes('HeadlessChrome');
+}
+
 export default function PrintPageClient() {
   const hasStartedRef = useRef(false);
   const [state, setState] = useState<PrintPageState>({ status: 'loading' });
+  const shouldAutoPrint = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    return new URLSearchParams(window.location.search).get('autoprint') !== '0';
+  }, []);
 
   useEffect(() => {
     const exportId = new URLSearchParams(window.location.search).get('id');
@@ -54,7 +113,7 @@ export default function PrintPageClient() {
   }, []);
 
   useEffect(() => {
-    if (state.status !== 'ready' || hasStartedRef.current) {
+    if (state.status !== 'ready' || hasStartedRef.current || !shouldAutoPrint) {
       return;
     }
 
@@ -62,6 +121,8 @@ export default function PrintPageClient() {
     const payload = state.payload;
     const exportId = payload.id;
     const isEmbedded = window.parent !== window;
+    const shouldUseHeadlessFallback = isHeadlessPrintEnvironment();
+    let headlessFallbackTimer: number | null = null;
 
     document.title = payload.filename;
 
@@ -85,7 +146,6 @@ export default function PrintPageClient() {
     const finishExport = (status: 'success' | 'error', message?: string) => {
       postResumeExportResult({
         exportId: payload.id,
-        format: payload.format,
         status,
         message,
       });
@@ -94,6 +154,10 @@ export default function PrintPageClient() {
     };
 
     const handleAfterPrint = () => {
+      if (headlessFallbackTimer !== null) {
+        window.clearTimeout(headlessFallbackTimer);
+        headlessFallbackTimer = null;
+      }
       finishExport('success');
     };
 
@@ -103,36 +167,46 @@ export default function PrintPageClient() {
       await document.fonts.ready;
       await new Promise((resolve) => window.setTimeout(resolve, 200));
 
-      if (payload.format === 'png') {
-        await downloadElementToPNG('resume-print-surface', payload.filename);
-        finishExport('success');
-        return;
-      }
-
       const surface = document.getElementById('resume-print-surface');
-      if (!surface) {
+      const content = document.getElementById('resume-print-content');
+      if (!surface || !content) {
         throw new Error('print-surface-missing');
       }
 
-      const contentHeightPx = Math.max(Math.ceil(surface.scrollHeight), getPaperDimensions(payload.resume.theme.paperSize).height);
+      const contentHeightPx = Math.max(
+        Math.ceil(content.scrollHeight),
+        Math.ceil(content.getBoundingClientRect().height),
+        1
+      );
+      const paper = getPaperDimensions(payload.resume.theme.paperSize);
       const pageHeightMm = Math.ceil(convertPxToMm(contentHeightPx) * 1000) / 1000;
       const pageStyle = document.getElementById('resume-print-page-style');
       if (pageStyle) {
-        pageStyle.textContent = `@page { size: ${getPaperDimensions(payload.resume.theme.paperSize).mmWidth}mm ${pageHeightMm}mm; margin: 0; }`;
+        pageStyle.textContent = getPrintPageStyleRule(paper.mmWidth, pageHeightMm);
       }
 
+      await waitForNextPaint();
       window.print();
+
+      if (shouldUseHeadlessFallback) {
+        headlessFallbackTimer = window.setTimeout(() => {
+          finishExport('success');
+        }, 1200);
+      }
     };
 
     run().catch((error) => {
       console.error('print-page-export-failed', error);
-      finishExport('error', payload.format === 'png' ? 'PNG 导出失败' : 'PDF 导出失败');
+      finishExport('error', 'PDF 导出失败');
     });
 
     return () => {
+      if (headlessFallbackTimer !== null) {
+        window.clearTimeout(headlessFallbackTimer);
+      }
       window.removeEventListener('afterprint', handleAfterPrint);
     };
-  }, [state]);
+  }, [shouldAutoPrint, state]);
 
   const renderContent = useMemo(() => {
     if (state.status === 'loading') {
@@ -161,18 +235,26 @@ export default function PrintPageClient() {
     return (
       <>
         <style id="resume-print-page-style">
-          {`@page { size: ${paper.mmWidth}mm ${paper.mmHeight}mm; margin: 0; }`}
+          {getPrintPageStyleRule(paper.mmWidth, paper.mmHeight)}
         </style>
-        <div className="min-h-screen bg-white flex justify-center py-6 print:py-0">
+        <div
+          id="resume-print-root"
+          className="bg-white mx-auto"
+          style={{
+            width: `${paper.width}px`,
+            minWidth: `${paper.width}px`,
+          }}
+        >
           <div
             id="resume-print-surface"
-            className="bg-white shadow-xl print:shadow-none"
+            className="bg-white"
             style={{
               width: `${paper.width}px`,
+              minWidth: `${paper.width}px`,
               fontFamily: `"${payload.resume.theme.fontFamily}", "Noto Sans SC", system-ui, sans-serif`,
             }}
           >
-            <div id="resume-print-content" className="relative w-full h-full">
+            <div id="resume-print-content" className="relative w-full">
               <ResumeLayout data={payload.resume} translations={translations} />
             </div>
           </div>

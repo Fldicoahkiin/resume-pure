@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { ResumeMarkdown } from '@/components/resume/ResumeMarkdown';
 import { Text, View } from '@/components/core/Universal';
 import { getDescriptionLines } from '@/lib/resumeUtils';
 import type { ResumeData } from '@/types';
@@ -8,7 +8,7 @@ interface DescriptionLinesProps {
   items: string[];
   keyPrefix: string;
   theme: ResumeData['theme'];
-  renderMarkdown: (text: string) => ReactNode;
+  enableLinks: boolean;
   lineHeight: number;
   showBulletPoints?: boolean;
   itemGap?: number;
@@ -18,7 +18,7 @@ export function DescriptionLines({
   items,
   keyPrefix,
   theme,
-  renderMarkdown,
+  enableLinks,
   lineHeight,
   showBulletPoints = true,
   itemGap = 2.5,
@@ -37,7 +37,7 @@ export function DescriptionLines({
           marginBottom: index === descriptionLines.length - 1 ? 0 : itemGap,
         }}
       >
-        {renderMarkdown(line.value)}
+        <ResumeMarkdown text={line.value} theme={theme} enableLinks={enableLinks} />
       </Text>
     ));
   }
@@ -72,7 +72,7 @@ export function DescriptionLines({
           lineHeight,
         }}
       >
-        {renderMarkdown(line.value)}
+        <ResumeMarkdown text={line.value} theme={theme} enableLinks={enableLinks} />
       </Text>
     </View>
   ));

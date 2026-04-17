@@ -9,6 +9,7 @@ import {
 import { DescriptionLines } from '@/components/resume/DescriptionLines';
 import { InlineMetadataItem } from '@/components/resume/InlineMetadataItem';
 import { pxToPt } from '@/components/resume/layoutMetrics';
+import { ResumeMarkdown } from '@/components/resume/ResumeMarkdown';
 import { ProjectTechnologyPill } from '@/components/resume/ProjectTechnologyPill';
 import { SectionHeading } from '@/components/resume/SectionHeading';
 import type { ResumeSectionSharedProps } from '@/components/resume/layoutTypes';
@@ -145,7 +146,7 @@ function ProjectLinks({
 }
 
 export function ProjectSection({ section, items, shared }: ProjectSectionProps) {
-  const { theme, linksEnabled, translations, metrics, SelectableBlock, renderMarkdown } = shared;
+  const { theme, linksEnabled, translations, metrics, SelectableBlock } = shared;
   const visibleProjects = items.filter((item) => item.visible !== false);
 
   if (visibleProjects.length === 0) {
@@ -222,7 +223,7 @@ export function ProjectSection({ section, items, shared }: ProjectSectionProps) 
                           items={project.description}
                           keyPrefix={`proj-${project.id}`}
                           theme={theme}
-                          renderMarkdown={renderMarkdown}
+                          enableLinks={linksEnabled}
                           lineHeight={metrics.detailLineHeight}
                           showBulletPoints={project.showBulletPoints !== false}
                           itemGap={descriptionGap}
@@ -275,7 +276,7 @@ export function ProjectSection({ section, items, shared }: ProjectSectionProps) 
                             lineHeight: metrics.detailLineHeight,
                           }}
                         >
-                          {renderMarkdown(proof.summary)}
+                          <ResumeMarkdown text={proof.summary} theme={theme} enableLinks={linksEnabled} />
                           {proof.refs.map((ref) => {
                             const href = sanitizeUrl(ref.url);
                             const label = ` ${formatProofRefLabel(ref)}`;

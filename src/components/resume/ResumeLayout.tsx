@@ -3,7 +3,6 @@ import {
   Text,
   View,
 } from '@/components/core/Universal';
-import { MarkdownUniversal as Markdown } from '@/components/core/MarkdownUniversal';
 import { DescriptionLines } from '@/components/resume/DescriptionLines';
 import { GenericCustomSection } from '@/components/resume/GenericCustomSection';
 import { getResumeLayoutMetrics, pxToPt } from '@/components/resume/layoutMetrics';
@@ -67,10 +66,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     detailLineHeight,
   } = metrics;
 
-  const renderMarkdown = (text: string) => (
-    <Markdown text={text} enableLinks={linksEnabled} primaryColor={theme.primaryColor} />
-  );
-  const sharedProps = { theme, linksEnabled, translations, metrics, SelectableBlock, renderMarkdown };
+  const sharedProps = { theme, linksEnabled, translations, metrics, SelectableBlock };
 
   const renderSectionHeading = (anchor: string, title: string) => (
     <SectionHeading
@@ -91,7 +87,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         items={items}
         keyPrefix={keyPrefix}
         theme={theme}
-        renderMarkdown={renderMarkdown}
+        enableLinks={linksEnabled}
         lineHeight={detailLineHeight}
         showBulletPoints={showBulletPoints}
         itemGap={itemGap}
@@ -280,7 +276,18 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         {data.sections
           .filter((section) => section.visible)
           .sort((left, right) => left.order - right.order)
-          .map((section) => renderSection(section))}
+          .map((section) => {
+            const renderedSection = renderSection(section);
+            if (!renderedSection) {
+              return null;
+            }
+
+            return (
+              <React.Fragment key={section.id}>
+                {renderedSection}
+              </React.Fragment>
+            );
+          })}
       </View>
     </>
   );

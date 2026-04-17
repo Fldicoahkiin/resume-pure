@@ -3,13 +3,11 @@ import type { PDFTranslations, ResumeData } from '@/types';
 const EXPORT_PAYLOAD_PREFIX = 'resume-export-payload:';
 const EXPORT_PAYLOAD_TTL_MS = 10 * 60 * 1000;
 
-export type ExportFormat = 'png' | 'pdf';
 export type ExportStatus = 'success' | 'error';
 export type ResumeExportTarget = Window | HTMLIFrameElement;
 
 export interface ResumeExportResult {
   exportId: string;
-  format: ExportFormat;
   status: ExportStatus;
   message?: string;
 }
@@ -18,7 +16,6 @@ export interface ResumeExportPayload {
   id: string;
   resume: ResumeData;
   translations: PDFTranslations;
-  format: ExportFormat;
   filename: string;
   createdAt: number;
 }
@@ -126,10 +123,10 @@ export function openResumeExportFrame(url: string): HTMLIFrameElement {
   iframe.setAttribute('aria-hidden', 'true');
   iframe.tabIndex = -1;
   iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '1px';
-  iframe.style.height = '1px';
+  iframe.style.left = '-10000px';
+  iframe.style.top = '0';
+  iframe.style.width = '1280px';
+  iframe.style.height = '1800px';
   iframe.style.opacity = '0';
   iframe.style.pointerEvents = 'none';
   iframe.style.border = '0';
@@ -146,7 +143,6 @@ function isResumeExportResult(value: unknown): value is ResumeExportResult {
   const candidate = value as Partial<ResumeExportResult>;
   return (
     typeof candidate.exportId === 'string' &&
-    (candidate.format === 'png' || candidate.format === 'pdf') &&
     (candidate.status === 'success' || candidate.status === 'error')
   );
 }
@@ -177,14 +173,14 @@ function disposeResumeExportTarget(target: ResumeExportTarget) {
   }
 }
 
-export function waitForResumeExport(exportId: string, format: ExportFormat, exportTarget: ResumeExportTarget): Promise<void> {
+export function waitForResumeExport(exportId: string, exportTarget: ResumeExportTarget): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       reject(new Error('export-window-unavailable'));
       return;
     }
 
-    const timeoutMs = format === 'pdf' ? 180000 : 60000;
+    const timeoutMs = 180000;
     let settled = false;
 
     const cleanup = () => {
@@ -212,7 +208,7 @@ export function waitForResumeExport(exportId: string, format: ExportFormat, expo
       }
 
       const result = event.data;
-      if (result.exportId !== exportId || result.format !== format) {
+      if (result.exportId !== exportId) {
         return;
       }
 
@@ -221,11 +217,11 @@ export function waitForResumeExport(exportId: string, format: ExportFormat, expo
         return;
       }
 
-      finish(() => reject(new Error(result.message || `${format}-export-failed`)));
+      finish(() => reject(new Error(result.message || 'pdf-export-failed')));
     };
 
     const timeoutId = window.setTimeout(() => {
-      finish(() => reject(new Error(`${format}-export-timeout`)));
+      finish(() => reject(new Error('pdf-export-timeout')));
     }, timeoutMs);
 
     const targetWatcherId = window.setInterval(() => {
@@ -237,7 +233,7 @@ export function waitForResumeExport(exportId: string, format: ExportFormat, expo
         return;
       }
 
-      finish(() => reject(new Error(`${format}-export-closed`)));
+      finish(() => reject(new Error('pdf-export-closed')));
     }, 400);
 
     window.addEventListener('message', handleMessage);

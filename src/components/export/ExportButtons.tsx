@@ -7,6 +7,17 @@ import { useTranslation } from 'react-i18next';
 import { exportToPNG } from '@/lib/image';
 import { exportToPDF } from '@/lib/pdf';
 
+function buildExportErrorMessage(prefix: string, error: unknown) {
+  const normalizedPrefix = prefix.trim().replace(/[：:]\s*$/, '');
+  const message = error instanceof Error ? error.message.trim().replace(/^[：:]\s*/, '') : '';
+
+  if (!message || message === normalizedPrefix) {
+    return normalizedPrefix;
+  }
+
+  return `${normalizedPrefix}：${message}`;
+}
+
 export function ExportButtons() {
   const { t } = useTranslation();
   const { resume } = useResumeStore();
@@ -35,7 +46,7 @@ export function ExportButtons() {
     try {
       await exportToPDF(resume, 'resume.pdf', translations);
     } catch (error) {
-      alert(t('export.pdfExportFailed') + (error as Error).message);
+      alert(buildExportErrorMessage(t('export.pdfExportFailed'), error));
     } finally {
       setLoadingPDF(false);
     }
@@ -46,7 +57,7 @@ export function ExportButtons() {
     try {
       await exportToPNG('resume.png');
     } catch (error) {
-      alert(t('export.pngExportFailed') + (error as Error).message);
+      alert(buildExportErrorMessage(t('export.pngExportFailed'), error));
     } finally {
       setLoadingPNG(false);
     }

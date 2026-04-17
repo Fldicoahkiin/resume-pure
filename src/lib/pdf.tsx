@@ -35,12 +35,11 @@ export async function exportToPDF(
     exportId = saveResumeExportPayload({
       resume: data,
       translations,
-      format: 'pdf',
       filename,
     });
     const exportUrl = createResumeExportUrl(exportId);
     const exportFrame = openResumeExportFrame(exportUrl);
-    await waitForResumeExport(exportId, 'pdf', exportFrame);
+    await waitForResumeExport(exportId, exportFrame);
   } catch (error) {
     if (exportId) {
       removeResumeExportPayload(exportId);
