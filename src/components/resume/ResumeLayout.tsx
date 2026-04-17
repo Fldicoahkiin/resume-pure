@@ -113,8 +113,19 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 }) => {
   const { theme } = data;
   const linksEnabled = theme.enableLinks !== false;
+  const isDenseLayout = theme.fontSize <= 10 && theme.spacing <= 2;
   const sectionMarginBottom = Math.max(theme.spacing * 2, 0);
   const headerMarginBottom = Math.max(theme.spacing * 2, 0);
+  const pageHorizontalPadding = isDenseLayout ? pxToPt(32) : PAGE_HORIZONTAL_PADDING;
+  const pageTopPadding = isDenseLayout ? pxToPt(24) : PAGE_TOP_PADDING;
+  const pageBottomPadding = isDenseLayout ? pxToPt(22) : PAGE_BOTTOM_PADDING;
+  const topBarHeight = isDenseLayout ? pxToPt(6) : TOP_BAR_HEIGHT;
+  const itemMarginBottom = isDenseLayout ? pxToPt(6) : ITEM_MARGIN_BOTTOM;
+  const sectionHeadingMarginBottom = isDenseLayout ? pxToPt(6) : SECTION_HEADING_MARGIN_BOTTOM;
+  const headingLineHeight = Math.max(theme.lineHeight, 1.1);
+  const metadataLineHeight = Math.max(theme.lineHeight, 1.05);
+  const detailLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.05 : 1.15);
+  const capsuleLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.1 : 1.2);
 
   const renderMarkdown = (text: string) => (
     <Markdown text={text} enableLinks={linksEnabled} primaryColor={theme.primaryColor} />
@@ -148,8 +159,8 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
   const renderSectionHeading = (anchor: string, title: string) => (
     <SelectableBlock anchor={anchor} pageBreakable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SECTION_HEADING_MARGIN_BOTTOM }}>
-        <View style={{ ...SECTION_BAR_STYLE, backgroundColor: theme.primaryColor, marginRight: pxToPt(8) }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: sectionHeadingMarginBottom }}>
+        <View style={{ ...SECTION_BAR_STYLE, backgroundColor: theme.primaryColor, marginRight: isDenseLayout ? pxToPt(6) : pxToPt(8) }} />
         <Text style={{ fontSize: theme.fontSize + 2, fontWeight: 'bold', color: '#374151' }}>
           {title}
         </Text>
@@ -492,16 +503,18 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
           const isCompact = project.layout === 'compact';
           const projectDescriptions = getDescriptionLines(project.description, `proj-${project.id}`);
           const projectProofs = project.proofs || [];
-          const projectLogoSize = isCompact ? pxToPt(24) : pxToPt(36);
-          const listTopMargin = isCompact ? 1.5 : 3.5;
-          const descriptionGap = isCompact ? 1.5 : 2.5;
+          const projectLogoSize = isCompact
+            ? pxToPt(isDenseLayout ? 20 : 24)
+            : pxToPt(isDenseLayout ? 28 : 36);
+          const listTopMargin = isDenseLayout ? (isCompact ? 1 : 2) : (isCompact ? 1.5 : 3.5);
+          const descriptionGap = isDenseLayout ? (isCompact ? 1 : 1.5) : (isCompact ? 1.5 : 2.5);
           const hasProjectLogo =
             project.showLogo !== false && Boolean(project.customLogo?.length || project.repoAvatarUrl?.length);
-          const proofIndent = hasProjectLogo ? projectLogoSize + pxToPt(9) : 0;
+          const proofIndent = hasProjectLogo ? projectLogoSize + pxToPt(isDenseLayout ? 6 : 9) : 0;
 
           return (
             <SelectableBlock key={project.id} anchor={projectAnchor(project.id)} pageBreakable>
-              <View style={{ marginBottom: ITEM_MARGIN_BOTTOM }}>
+              <View style={{ marginBottom: itemMarginBottom }}>
                 <View pdfProps={{ minPresenceAhead: 8 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     {hasProjectLogo ? (
@@ -512,19 +525,19 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                           width: projectLogoSize,
                           height: projectLogoSize,
                           borderRadius: projectLogoSize / 2,
-                          marginRight: pxToPt(9),
+                          marginRight: pxToPt(isDenseLayout ? 6 : 9),
                           objectFit: 'cover',
                         }}
                       />
                     ) : null}
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', flex: 1, minWidth: 0, paddingRight: pxToPt(8) }}>
-                          <Text inline style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: 1.2 }}>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', flex: 1, minWidth: 0, paddingRight: pxToPt(isDenseLayout ? 6 : 8) }}>
+                          <Text inline style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: headingLineHeight }}>
                             {project.name}
                           </Text>
                           {project.role ? (
-                            <Text inline style={{ fontSize: theme.fontSize - 1, color: '#6b7280', marginLeft: pxToPt(6) }}>
+                            <Text inline style={{ fontSize: theme.fontSize - 1, color: '#6b7280', marginLeft: pxToPt(isDenseLayout ? 4 : 6) }}>
                               {project.role}
                             </Text>
                           ) : null}
@@ -535,7 +548,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                             fontSize: theme.fontSize - 1,
                             color: '#666',
                             flexShrink: 0,
-                            lineHeight: 1.2,
+                            lineHeight: metadataLineHeight,
                             marginTop: 0,
                           }}
                         >
@@ -569,16 +582,16 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     backgroundColor: '#f9fafb',
-                                    borderRadius: pxToPt(8),
+                                    borderRadius: pxToPt(isDenseLayout ? 7 : 8),
                                     borderWidth: 0.5,
                                     borderStyle: 'solid',
                                     borderColor: '#e5e7eb',
-                                    marginRight: pxToPt(4),
-                                    marginBottom: pxToPt(2),
-                                    paddingLeft: pxToPt(6),
-                                    paddingRight: pxToPt(6),
-                                    paddingTop: 1.5,
-                                    paddingBottom: 1.5,
+                                    marginRight: pxToPt(isDenseLayout ? 3 : 4),
+                                    marginBottom: pxToPt(isDenseLayout ? 1 : 2),
+                                    paddingLeft: pxToPt(isDenseLayout ? 5 : 6),
+                                    paddingRight: pxToPt(isDenseLayout ? 5 : 6),
+                                    paddingTop: isDenseLayout ? 0.5 : 1.5,
+                                    paddingBottom: isDenseLayout ? 0.5 : 1.5,
                                   }}
                                 >
                                   {logo ? (
@@ -586,7 +599,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                       <Path d={logo.svgPath} fill={logo.color} />
                                     </Svg>
                                   ) : null}
-                                  <Text inline style={{ fontSize: theme.fontSize - 2, color: '#4b5563' }}>
+                                  <Text inline style={{ fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 2), color: '#4b5563', lineHeight: capsuleLineHeight }}>
                                     {tech}
                                   </Text>
                                 </View>
@@ -599,19 +612,19 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 backgroundColor: '#f9fafb',
-                                borderRadius: pxToPt(8),
+                                borderRadius: pxToPt(isDenseLayout ? 7 : 8),
                                 borderWidth: 0.5,
                                 borderStyle: 'solid',
                                 borderColor: '#e5e7eb',
-                                marginRight: pxToPt(4),
-                                marginBottom: pxToPt(2),
-                                paddingLeft: pxToPt(6),
-                                paddingRight: pxToPt(6),
-                                paddingTop: 1.5,
-                                paddingBottom: 1.5,
+                                marginRight: pxToPt(isDenseLayout ? 3 : 4),
+                                marginBottom: pxToPt(isDenseLayout ? 1 : 2),
+                                paddingLeft: pxToPt(isDenseLayout ? 5 : 6),
+                                paddingRight: pxToPt(isDenseLayout ? 5 : 6),
+                                paddingTop: isDenseLayout ? 0.5 : 1.5,
+                                paddingBottom: isDenseLayout ? 0.5 : 1.5,
                               }}
                             >
-                              <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af' }}>
+                              <Text inline style={{ fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 2), color: '#9ca3af', lineHeight: capsuleLineHeight }}>
                                 +{project.technologies.length - 4}
                               </Text>
                             </View>
@@ -623,15 +636,15 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                 </View>
 
                 {project.showProofs !== false && projectProofs.length > 0 ? (
-                  <View style={{ marginTop: isCompact ? 2 : 2.5, marginLeft: proofIndent }}>
+                  <View style={{ marginTop: isDenseLayout ? 1.5 : (isCompact ? 2 : 2.5), marginLeft: proofIndent }}>
                     {projectProofs.map((proof) => (
                       <SelectableBlock
                         key={proof.id}
                         anchor={projectProofAnchor(project.id, proof.id)}
                         pageBreakable={false}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 0.5 }}>
-                          <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', width: pxToPt(8), flexShrink: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: isDenseLayout ? 0 : 0.5 }}>
+                          <Text style={{ fontSize: theme.fontSize - 1, color: '#9ca3af', width: pxToPt(isDenseLayout ? 6 : 8), flexShrink: 0 }}>
                             •
                           </Text>
                           <Text
@@ -639,7 +652,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                               fontSize: theme.fontSize - 1,
                               color: '#374151',
                               flex: 1,
-                              lineHeight: 1.4,
+                              lineHeight: detailLineHeight,
                             }}
                           >
                             {renderMarkdown(proof.summary)}
@@ -655,7 +668,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                     color: '#9ca3af',
                                     textDecoration: 'none',
                                     fontSize: theme.fontSize - 2.5,
-                                    lineHeight: 1.4,
+                                    lineHeight: detailLineHeight,
                                   }}
                                 >
                                   {label}
@@ -706,11 +719,11 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={skill.id} anchor={skillAnchor(skill.id)} pageBreakable>
-              <View style={{ marginBottom: ITEM_MARGIN_BOTTOM }}>
-                <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#333', marginBottom: 2 }}>
+              <View style={{ marginBottom: itemMarginBottom }}>
+                <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#333', marginBottom: isDenseLayout ? 1 : 2 }}>
                   {skill.category}
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 1 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: isDenseLayout ? 0.5 : 1 }}>
                   {orderedItems.map((item) => {
                     const logo = resolveSkillLogo(item.name);
                     const capsuleStyle = getCapsuleStyle(item.level);
@@ -728,12 +741,12 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                             alignItems: 'center',
                             flexWrap: 'nowrap',
                             borderRadius: 100,
-                            paddingLeft: pxToPt(6.5),
-                            paddingRight: pxToPt(6.5),
-                            paddingTop: 0.5,
-                            paddingBottom: 0.5,
-                            marginRight: pxToPt(7),
-                            marginBottom: 2.5,
+                            paddingLeft: pxToPt(isDenseLayout ? 5.5 : 6.5),
+                            paddingRight: pxToPt(isDenseLayout ? 5.5 : 6.5),
+                            paddingTop: isDenseLayout ? 0 : 0.5,
+                            paddingBottom: isDenseLayout ? 0 : 0.5,
+                            marginRight: pxToPt(isDenseLayout ? 5 : 7),
+                            marginBottom: isDenseLayout ? 1.5 : 2.5,
                             backgroundColor: capsuleStyle.backgroundColor,
                             borderWidth: 1,
                             borderStyle: 'solid',
@@ -754,7 +767,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                 fontSize: theme.fontSize - 0.5,
                                 color: capsuleStyle.color,
                                 fontWeight: capsuleStyle.fontWeight,
-                                lineHeight: 1.5,
+                                lineHeight: capsuleLineHeight,
                               }}
                             >
                               {item.name}
@@ -772,8 +785,8 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                       : item.level === 'proficient'
                                         ? '#e5e7eb'
                                         : '#d1d5db',
-                                  marginLeft: pxToPt(6),
-                                  marginRight: pxToPt(6),
+                                  marginLeft: pxToPt(isDenseLayout ? 4 : 6),
+                                  marginRight: pxToPt(isDenseLayout ? 4 : 6),
                                 }}
                               />
                               <Text
@@ -787,7 +800,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                         ? '#6b7280'
                                         : '#9ca3af',
                                   fontWeight: 400,
-                                  lineHeight: 1.3,
+                                  lineHeight: detailLineHeight,
                                 }}
                               >
                                 {item.context}
@@ -881,28 +894,28 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={item.id} anchor={customItemAnchor(section.id, item.id)} pageBreakable>
-              <View style={{ marginBottom: ITEM_MARGIN_BOTTOM }} pdfProps={{ minPresenceAhead: 8 }}>
+              <View style={{ marginBottom: itemMarginBottom }} pdfProps={{ minPresenceAhead: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   {hasLogo ? (
                     <Image
                       src={item.repoAvatarUrl || ''}
                       alt=""
                       style={{
-                        width: pxToPt(24),
-                        height: pxToPt(24),
-                        borderRadius: pxToPt(12),
-                        marginRight: pxToPt(9),
+                        width: pxToPt(isDenseLayout ? 20 : 24),
+                        height: pxToPt(isDenseLayout ? 20 : 24),
+                        borderRadius: pxToPt(isDenseLayout ? 10 : 12),
+                        marginRight: pxToPt(isDenseLayout ? 6 : 9),
                         objectFit: 'cover',
                       }}
                     />
                   ) : null}
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#374151', lineHeight: 1.2 }}>
+                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#374151', lineHeight: headingLineHeight }}>
                         {item.title || 'Untitled'}
                       </Text>
                       {item.date ? (
-                        <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: 1.2 }}>
+                        <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: metadataLineHeight }}>
                           {item.date}
                         </Text>
                       ) : null}
@@ -927,7 +940,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       item.description,
                       keyPrefix,
                       item.showBulletPoints !== false,
-                      1.5
+                      isDenseLayout ? 1 : 1.5
                     )}
                   </View>
                 </View>
@@ -986,14 +999,14 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
   return (
     <>
-      <View style={{ width: '100%', height: TOP_BAR_HEIGHT, backgroundColor: theme.primaryColor }} />
+      <View style={{ width: '100%', height: topBarHeight, backgroundColor: theme.primaryColor }} />
 
       <View
         style={{
-          paddingLeft: PAGE_HORIZONTAL_PADDING,
-          paddingRight: PAGE_HORIZONTAL_PADDING,
-          paddingTop: PAGE_TOP_PADDING,
-          paddingBottom: PAGE_BOTTOM_PADDING,
+          paddingLeft: pageHorizontalPadding,
+          paddingRight: pageHorizontalPadding,
+          paddingTop: pageTopPadding,
+          paddingBottom: pageBottomPadding,
         }}
       >
         <SelectableBlock
@@ -1001,22 +1014,22 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
           pageBreakable
           style={{ marginBottom: headerMarginBottom }}
         >
-          <Text style={{ fontSize: theme.fontSize + 8, fontWeight: 'bold', color: theme.primaryColor, lineHeight: 1.2 }}>
+          <Text style={{ fontSize: theme.fontSize + 8, fontWeight: 'bold', color: theme.primaryColor, lineHeight: headingLineHeight }}>
             {data.personalInfo.name}
           </Text>
           {data.personalInfo.title ? (
-            <Text style={{ fontSize: theme.fontSize + 2, color: '#4b5563', marginTop: pxToPt(4) }}>
+            <Text style={{ fontSize: theme.fontSize + 2, color: '#4b5563', marginTop: pxToPt(isDenseLayout ? 3 : 4), lineHeight: headingLineHeight }}>
               {data.personalInfo.title}
             </Text>
           ) : null}
           {data.personalInfo.summary ? (
-            <Text style={{ fontSize: theme.fontSize - 1, marginTop: pxToPt(6), lineHeight: 1.5, color: '#374151' }}>
+            <Text style={{ fontSize: theme.fontSize - 1, marginTop: pxToPt(isDenseLayout ? 4 : 6), lineHeight: detailLineHeight, color: '#374151' }}>
               {renderMarkdown(data.personalInfo.summary)}
             </Text>
           ) : null}
           <View
             style={{
-              marginTop: data.personalInfo.summary ? pxToPt(4) : 1,
+              marginTop: data.personalInfo.summary ? pxToPt(isDenseLayout ? 3 : 4) : 1,
               flexDirection: 'row',
               flexWrap: 'wrap',
               fontSize: theme.fontSize - 1,
@@ -1073,7 +1086,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
               .filter((contact) => contact.value)
               .map((contact, index) => (
                 <SelectableBlock key={`${contact.value}-${index}`} anchor={contact.anchor}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: pxToPt(12), marginBottom: pxToPt(2) }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: pxToPt(isDenseLayout ? 10 : 12), marginBottom: isDenseLayout ? 1 : pxToPt(2) }}>
                     <Svg viewBox="0 0 24 24" style={{ width: pxToPt(9), height: pxToPt(9), marginRight: pxToPt(4) }}>
                       {getContactIconSvg(contact.type || 'link')}
                     </Svg>
