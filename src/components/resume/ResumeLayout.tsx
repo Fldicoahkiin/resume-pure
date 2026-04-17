@@ -62,6 +62,9 @@ const PAGE_BOTTOM_PADDING = pxToPt(30);
 const TOP_BAR_HEIGHT = pxToPt(8);
 const ITEM_MARGIN_BOTTOM = pxToPt(8);
 const SECTION_HEADING_MARGIN_BOTTOM = pxToPt(8);
+const INLINE_ICON_GAP = pxToPt(2);
+const INLINE_ICON_LINK_GAP = pxToPt(3);
+const INLINE_METADATA_GAP = pxToPt(6);
 
 export interface ResumeSelectableBlockProps {
   anchor: string;
@@ -118,7 +121,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
   const headerMarginBottom = Math.max(theme.spacing * 2, 0);
   const pageHorizontalPadding = isDenseLayout ? pxToPt(32) : PAGE_HORIZONTAL_PADDING;
   const pageTopPadding = isDenseLayout ? pxToPt(24) : PAGE_TOP_PADDING;
-  const pageBottomPadding = isDenseLayout ? pxToPt(22) : PAGE_BOTTOM_PADDING;
+  const pageBottomPadding = isDenseLayout ? pxToPt(14) : PAGE_BOTTOM_PADDING;
   const topBarHeight = isDenseLayout ? pxToPt(6) : TOP_BAR_HEIGHT;
   const itemMarginBottom = isDenseLayout ? pxToPt(6) : ITEM_MARGIN_BOTTOM;
   const sectionHeadingMarginBottom = isDenseLayout ? pxToPt(6) : SECTION_HEADING_MARGIN_BOTTOM;
@@ -126,6 +129,10 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
   const metadataLineHeight = Math.max(theme.lineHeight, 1.05);
   const detailLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.05 : 1.15);
   const capsuleLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.1 : 1.2);
+  const inlineIconSize = theme.fontSize - 2;
+  const inlineIconBoxSize = inlineIconSize;
+  const contactIconSize = pxToPt(9);
+  const contactIconBoxSize = contactIconSize;
 
   const renderMarkdown = (text: string) => (
     <Markdown text={text} enableLinks={linksEnabled} primaryColor={theme.primaryColor} />
@@ -326,16 +333,27 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     return (
       <>
         {project.repoUrl ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(2) }}>
-              <Path
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                fill="#9ca3af"
-              />
-            </Svg>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  fill="#9ca3af"
+                />
+              </Svg>
+            </View>
             <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
               {repoHref && isSafePdfUrl(repoHref) && linksEnabled ? (
-                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none' }}>
+                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
                   {formatGitHubPath(project.repoUrl)}
                 </Link>
               ) : (
@@ -346,10 +364,21 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         ) : null}
 
         {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(2) }}>
-              <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
-            </Svg>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
+              </Svg>
+            </View>
             <Text inline style={{ fontSize: theme.fontSize - 2, color: '#d97706', lineHeight: theme.lineHeight }}>
               {formatCompactNumber(project.repoStars)}
             </Text>
@@ -357,13 +386,24 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         ) : null}
 
         {project.url ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(3) }}>
-              <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
-            </Svg>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_LINK_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
+              </Svg>
+            </View>
             <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
               {projectHref && isSafePdfUrl(projectHref) && linksEnabled ? (
-                <Link href={projectHref} style={{ color: '#9ca3af', textDecoration: 'none' }}>
+                <Link href={projectHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
                   {project.url}
                 </Link>
               ) : (
@@ -399,20 +439,20 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'baseline',
+                        alignItems: 'flex-start',
                         marginTop: hideCompany ? 0 : 1,
                       }}
                     >
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#374151' }}>
+                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: theme.lineHeight, paddingRight: pxToPt(8) }}>
                         {experience.position}
                         {experience.location ? (
-                          <Text inline style={{ color: '#6b7280' }}>
+                          <Text inline style={{ color: '#6b7280', lineHeight: theme.lineHeight }}>
                             {' '}
                             · {experience.location}
                           </Text>
                         ) : null}
                       </Text>
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: 1.2 }}>
+                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: theme.lineHeight }}>
                         {getDateRange(
                           experience.startDate,
                           experience.endDate,
@@ -459,21 +499,21 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'baseline',
+                        alignItems: 'flex-start',
                         marginTop: hideSchool ? 0 : 1,
                       }}
                     >
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#374151' }}>
+                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: theme.lineHeight, paddingRight: pxToPt(8) }}>
                         {education.degree}
-                        {education.major ? <Text inline> - {education.major}</Text> : null}
+                        {education.major ? <Text inline style={{ lineHeight: theme.lineHeight }}> - {education.major}</Text> : null}
                         {education.gpa ? (
-                          <Text inline style={{ color: '#6b7280' }}>
+                          <Text inline style={{ color: '#6b7280', lineHeight: theme.lineHeight }}>
                             {' '}
                             · GPA: {education.gpa}
                           </Text>
                         ) : null}
                       </Text>
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: 1.2 }}>
+                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: theme.lineHeight }}>
                         {getDateRange(education.startDate, education.endDate, false, translations.present)}
                       </Text>
                     </View>
@@ -595,9 +635,20 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                   }}
                                 >
                                   {logo ? (
-                                    <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(2) }}>
-                                      <Path d={logo.svgPath} fill={logo.color} />
-                                    </Svg>
+                                    <View
+                                      style={{
+                                        width: inlineIconBoxSize,
+                                        height: inlineIconBoxSize,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: INLINE_ICON_GAP,
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                                        <Path d={logo.svgPath} fill={logo.color} />
+                                      </Svg>
+                                    </View>
                                   ) : null}
                                   <Text inline style={{ fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 2), color: '#4b5563', lineHeight: capsuleLineHeight }}>
                                     {tech}
@@ -652,38 +703,38 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                               fontSize: theme.fontSize - 1,
                               color: '#374151',
                               flex: 1,
-                              lineHeight: detailLineHeight,
-                            }}
-                          >
-                            {renderMarkdown(proof.summary)}
-                            {proof.refs.map((ref) => {
+                                  lineHeight: detailLineHeight,
+                                }}
+                              >
+                                {renderMarkdown(proof.summary)}
+                                {proof.refs.map((ref) => {
                               const href = sanitizeUrl(ref.url);
                               const label = ` ${formatProofRefLabel(ref)}`;
 
-                              return linksEnabled && href && isSafePdfUrl(href) ? (
-                                <Link
-                                  key={ref.id}
-                                  href={href}
-                                  style={{
-                                    color: '#9ca3af',
-                                    textDecoration: 'none',
-                                    fontSize: theme.fontSize - 2.5,
-                                    lineHeight: detailLineHeight,
-                                  }}
-                                >
-                                  {label}
-                                </Link>
-                              ) : (
-                                <Text
-                                  key={ref.id}
-                                  inline
-                                  style={{
-                                    color: '#9ca3af',
-                                    fontSize: theme.fontSize - 2.5,
-                                    lineHeight: theme.lineHeight,
-                                  }}
-                                >
-                                  {label}
+                                  return linksEnabled && href && isSafePdfUrl(href) ? (
+                                    <Link
+                                      key={ref.id}
+                                      href={href}
+                                      style={{
+                                        color: '#9ca3af',
+                                        textDecoration: 'none',
+                                        fontSize: theme.fontSize - 2.5,
+                                        lineHeight: detailLineHeight,
+                                      }}
+                                    >
+                                      {label}
+                                    </Link>
+                                  ) : (
+                                    <Text
+                                      key={ref.id}
+                                      inline
+                                      style={{
+                                        color: '#9ca3af',
+                                        fontSize: theme.fontSize - 2.5,
+                                        lineHeight: detailLineHeight,
+                                      }}
+                                    >
+                                      {label}
                                 </Text>
                               );
                             })}
@@ -719,11 +770,11 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={skill.id} anchor={skillAnchor(skill.id)} pageBreakable>
-              <View style={{ marginBottom: itemMarginBottom }}>
-                <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#333', marginBottom: isDenseLayout ? 1 : 2 }}>
+              <View style={{ marginBottom: isDenseLayout ? pxToPt(4) : itemMarginBottom }}>
+                <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#333', marginBottom: isDenseLayout ? 0 : 2 }}>
                   {skill.category}
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: isDenseLayout ? 0.5 : 1 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: isDenseLayout ? 0 : 1 }}>
                   {orderedItems.map((item) => {
                     const logo = resolveSkillLogo(item.name);
                     const capsuleStyle = getCapsuleStyle(item.level);
@@ -741,12 +792,12 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                             alignItems: 'center',
                             flexWrap: 'nowrap',
                             borderRadius: 100,
-                            paddingLeft: pxToPt(isDenseLayout ? 5.5 : 6.5),
-                            paddingRight: pxToPt(isDenseLayout ? 5.5 : 6.5),
+                            paddingLeft: pxToPt(isDenseLayout ? 4.5 : 6.5),
+                            paddingRight: pxToPt(isDenseLayout ? 4.5 : 6.5),
                             paddingTop: isDenseLayout ? 0 : 0.5,
                             paddingBottom: isDenseLayout ? 0 : 0.5,
-                            marginRight: pxToPt(isDenseLayout ? 5 : 7),
-                            marginBottom: isDenseLayout ? 1.5 : 2.5,
+                            marginRight: pxToPt(isDenseLayout ? 4 : 7),
+                            marginBottom: isDenseLayout ? 1 : 2.5,
                             backgroundColor: capsuleStyle.backgroundColor,
                             borderWidth: 1,
                             borderStyle: 'solid',
@@ -764,7 +815,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                             <Text
                               inline
                               style={{
-                                fontSize: theme.fontSize - 0.5,
+                                fontSize: theme.fontSize - (isDenseLayout ? 1 : 0.5),
                                 color: capsuleStyle.color,
                                 fontWeight: capsuleStyle.fontWeight,
                                 lineHeight: capsuleLineHeight,
@@ -785,14 +836,14 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                                       : item.level === 'proficient'
                                         ? '#e5e7eb'
                                         : '#d1d5db',
-                                  marginLeft: pxToPt(isDenseLayout ? 4 : 6),
-                                  marginRight: pxToPt(isDenseLayout ? 4 : 6),
+                                  marginLeft: pxToPt(isDenseLayout ? 3 : 6),
+                                  marginRight: pxToPt(isDenseLayout ? 3 : 6),
                                 }}
                               />
                               <Text
                                 inline
                                 style={{
-                                  fontSize: theme.fontSize - 1.5,
+                                  fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 1.5),
                                   color:
                                     item.level === 'core'
                                       ? '#4b5563'
@@ -827,16 +878,27 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     return (
       <>
         {item.repoUrl ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(2) }}>
-              <Path
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                fill="#9ca3af"
-              />
-            </Svg>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  fill="#9ca3af"
+                />
+              </Svg>
+            </View>
+            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
               {repoHref && isSafePdfUrl(repoHref) && linksEnabled ? (
-                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none' }}>
+                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
                   {formatGitHubPath(item.repoUrl)}
                 </Link>
               ) : (
@@ -847,24 +909,46 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         ) : null}
 
         {item.showStars !== false && typeof item.repoStars === 'number' && item.repoStars > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(2) }}>
-              <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
-            </Svg>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#d97706' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
+              </Svg>
+            </View>
+            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#d97706', lineHeight: theme.lineHeight }}>
               {formatCompactNumber(item.repoStars)}
             </Text>
           </View>
         ) : null}
 
         {item.url ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: pxToPt(6) }}>
-            <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 2, height: theme.fontSize - 2, marginRight: pxToPt(3) }}>
-              <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
-            </Svg>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
+            <View
+              style={{
+                width: inlineIconBoxSize,
+                height: inlineIconBoxSize,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: INLINE_ICON_LINK_GAP,
+                flexShrink: 0,
+              }}
+            >
+              <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
+                <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
+              </Svg>
+            </View>
+            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
               {itemHref && isSafePdfUrl(itemHref) && linksEnabled ? (
-                <Link href={itemHref} style={{ color: '#9ca3af', textDecoration: 'none' }}>
+                <Link href={itemHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
                   {item.url}
                 </Link>
               ) : (
@@ -910,7 +994,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                     />
                   ) : null}
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', color: '#374151', lineHeight: headingLineHeight }}>
                         {item.title || 'Untitled'}
                       </Text>
@@ -1086,13 +1170,24 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
               .filter((contact) => contact.value)
               .map((contact, index) => (
                 <SelectableBlock key={`${contact.value}-${index}`} anchor={contact.anchor}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: pxToPt(isDenseLayout ? 10 : 12), marginBottom: isDenseLayout ? 1 : pxToPt(2) }}>
-                    <Svg viewBox="0 0 24 24" style={{ width: pxToPt(9), height: pxToPt(9), marginRight: pxToPt(4) }}>
-                      {getContactIconSvg(contact.type || 'link')}
-                    </Svg>
-                    <Text inline style={{ color: '#4b5563' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginRight: pxToPt(isDenseLayout ? 10 : 12), marginBottom: isDenseLayout ? 1 : pxToPt(2) }}>
+                    <View
+                      style={{
+                        width: contactIconBoxSize,
+                        height: contactIconBoxSize,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: pxToPt(4),
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Svg viewBox="0 0 24 24" style={{ width: contactIconSize, height: contactIconSize }}>
+                        {getContactIconSvg(contact.type || 'link')}
+                      </Svg>
+                    </View>
+                    <Text inline style={{ color: '#4b5563', lineHeight: theme.lineHeight }}>
                       {contact.href && isSafePdfUrl(contact.href) && linksEnabled ? (
-                        <Link href={contact.href} style={{ color: '#4b5563', textDecoration: 'none' }}>
+                        <Link href={contact.href} style={{ color: '#4b5563', textDecoration: 'none', lineHeight: theme.lineHeight }}>
                           {contact.value}
                         </Link>
                       ) : (

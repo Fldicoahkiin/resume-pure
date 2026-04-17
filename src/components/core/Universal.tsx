@@ -338,8 +338,14 @@ export const Image = ({
     return <PdfImage src={src} style={pdfStyle} {...resolvedPdfProps} />;
   }
 
+  const webStyle = normalizeWebStyle(style);
+  const nextStyle: CSSProperties = {
+    display: 'block',
+    ...webStyle,
+  };
+
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} className={className} style={normalizeWebStyle(style)} alt="" {...props} />;
+  return <img src={src} className={className} style={nextStyle} alt="" {...props} />;
 };
 
 export const Svg = ({ viewBox, className, style, children, pdfProps, ...props }: SvgProps) => {
@@ -354,8 +360,15 @@ export const Svg = ({ viewBox, className, style, children, pdfProps, ...props }:
     );
   }
 
+  const webStyle = normalizeWebStyle(style);
+  const nextStyle: CSSProperties = {
+    display: 'block',
+    flexShrink: 0,
+    ...webStyle,
+  };
+
   return (
-    <svg viewBox={viewBox} className={className} style={normalizeWebStyle(style)} {...props}>
+    <svg viewBox={viewBox} className={className} style={nextStyle} {...props}>
       {children}
     </svg>
   );

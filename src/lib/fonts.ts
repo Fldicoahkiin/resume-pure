@@ -1,5 +1,5 @@
 // 字体配置系统
-// 预览：通过 Google Fonts CSS @import 加载
+// 预览：通过全局 @font-face 规则加载
 // PDF：由 pdfFonts.ts 在导出阶段按需注册
 
 // 字体分类

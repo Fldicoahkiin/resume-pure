@@ -100,7 +100,6 @@ const ResumePDFDocument: React.FC<ResumePDFDocumentProps> = ({ data, translation
     page: {
       fontSize: theme.fontSize,
       fontFamily,
-      lineHeight: theme.lineHeight,
       backgroundColor: '#ffffff',
     },
   });
