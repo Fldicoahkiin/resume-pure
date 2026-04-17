@@ -49,7 +49,7 @@ export default function HomePage() {
             </span>
             {t('common.startEditing')}
           </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-400 mb-6 tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
             {t('home.hero.title')}
           </h1>
           <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 mb-4 leading-relaxed max-w-2xl mx-auto sm:mx-0">

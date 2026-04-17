@@ -584,7 +584,7 @@ export default function BuilderPage() {
     const container = editorViewportRef.current;
     if (!container) return null;
 
-    const candidates = getEditorAnchorCandidates(anchor);
+    const candidates = getEditorAnchorCandidates(anchor, resume);
     for (const candidate of candidates) {
       const target = container.querySelector<HTMLElement>(`[data-editor-anchor="${candidate}"]`);
       if (target) {
@@ -593,7 +593,7 @@ export default function BuilderPage() {
     }
 
     return null;
-  }, []);
+  }, [resume]);
 
   const scrollToEditorAnchor = useCallback((anchor: string) => {
     let tries = 0;
@@ -631,7 +631,7 @@ export default function BuilderPage() {
       setActivePreviewAnchor(null);
     }, PREVIEW_FEEDBACK_DURATION);
 
-    const sectionId = getSectionIdFromPreviewAnchor(anchor);
+    const sectionId = getSectionIdFromPreviewAnchor(anchor, resume);
     setUi((prev) => {
       const nextCollapsed = new Set(prev.collapsedSections);
       if (sectionId) {
@@ -656,7 +656,7 @@ export default function BuilderPage() {
     window.setTimeout(() => {
       scrollToEditorAnchor(anchor);
     }, 90);
-  }, [scrollToEditorAnchor, ui.editorMode]);
+  }, [resume, scrollToEditorAnchor, ui.editorMode]);
 
   useEffect(() => {
     return () => {

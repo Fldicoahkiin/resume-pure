@@ -20,12 +20,18 @@ interface SkillTagsInputProps {
 }
 
 function SkillTagsInput({ tags, onChange, className, placeholder }: SkillTagsInputProps) {
-  const [value, setValue] = useState(tags.join(', '));
+  const [value, setValue] = useState(() => tags.join(', '));
+
+  const parseTags = (input: string) =>
+    input.split(',').flatMap((segment) => {
+      const trimmed = segment.trim();
+      return trimmed ? [trimmed] : [];
+    });
 
   useEffect(() => {
     // Only update local value if the canonical parsed version differs
     // This allows the user to type trailing spaces/commas freely
-    const parsedValue = value.split(',').map((s) => s.trim()).filter(Boolean);
+    const parsedValue = parseTags(value);
     const tagsStr = tags.join(',');
     const parsedStr = parsedValue.join(',');
     if (tagsStr !== parsedStr) {
@@ -39,8 +45,7 @@ function SkillTagsInput({ tags, onChange, className, placeholder }: SkillTagsInp
       value={value}
       onChange={(e) => {
         setValue(e.target.value);
-        const newTags = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
-        onChange(newTags);
+        onChange(parseTags(e.target.value));
       }}
       className={className}
       placeholder={placeholder}

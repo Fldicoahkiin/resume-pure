@@ -136,7 +136,7 @@ export function DraggableSection({
                 onDelete();
               }
             }}
-            className="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+            className="p-1.5 rounded text-red-400 hover:text-red-500 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/20 transition"
             title={t('draggableSection.deleteSection')}
           >
             <Trash2 size={18} />
