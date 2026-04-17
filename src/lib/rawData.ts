@@ -1,4 +1,17 @@
-import { ContactItem, Education, Experience, Project, ResumeData, SectionConfig, Skill, SkillItem, SkillLevel, CustomSection } from '@/types';
+import {
+  ContactItem,
+  CustomSection,
+  CustomSectionItem,
+  Education,
+  Experience,
+  Project,
+  ResumeData,
+  SectionConfig,
+  Skill,
+  SkillItem,
+  SkillLevel,
+} from '@/types';
+import { inferCustomSectionType } from '@/lib/resumeUtils';
 
 export const RAW_SCHEMA_ERROR_MESSAGE = 'Unsupported raw format. Expected latest raw structure.';
 
@@ -84,10 +97,24 @@ interface RawSkillItem {
   visible?: boolean;
 }
 
+interface RawCustomItem {
+  title?: string;
+  subtitle?: string;
+  date?: string;
+  description: string[];
+  showBulletPoints?: boolean;
+  url?: string;
+  repoUrl?: string;
+  repoStars?: number;
+  repoAvatarUrl?: string;
+  showStars?: boolean;
+  showLogo?: boolean;
+}
+
 interface RawCustomSection {
   key: string;
   type?: string;
-  items: (RawProjectItem | RawExperienceItem | RawEducationItem | RawSkillItem)[];
+  items: (RawCustomItem | RawProjectItem | RawExperienceItem | RawEducationItem | RawSkillItem)[];
 }
 
 interface RawSectionConfig {
@@ -264,6 +291,22 @@ function toRawSkills(items: Skill[]): RawSkillItem[] {
   }));
 }
 
+function toRawCustomItems(items: CustomSectionItem[]): RawCustomItem[] {
+  return items.map((item) => ({
+    title: item.title,
+    subtitle: item.subtitle,
+    date: item.date,
+    description: item.description,
+    showBulletPoints: item.showBulletPoints,
+    url: item.url,
+    repoUrl: item.repoUrl,
+    repoStars: item.repoStars,
+    repoAvatarUrl: item.repoAvatarUrl,
+    showStars: item.showStars,
+    showLogo: item.showLogo,
+  }));
+}
+
 function toRawSections(data: ResumeData, keyMap: Map<string, string>): RawSectionConfig[] {
   return getOrderedSections(data.sections).map((section) => {
     if (section.isCustom) {
@@ -292,14 +335,20 @@ function toRawCustomSections(data: ResumeData, keyMap: Map<string, string>): Raw
     .filter((section): section is CustomSection => section !== undefined)
     .sort((a, b) => (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER))
     .map((section) => {
-      const type = section.type && section.type !== 'custom' ? section.type : 'project';
+      const type = inferCustomSectionType(section);
       return {
         key: keyMap.get(section.id) || section.id,
-        type: type,
-        items: type === 'project' ? toRawProjects(section.items as Project[]) :
-          type === 'experience' ? toRawExperience(section.items as Experience[]) :
-            type === 'education' ? toRawEducation(section.items as Education[]) :
-              toRawSkills(section.items as Skill[]),
+        type,
+        items:
+          type === 'project'
+            ? toRawProjects(section.items as Project[])
+            : type === 'experience'
+              ? toRawExperience(section.items as Experience[])
+              : type === 'education'
+                ? toRawEducation(section.items as Education[])
+                : type === 'skill'
+                  ? toRawSkills(section.items as Skill[])
+                  : toRawCustomItems(section.items as CustomSectionItem[]),
       };
     });
 }
@@ -534,7 +583,10 @@ export function prepareImportedResumeData(input: unknown): unknown {
     if (!internalId) return null;
 
     const items = Array.isArray(section.items) ? section.items : [];
-    const type = typeof section.type === 'string' ? section.type : undefined;
+    const type = inferCustomSectionType({
+      type: typeof section.type === 'string' ? section.type : undefined,
+      items,
+    });
 
     return {
       id: internalId,
@@ -547,7 +599,7 @@ export function prepareImportedResumeData(input: unknown): unknown {
           id: `custom-item-${sectionIndex + 1}-${itemIndex + 1}`,
         };
 
-        const resolvedType = type || 'project';
+        const resolvedType = type;
 
         if (resolvedType === 'project' && Array.isArray(item.proofs)) {
           baseItem.proofs = mapProjectProofs(item.proofs);

@@ -180,3 +180,17 @@ export interface ResumeData {
   sections: SectionConfig[];
   theme: ThemeConfig;
 }
+
+// PDF 导出用的翻译类型
+export interface PDFTranslations {
+  summary: string;
+  experience: string;
+  education: string;
+  projects: string;
+  skills: string;
+  technologies: string;
+  contributions: string;
+  present: string;
+  customSection?: string;
+  skillLevel: Record<SkillLevel, string>;
+}

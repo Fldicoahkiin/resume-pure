@@ -2,7 +2,15 @@ import { ResumeData, Experience, Education, Project, Skill, SkillLevel } from '@
 import { createInitialResume, normalizeResumeData } from './resumeData';
 import { createEntityId } from './id';
 
+export const UNSUPPORTED_CUSTOM_SECTION_MARKDOWN_ERROR =
+  'Markdown import/export does not support custom sections.';
+
 export function exportToMarkdown(data: ResumeData): string {
+  const hasCustomSections = data.customSections.some((section) => section.items.length > 0);
+  if (hasCustomSections) {
+    throw new Error(UNSUPPORTED_CUSTOM_SECTION_MARKDOWN_ERROR);
+  }
+
   const lines: string[] = [];
   
   // 个人信息

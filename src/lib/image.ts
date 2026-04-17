@@ -69,6 +69,7 @@ export async function readImageFileAsDataUrl(file: File, maxBytes: number = MAX_
 
 export const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==';
+const PNG_EXPORT_PIXEL_RATIO = 2;
 
 
 /** 通过 img+canvas 将外部图片转为 data URL，支持跟随 302 重定向 */
@@ -203,8 +204,52 @@ async function replaceImagesWithDataUrls(element: HTMLElement): Promise<() => vo
   };
 }
 
+function createExportClone(
+  element: HTMLElement,
+  width: number,
+  height: number
+): {
+  clone: HTMLElement;
+  cleanup: () => void;
+} {
+  const clone = element.cloneNode(true) as HTMLElement;
+  const host = document.createElement('div');
+  const sourceStyle = window.getComputedStyle(element);
+
+  host.style.position = 'fixed';
+  host.style.left = '-99999px';
+  host.style.top = '0';
+  host.style.pointerEvents = 'none';
+  host.style.opacity = '0';
+  host.style.zIndex = '-1';
+  host.style.width = `${width}px`;
+  host.style.height = `${height}px`;
+  host.style.overflow = 'hidden';
+  host.style.backgroundColor = sourceStyle.backgroundColor || '#ffffff';
+
+  clone.style.boxSizing = 'border-box';
+  clone.style.width = `${width}px`;
+  clone.style.minWidth = `${width}px`;
+  clone.style.maxWidth = `${width}px`;
+  clone.style.height = `${height}px`;
+  clone.style.minHeight = `${height}px`;
+  clone.style.margin = '0';
+  clone.style.transform = 'none';
+  clone.style.backgroundColor = sourceStyle.backgroundColor || '#ffffff';
+
+  host.appendChild(clone);
+  document.body.appendChild(host);
+
+  return {
+    clone,
+    cleanup: () => {
+      host.remove();
+    },
+  };
+}
+
 export async function exportToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
-  const { toBlob } = await import('html-to-image');
+  const { getFontEmbedCSS, toBlob } = await import('html-to-image');
 
   const element = document.getElementById(elementId);
   if (!element) {
@@ -213,26 +258,43 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
 
   await document.fonts.ready;
   const viewportState = prepareExportViewport();
-  const width = element.offsetWidth;
-  const height = element.offsetHeight;
-  const restoreImages = await replaceImagesWithDataUrls(element);
 
   try {
-    const blob = await toBlob(element, {
-      width,
-      height,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
-      skipFonts: false,
-      cacheBust: false,
-      imagePlaceholder: TRANSPARENT_PX,
-      filter: (node: Node) => {
-        if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
-          return false;
-        }
-        return true;
-      },
-    });
+    const width = Math.ceil(element.offsetWidth);
+    const height = Math.ceil(element.offsetHeight);
+    const { clone, cleanup } = createExportClone(element, width, height);
+    let blob: Blob | null = null;
+
+    try {
+      const restoreImages = await replaceImagesWithDataUrls(clone);
+
+      try {
+        const fontEmbedCSS = await getFontEmbedCSS(clone, {
+          preferredFontFormat: 'woff2',
+        });
+
+        blob = await toBlob(clone, {
+          width,
+          height,
+          pixelRatio: PNG_EXPORT_PIXEL_RATIO,
+          backgroundColor: '#ffffff',
+          fontEmbedCSS,
+          cacheBust: false,
+          imagePlaceholder: TRANSPARENT_PX,
+          filter: (node: Node) => {
+            if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
+              return false;
+            }
+            return true;
+          },
+        });
+      } finally {
+        restoreImages();
+      }
+    } finally {
+      cleanup();
+    }
+
     if (!blob) throw new Error('导出引擎未生成有效数据');
 
     const url = URL.createObjectURL(blob);
@@ -249,7 +311,6 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
   } finally {
-    restoreImages();
     restoreExportViewport(viewportState);
   }
 }

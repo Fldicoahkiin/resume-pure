@@ -2,6 +2,7 @@ import {
   ContactIconType,
   ContactItem,
   CustomSection,
+  CustomSectionItem,
   Education,
   Experience,
   PersonalInfo,
@@ -17,6 +18,7 @@ import {
   CustomSectionType,
 } from '@/types';
 import { normalizePaperSize } from '@/lib/paper';
+import { inferCustomSectionType } from '@/lib/resumeUtils';
 
 const BUILTIN_SECTIONS: SectionConfig[] = [
   { id: 'summary', title: '', visible: true, order: 1 },
@@ -415,8 +417,36 @@ function normalizeSkills(input: unknown): Skill[] {
 
     const tags = asStringArray(item.tags);
     if (tags.length > 0) skill.tags = tags;
+    skill.visible = asBoolean(item.visible, true);
 
     acc.push(skill);
+
+    return acc;
+  }, []);
+}
+
+function normalizeCustomItems(input: unknown): CustomSectionItem[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input.reduce<CustomSectionItem[]>((acc, item, index) => {
+    if (!isRecord(item)) return acc;
+
+    acc.push({
+      id: asString(item.id, createId('custom-item', index)),
+      title: asOptionalString(item.title),
+      subtitle: asOptionalString(item.subtitle),
+      date: asOptionalString(item.date),
+      description: asStringArray(item.description),
+      showBulletPoints: asBoolean(item.showBulletPoints, true),
+      url: asOptionalString(item.url),
+      repoUrl: asOptionalString(item.repoUrl),
+      repoStars: asOptionalNumber(item.repoStars, 0),
+      repoAvatarUrl: asOptionalString(item.repoAvatarUrl),
+      showStars: asBoolean(item.showStars, true),
+      showLogo: asBoolean(item.showLogo, true),
+    });
 
     return acc;
   }, []);
@@ -430,11 +460,14 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
   return input.reduce<CustomSection[]>((sectionAcc, section, sectionIndex) => {
     if (!isRecord(section)) return sectionAcc;
 
-    const type = typeof section.type === 'string' && section.type !== 'custom' ? section.type : 'project';
-    
+    const type = inferCustomSectionType({
+      type: typeof section.type === 'string' ? section.type : undefined,
+      items: Array.isArray(section.items) ? section.items : [],
+    });
+
     let items: CustomSection['items'] = [];
     const sectionItems = Array.isArray(section.items) ? section.items : [];
-    
+
     if (type === 'project') {
       items = normalizeProjects(sectionItems);
     } else if (type === 'experience') {
@@ -443,6 +476,8 @@ function normalizeCustomSections(input: unknown): CustomSection[] {
       items = normalizeEducation(sectionItems);
     } else if (type === 'skill') {
       items = normalizeSkills(sectionItems);
+    } else {
+      items = normalizeCustomItems(sectionItems);
     }
 
     sectionAcc.push({
