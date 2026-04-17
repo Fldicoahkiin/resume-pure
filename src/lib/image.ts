@@ -1,3 +1,11 @@
+import {
+  createResumeExportUrl,
+  openResumeExportWindow,
+  removeResumeExportPayload,
+  saveResumeExportPayload,
+} from '@/lib/exportPayload';
+import type { PDFTranslations, ResumeData } from '@/types';
+
 const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
 
 function compressImageToDataUrl(file: File, maxBytes: number): Promise<string> {
@@ -157,35 +165,6 @@ export async function toDataUrl(src: string): Promise<string> {
   return viaOriginalFetch || TRANSPARENT_PX;
 }
 
-function prepareExportViewport() {
-  const previewArea = document.getElementById('builder-preview-area');
-  const wasHidden = previewArea ? window.getComputedStyle(previewArea).display === 'none' : false;
-  if (wasHidden && previewArea) {
-    previewArea.style.display = 'flex';
-    previewArea.style.position = 'fixed';
-    previewArea.style.left = '-99999px';
-    previewArea.style.top = '0';
-  }
-
-  const scaleWrapper = document.getElementById('resume-preview-scale-wrapper');
-  const savedTransform = scaleWrapper?.style.transform ?? '';
-  if (scaleWrapper) scaleWrapper.style.transform = 'none';
-
-  return { previewArea, wasHidden, scaleWrapper, savedTransform };
-}
-
-function restoreExportViewport(state: ReturnType<typeof prepareExportViewport>) {
-  if (state.scaleWrapper) {
-    state.scaleWrapper.style.transform = state.savedTransform;
-  }
-  if (state.wasHidden && state.previewArea) {
-    state.previewArea.style.display = '';
-    state.previewArea.style.position = '';
-    state.previewArea.style.left = '';
-    state.previewArea.style.top = '';
-  }
-}
-
 async function replaceImagesWithDataUrls(element: HTMLElement): Promise<() => void> {
   const images = element.querySelectorAll('img');
   const savedSrcs: { img: HTMLImageElement; src: string }[] = [];
@@ -248,7 +227,7 @@ function createExportClone(
   };
 }
 
-export async function exportToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
+export async function downloadElementToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
   const { getFontEmbedCSS, toBlob } = await import('html-to-image');
 
   const element = document.getElementById(elementId);
@@ -257,7 +236,6 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   }
 
   await document.fonts.ready;
-  const viewportState = prepareExportViewport();
 
   try {
     const width = Math.ceil(element.offsetWidth);
@@ -310,7 +288,30 @@ export async function exportToPNG(elementId: string, filename: string = 'resume.
   } catch (error) {
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
-  } finally {
-    restoreExportViewport(viewportState);
+  }
+}
+
+export async function exportToPNG(
+  data: ResumeData,
+  filename: string = 'resume.png',
+  translations: PDFTranslations
+): Promise<void> {
+  let exportId: string | null = null;
+
+  try {
+    exportId = saveResumeExportPayload({
+      resume: data,
+      translations,
+      format: 'png',
+      filename,
+    });
+    const exportUrl = createResumeExportUrl(exportId);
+    openResumeExportWindow(exportUrl);
+  } catch (error) {
+    if (exportId) {
+      removeResumeExportPayload(exportId);
+    }
+    console.error('PNG 导出失败:', error);
+    throw new Error('PNG 导出失败');
   }
 }

@@ -1,6 +1,5 @@
-import React, { CSSProperties, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import {
-  Circle,
   Image,
   Link,
   Path,
@@ -9,13 +8,22 @@ import {
   View,
 } from '@/components/core/Universal';
 import { MarkdownUniversal as Markdown } from '@/components/core/MarkdownUniversal';
+import { DescriptionLines } from '@/components/resume/DescriptionLines';
+import { InlineMetadataItem } from '@/components/resume/InlineMetadataItem';
+import { getResumeLayoutMetrics, pxToPt } from '@/components/resume/layoutMetrics';
+import { ProjectTechnologyPill } from '@/components/resume/ProjectTechnologyPill';
+import { ResumeHeader } from '@/components/resume/ResumeHeader';
+import { SectionHeading } from '@/components/resume/SectionHeading';
+import { SkillCapsule } from '@/components/resume/SkillCapsule';
+import type {
+  ResumeLayoutProps,
+  ResumeSelectableBlockProps,
+} from '@/components/resume/layoutTypes';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import {
-  customContactAnchor,
   customItemAnchor,
   educationAnchor,
   experienceAnchor,
-  personalInfoFieldAnchor,
   projectAnchor,
   projectProofAnchor,
   sectionAnchor,
@@ -27,7 +35,6 @@ import {
   formatGitHubPath,
   formatProofRefLabel,
   getDateRange,
-  getDescriptionLines,
   inferCustomSectionType,
   isSafePdfUrl,
   sanitizeUrl,
@@ -38,41 +45,17 @@ import type {
   Education,
   Experience,
   Project,
-  ResumeData,
   SectionConfig,
   Skill,
-  SkillLevel,
 } from '@/types';
 
-const CSS_PIXEL_TO_POINT = 72 / 96;
-
-function pxToPt(value: number): number {
-  return value * CSS_PIXEL_TO_POINT;
-}
-
-const SECTION_BAR_STYLE: CSSProperties = {
-  width: pxToPt(32),
-  height: pxToPt(4),
-  borderRadius: 999,
-};
-
-const PAGE_HORIZONTAL_PADDING = pxToPt(48);
-const PAGE_TOP_PADDING = pxToPt(32);
-const PAGE_BOTTOM_PADDING = pxToPt(30);
-const TOP_BAR_HEIGHT = pxToPt(8);
-const ITEM_MARGIN_BOTTOM = pxToPt(8);
-const SECTION_HEADING_MARGIN_BOTTOM = pxToPt(8);
+export type {
+  ResumeLayoutProps,
+  ResumeSelectableBlockProps,
+} from '@/components/resume/layoutTypes';
 const INLINE_ICON_GAP = pxToPt(2);
 const INLINE_ICON_LINK_GAP = pxToPt(3);
 const INLINE_METADATA_GAP = pxToPt(6);
-
-export interface ResumeSelectableBlockProps {
-  anchor: string;
-  children: ReactNode;
-  className?: string;
-  style?: CSSProperties;
-  pageBreakable?: boolean;
-}
 
 const DefaultSelectableBlock = ({
   children,
@@ -84,21 +67,6 @@ const DefaultSelectableBlock = ({
   </View>
 );
 
-export interface ResumeLayoutTranslations {
-  experience: string;
-  education: string;
-  projects: string;
-  skills: string;
-  present: string;
-  customSection?: string;
-}
-
-export interface ResumeLayoutProps {
-  data: ResumeData;
-  translations: ResumeLayoutTranslations;
-  SelectableBlock?: React.ComponentType<ResumeSelectableBlockProps>;
-}
-
 function isCustomSectionItem(value: CustomSection['items'][number]): value is CustomSectionItem {
   return (
     'title' in value ||
@@ -109,6 +77,37 @@ function isCustomSectionItem(value: CustomSection['items'][number]): value is Cu
   );
 }
 
+function buildDuplicateSafeKeys(values: string[], prefix: string) {
+  const counts = new Map<string, number>();
+
+  return values.map((value) => {
+    const occurrence = counts.get(value) ?? 0;
+    counts.set(value, occurrence + 1);
+    return `${prefix}-${value}-${occurrence}`;
+  });
+}
+
+function renderTechnologyPills(
+  projectId: string,
+  technologies: string[],
+  visibleCount: number,
+  theme: ResumeLayoutProps['data']['theme'],
+  metrics: ReturnType<typeof getResumeLayoutMetrics>
+) {
+  const visibleTechnologies = technologies.slice(0, visibleCount);
+  const technologyKeys = buildDuplicateSafeKeys(visibleTechnologies, projectId);
+
+  return visibleTechnologies.map((tech, technologyIndex) => (
+    <ProjectTechnologyPill
+      key={technologyKeys[technologyIndex]}
+      label={tech}
+      icon={resolveSkillLogo(tech)}
+      theme={theme}
+      metrics={metrics}
+    />
+  ));
+}
+
 export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
   data,
   translations,
@@ -116,63 +115,32 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 }) => {
   const { theme } = data;
   const linksEnabled = theme.enableLinks !== false;
-  const isDenseLayout = theme.fontSize <= 10 && theme.spacing <= 2;
-  const sectionMarginBottom = Math.max(theme.spacing * 2, 0);
-  const headerMarginBottom = Math.max(theme.spacing * 2, 0);
-  const pageHorizontalPadding = isDenseLayout ? pxToPt(32) : PAGE_HORIZONTAL_PADDING;
-  const pageTopPadding = isDenseLayout ? pxToPt(24) : PAGE_TOP_PADDING;
-  const pageBottomPadding = isDenseLayout ? pxToPt(14) : PAGE_BOTTOM_PADDING;
-  const topBarHeight = isDenseLayout ? pxToPt(6) : TOP_BAR_HEIGHT;
-  const itemMarginBottom = isDenseLayout ? pxToPt(6) : ITEM_MARGIN_BOTTOM;
-  const sectionHeadingMarginBottom = isDenseLayout ? pxToPt(6) : SECTION_HEADING_MARGIN_BOTTOM;
-  const headingLineHeight = Math.max(theme.lineHeight, 1.1);
-  const metadataLineHeight = Math.max(theme.lineHeight, 1.05);
-  const detailLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.05 : 1.15);
-  const capsuleLineHeight = Math.max(theme.lineHeight, isDenseLayout ? 1.1 : 1.2);
-  const inlineIconSize = theme.fontSize - 2;
-  const inlineIconBoxSize = inlineIconSize;
-  const contactIconSize = pxToPt(9);
-  const contactIconBoxSize = contactIconSize;
+  const metrics = getResumeLayoutMetrics(theme);
+  const {
+    isDenseLayout,
+    sectionMarginBottom,
+    pageHorizontalPadding,
+    pageTopPadding,
+    pageBottomPadding,
+    topBarHeight,
+    itemMarginBottom,
+    headingLineHeight,
+    metadataLineHeight,
+    detailLineHeight,
+    inlineIconSize,
+    inlineIconBoxSize,
+  } = metrics;
 
   const renderMarkdown = (text: string) => (
     <Markdown text={text} enableLinks={linksEnabled} primaryColor={theme.primaryColor} />
   );
 
-  const getCapsuleStyle = (level: SkillLevel) => {
-    switch (level) {
-      case 'core':
-        return {
-          backgroundColor: '#ffffff',
-          color: '#111827',
-          borderColor: theme.primaryColor,
-          fontWeight: 600 as const,
-        };
-      case 'proficient':
-        return {
-          backgroundColor: '#ffffff',
-          color: '#4b5563',
-          borderColor: '#d1d5db',
-          fontWeight: 500 as const,
-        };
-      case 'familiar':
-        return {
-          backgroundColor: '#f3f4f6',
-          color: '#6b7280',
-          borderColor: 'transparent',
-          fontWeight: 400 as const,
-        };
-    }
-  };
-
   const renderSectionHeading = (anchor: string, title: string) => (
-    <SelectableBlock anchor={anchor} pageBreakable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: sectionHeadingMarginBottom }}>
-        <View style={{ ...SECTION_BAR_STYLE, backgroundColor: theme.primaryColor, marginRight: isDenseLayout ? pxToPt(6) : pxToPt(8) }} />
-        <Text style={{ fontSize: theme.fontSize + 2, fontWeight: 'bold', color: '#374151' }}>
-          {title}
-        </Text>
-      </View>
-    </SelectableBlock>
+    <SectionHeading
+      anchor={anchor}
+      title={title}
+      shared={{ theme, linksEnabled, translations, metrics, SelectableBlock, renderMarkdown }}
+    />
   );
 
   const renderDescriptionLines = (
@@ -181,147 +149,15 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     showBulletPoints = true,
     itemGap = 2.5
   ) => {
-    const descriptionLines = getDescriptionLines(items, keyPrefix);
-    if (descriptionLines.length === 0) return null;
-
-    if (!showBulletPoints) {
-      return descriptionLines.map((line, index) => (
-        <Text
-          key={line.key}
-          style={{
-            fontSize: theme.fontSize - 1,
-            color: '#374151',
-            lineHeight: theme.lineHeight,
-            marginBottom: index === descriptionLines.length - 1 ? 0 : itemGap,
-          }}
-        >
-          {renderMarkdown(line.value)}
-        </Text>
-      ));
-    }
-
-    return descriptionLines.map((line, index) => (
-      <View
-        key={line.key}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          marginBottom: index === descriptionLines.length - 1 ? 0 : itemGap,
-        }}
-      >
-        <Text
-          style={{
-            color: '#9ca3af',
-            fontSize: theme.fontSize - 1,
-            fontWeight: 700,
-            lineHeight: theme.lineHeight,
-            marginRight: pxToPt(4),
-            width: pxToPt(8),
-            flexShrink: 0,
-          }}
-        >
-          •
-        </Text>
-        <Text
-          style={{
-            color: '#374151',
-            flex: 1,
-            fontSize: theme.fontSize - 1,
-            lineHeight: theme.lineHeight,
-          }}
-        >
-          {renderMarkdown(line.value)}
-        </Text>
-      </View>
-    ));
-  };
-
-  const getContactIconSvg = (type: string) => {
-    if (type.includes('mail')) {
-      return (
-        <Path
-          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          stroke="#6b7280"
-          strokeWidth={1.5}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      );
-    }
-
-    if (type.includes('phone')) {
-      return (
-        <Path
-          d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
-          stroke="#6b7280"
-          strokeWidth={1.5}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      );
-    }
-
-    if (type.includes('github')) {
-      return (
-        <Path
-          d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-          fill="#6b7280"
-        />
-      );
-    }
-
-    if (type.includes('linkedin')) {
-      return (
-        <Path
-          d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 6a2 2 0 110-4 2 2 0 010 4z"
-          stroke="#6b7280"
-          strokeWidth={1.5}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      );
-    }
-
-    if (type.includes('map') || type.includes('location')) {
-      return (
-        <Path
-          d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z M12 13a3 3 0 100-6 3 3 0 000 6z"
-          stroke="#6b7280"
-          strokeWidth={1.5}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      );
-    }
-
-    if (type.includes('website') || type.includes('globe')) {
-      return (
-        <>
-          <Circle cx="12" cy="12" r="10" stroke="#6b7280" strokeWidth={1.5} fill="none" />
-          <Path
-            d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20z M2 12h20"
-            stroke="#6b7280"
-            strokeWidth={1.5}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </>
-      );
-    }
-
     return (
-      <Path
-        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-        stroke="#6b7280"
-        strokeWidth={1.5}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <DescriptionLines
+        items={items}
+        keyPrefix={keyPrefix}
+        theme={theme}
+        renderMarkdown={renderMarkdown}
+        lineHeight={detailLineHeight}
+        showBulletPoints={showBulletPoints}
+        itemGap={itemGap}
       />
     );
   };
@@ -333,84 +169,62 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     return (
       <>
         {project.repoUrl ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={formatGitHubPath(project.repoUrl)}
+            href={repoHref}
+            enableLinks={linksEnabled}
+            color="#9ca3af"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path
                   d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
                   fill="#9ca3af"
                 />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
-              {repoHref && isSafePdfUrl(repoHref) && linksEnabled ? (
-                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
-                  {formatGitHubPath(project.repoUrl)}
-                </Link>
-              ) : (
-                formatGitHubPath(project.repoUrl)
-              )}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
 
         {project.showStars !== false && typeof project.repoStars === 'number' && project.repoStars > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={formatCompactNumber(project.repoStars)}
+            enableLinks={false}
+            color="#d97706"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#d97706', lineHeight: theme.lineHeight }}>
-              {formatCompactNumber(project.repoStars)}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
 
         {project.url ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_LINK_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={project.url}
+            href={projectHref}
+            enableLinks={linksEnabled}
+            color="#9ca3af"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_LINK_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
-              {projectHref && isSafePdfUrl(projectHref) && linksEnabled ? (
-                <Link href={projectHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
-                  {project.url}
-                </Link>
-              ) : (
-                project.url
-              )}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
       </>
     );
@@ -427,11 +241,11 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={experience.id} anchor={experienceAnchor(experience.id)} pageBreakable>
-              <View style={{ marginBottom: ITEM_MARGIN_BOTTOM }} pdfProps={{ minPresenceAhead: 8 }}>
+              <View style={{ marginBottom: itemMarginBottom }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
                   <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
                     {!hideCompany ? (
-                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: 1.2 }}>
+                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: headingLineHeight }}>
                         {experience.company}
                       </Text>
                     ) : null}
@@ -439,20 +253,20 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         marginTop: hideCompany ? 0 : 1,
                       }}
                     >
-                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: theme.lineHeight, paddingRight: pxToPt(8) }}>
+                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: detailLineHeight, paddingRight: pxToPt(8) }}>
                         {experience.position}
                         {experience.location ? (
-                          <Text inline style={{ color: '#6b7280', lineHeight: theme.lineHeight }}>
+                          <Text inline style={{ color: '#6b7280', lineHeight: detailLineHeight }}>
                             {' '}
                             · {experience.location}
                           </Text>
                         ) : null}
                       </Text>
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: theme.lineHeight }}>
+                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: metadataLineHeight }}>
                         {getDateRange(
                           experience.startDate,
                           experience.endDate,
@@ -487,11 +301,11 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={education.id} anchor={educationAnchor(education.id)} pageBreakable>
-              <View style={{ marginBottom: ITEM_MARGIN_BOTTOM }} pdfProps={{ wrap: false }}>
+              <View style={{ marginBottom: itemMarginBottom }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
                   <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
                     {!hideSchool ? (
-                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: 1.2 }}>
+                      <Text style={{ fontSize: theme.fontSize, fontWeight: 'bold', lineHeight: headingLineHeight }}>
                         {education.school}
                       </Text>
                     ) : null}
@@ -499,21 +313,21 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         marginTop: hideSchool ? 0 : 1,
                       }}
                     >
-                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: theme.lineHeight, paddingRight: pxToPt(8) }}>
+                      <Text style={{ flex: 1, fontSize: theme.fontSize - 1, color: '#374151', lineHeight: detailLineHeight, paddingRight: pxToPt(8) }}>
                         {education.degree}
-                        {education.major ? <Text inline style={{ lineHeight: theme.lineHeight }}> - {education.major}</Text> : null}
+                        {education.major ? <Text inline style={{ lineHeight: detailLineHeight }}> - {education.major}</Text> : null}
                         {education.gpa ? (
-                          <Text inline style={{ color: '#6b7280', lineHeight: theme.lineHeight }}>
+                          <Text inline style={{ color: '#6b7280', lineHeight: detailLineHeight }}>
                             {' '}
                             · GPA: {education.gpa}
                           </Text>
                         ) : null}
                       </Text>
-                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: theme.lineHeight }}>
+                      <Text style={{ fontSize: theme.fontSize - 1, color: '#666', flexShrink: 0, lineHeight: metadataLineHeight }}>
                         {getDateRange(education.startDate, education.endDate, false, translations.present)}
                       </Text>
                     </View>
@@ -541,7 +355,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
         {renderSectionHeading(sectionAnchor(section.id), section.title || translations.projects)}
         {visibleProjects.map((project) => {
           const isCompact = project.layout === 'compact';
-          const projectDescriptions = getDescriptionLines(project.description, `proj-${project.id}`);
+          const hasProjectDescription = project.description.some((line) => line.trim().length > 0);
           const projectProofs = project.proofs || [];
           const projectLogoSize = isCompact
             ? pxToPt(isDenseLayout ? 20 : 24)
@@ -555,7 +369,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
           return (
             <SelectableBlock key={project.id} anchor={projectAnchor(project.id)} pageBreakable>
               <View style={{ marginBottom: itemMarginBottom }}>
-                <View pdfProps={{ minPresenceAhead: 8 }}>
+                <View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     {hasProjectLogo ? (
                       <Image
@@ -596,7 +410,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                         </Text>
                       </View>
 
-                      {projectDescriptions.length > 0 ? (
+                      {hasProjectDescription ? (
                         <View style={{ marginTop: listTopMargin, minWidth: 0 }}>
                           {renderDescriptionLines(
                             project.description,
@@ -611,74 +425,21 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                       project.technologies &&
                       project.technologies.length > 0 ? (
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: listTopMargin }}>
-                          {project.technologies
-                            .slice(0, isCompact ? 4 : project.technologies.length)
-                            .map((tech, index) => {
-                              const logo = resolveSkillLogo(tech);
-                              return (
-                                <View
-                                  key={`${project.id}-${tech}-${index}`}
-                                  style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    backgroundColor: '#f9fafb',
-                                    borderRadius: pxToPt(isDenseLayout ? 7 : 8),
-                                    borderWidth: 0.5,
-                                    borderStyle: 'solid',
-                                    borderColor: '#e5e7eb',
-                                    marginRight: pxToPt(isDenseLayout ? 3 : 4),
-                                    marginBottom: pxToPt(isDenseLayout ? 1 : 2),
-                                    paddingLeft: pxToPt(isDenseLayout ? 5 : 6),
-                                    paddingRight: pxToPt(isDenseLayout ? 5 : 6),
-                                    paddingTop: isDenseLayout ? 0.5 : 1.5,
-                                    paddingBottom: isDenseLayout ? 0.5 : 1.5,
-                                  }}
-                                >
-                                  {logo ? (
-                                    <View
-                                      style={{
-                                        width: inlineIconBoxSize,
-                                        height: inlineIconBoxSize,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: INLINE_ICON_GAP,
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
-                                        <Path d={logo.svgPath} fill={logo.color} />
-                                      </Svg>
-                                    </View>
-                                  ) : null}
-                                  <Text inline style={{ fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 2), color: '#4b5563', lineHeight: capsuleLineHeight }}>
-                                    {tech}
-                                  </Text>
-                                </View>
-                              );
-                            })}
+                          {renderTechnologyPills(
+                            project.id,
+                            project.technologies,
+                            isCompact ? 4 : project.technologies.length,
+                            theme,
+                            metrics
+                          )}
 
                           {project.technologies.length > (isCompact ? 4 : project.technologies.length) ? (
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: '#f9fafb',
-                                borderRadius: pxToPt(isDenseLayout ? 7 : 8),
-                                borderWidth: 0.5,
-                                borderStyle: 'solid',
-                                borderColor: '#e5e7eb',
-                                marginRight: pxToPt(isDenseLayout ? 3 : 4),
-                                marginBottom: pxToPt(isDenseLayout ? 1 : 2),
-                                paddingLeft: pxToPt(isDenseLayout ? 5 : 6),
-                                paddingRight: pxToPt(isDenseLayout ? 5 : 6),
-                                paddingTop: isDenseLayout ? 0.5 : 1.5,
-                                paddingBottom: isDenseLayout ? 0.5 : 1.5,
-                              }}
-                            >
-                              <Text inline style={{ fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 2), color: '#9ca3af', lineHeight: capsuleLineHeight }}>
-                                +{project.technologies.length - 4}
-                              </Text>
-                            </View>
+                            <ProjectTechnologyPill
+                              label={`+${project.technologies.length - 4}`}
+                              theme={theme}
+                              metrics={metrics}
+                              muted
+                            />
                           ) : null}
                         </View>
                       ) : null}
@@ -776,89 +537,13 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: isDenseLayout ? 0 : 1 }}>
                   {orderedItems.map((item) => {
-                    const logo = resolveSkillLogo(item.name);
-                    const capsuleStyle = getCapsuleStyle(item.level);
-
                     return (
                       <SelectableBlock
                         key={item.id}
                         anchor={skillItemAnchor(skill.id, item.id)}
                         pageBreakable={false}
                       >
-                        <View
-                          pdfProps={{ wrap: false }}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            flexWrap: 'nowrap',
-                            borderRadius: 100,
-                            paddingLeft: pxToPt(isDenseLayout ? 4.5 : 6.5),
-                            paddingRight: pxToPt(isDenseLayout ? 4.5 : 6.5),
-                            paddingTop: isDenseLayout ? 0 : 0.5,
-                            paddingBottom: isDenseLayout ? 0 : 0.5,
-                            marginRight: pxToPt(isDenseLayout ? 4 : 7),
-                            marginBottom: isDenseLayout ? 1 : 2.5,
-                            backgroundColor: capsuleStyle.backgroundColor,
-                            borderWidth: 1,
-                            borderStyle: 'solid',
-                            borderColor: capsuleStyle.borderColor,
-                          }}
-                        >
-                          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' }}>
-                            {item.showLogo === false ? null : item.logo ? (
-                              <Image src={item.logo} alt="" style={{ width: theme.fontSize - 1, height: theme.fontSize - 1, marginRight: pxToPt(4) }} />
-                            ) : logo ? (
-                              <Svg viewBox="0 0 24 24" style={{ width: theme.fontSize - 1, height: theme.fontSize - 1, marginRight: pxToPt(4) }}>
-                                <Path d={logo.svgPath} fill={logo.color} />
-                              </Svg>
-                            ) : null}
-                            <Text
-                              inline
-                              style={{
-                                fontSize: theme.fontSize - (isDenseLayout ? 1 : 0.5),
-                                color: capsuleStyle.color,
-                                fontWeight: capsuleStyle.fontWeight,
-                                lineHeight: capsuleLineHeight,
-                              }}
-                            >
-                              {item.name}
-                            </Text>
-                          </View>
-                          {item.showContext !== false && item.context ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' }}>
-                              <View
-                                style={{
-                                  width: 1,
-                                  height: theme.fontSize,
-                                  backgroundColor:
-                                    item.level === 'core'
-                                      ? `${theme.primaryColor}40`
-                                      : item.level === 'proficient'
-                                        ? '#e5e7eb'
-                                        : '#d1d5db',
-                                  marginLeft: pxToPt(isDenseLayout ? 3 : 6),
-                                  marginRight: pxToPt(isDenseLayout ? 3 : 6),
-                                }}
-                              />
-                              <Text
-                                inline
-                                style={{
-                                  fontSize: theme.fontSize - (isDenseLayout ? 2.5 : 1.5),
-                                  color:
-                                    item.level === 'core'
-                                      ? '#4b5563'
-                                      : item.level === 'proficient'
-                                        ? '#6b7280'
-                                        : '#9ca3af',
-                                  fontWeight: 400,
-                                  lineHeight: detailLineHeight,
-                                }}
-                              >
-                                {item.context}
-                              </Text>
-                            </View>
-                          ) : null}
-                        </View>
+                        <SkillCapsule item={item} theme={theme} metrics={metrics} />
                       </SelectableBlock>
                     );
                   })}
@@ -878,84 +563,62 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
     return (
       <>
         {item.repoUrl ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={formatGitHubPath(item.repoUrl)}
+            href={repoHref}
+            enableLinks={linksEnabled}
+            color="#9ca3af"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path
                   d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
                   fill="#9ca3af"
                 />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
-              {repoHref && isSafePdfUrl(repoHref) && linksEnabled ? (
-                <Link href={repoHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
-                  {formatGitHubPath(item.repoUrl)}
-                </Link>
-              ) : (
-                formatGitHubPath(item.repoUrl)
-              )}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
 
         {item.showStars !== false && typeof item.repoStars === 'number' && item.repoStars > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={formatCompactNumber(item.repoStars)}
+            enableLinks={false}
+            color="#d97706"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#d97706" />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#d97706', lineHeight: theme.lineHeight }}>
-              {formatCompactNumber(item.repoStars)}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
 
         {item.url ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: INLINE_METADATA_GAP }}>
-            <View
-              style={{
-                width: inlineIconBoxSize,
-                height: inlineIconBoxSize,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: INLINE_ICON_LINK_GAP,
-                flexShrink: 0,
-              }}
-            >
+          <InlineMetadataItem
+            value={item.url}
+            href={itemHref}
+            enableLinks={linksEnabled}
+            color="#9ca3af"
+            fontSize={theme.fontSize - 2}
+            lineHeight={metadataLineHeight}
+            iconBoxSize={inlineIconBoxSize}
+            iconGap={INLINE_ICON_LINK_GAP}
+            style={{ marginLeft: INLINE_METADATA_GAP }}
+            icon={
               <Svg viewBox="0 0 24 24" style={{ width: inlineIconSize, height: inlineIconSize }}>
                 <Path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#9ca3af" />
               </Svg>
-            </View>
-            <Text inline style={{ fontSize: theme.fontSize - 2, color: '#9ca3af', lineHeight: theme.lineHeight }}>
-              {itemHref && isSafePdfUrl(itemHref) && linksEnabled ? (
-                <Link href={itemHref} style={{ color: '#9ca3af', textDecoration: 'none', lineHeight: theme.lineHeight }}>
-                  {item.url}
-                </Link>
-              ) : (
-                item.url
-              )}
-            </Text>
-          </View>
+            }
+          />
         ) : null}
       </>
     );
@@ -978,7 +641,7 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
 
           return (
             <SelectableBlock key={item.id} anchor={customItemAnchor(section.id, item.id)} pageBreakable>
-              <View style={{ marginBottom: itemMarginBottom }} pdfProps={{ minPresenceAhead: 8 }}>
+              <View style={{ marginBottom: itemMarginBottom }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   {hasLogo ? (
                     <Image
@@ -1093,112 +756,10 @@ export const ResumeLayout: React.FC<ResumeLayoutProps> = ({
           paddingBottom: pageBottomPadding,
         }}
       >
-        <SelectableBlock
-          anchor="personalInfo"
-          pageBreakable
-          style={{ marginBottom: headerMarginBottom }}
-        >
-          <Text style={{ fontSize: theme.fontSize + 8, fontWeight: 'bold', color: theme.primaryColor, lineHeight: headingLineHeight }}>
-            {data.personalInfo.name}
-          </Text>
-          {data.personalInfo.title ? (
-            <Text style={{ fontSize: theme.fontSize + 2, color: '#4b5563', marginTop: pxToPt(isDenseLayout ? 3 : 4), lineHeight: headingLineHeight }}>
-              {data.personalInfo.title}
-            </Text>
-          ) : null}
-          {data.personalInfo.summary ? (
-            <Text style={{ fontSize: theme.fontSize - 1, marginTop: pxToPt(isDenseLayout ? 4 : 6), lineHeight: detailLineHeight, color: '#374151' }}>
-              {renderMarkdown(data.personalInfo.summary)}
-            </Text>
-          ) : null}
-          <View
-            style={{
-              marginTop: data.personalInfo.summary ? pxToPt(isDenseLayout ? 3 : 4) : 1,
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              fontSize: theme.fontSize - 1,
-              color: '#4b5563',
-            }}
-          >
-            {[
-              {
-                anchor: personalInfoFieldAnchor('email'),
-                type: data.personalInfo.iconConfig?.emailIcon || 'mail',
-                value: data.personalInfo.email,
-                href: sanitizeUrl(data.personalInfo.email),
-              },
-              {
-                anchor: personalInfoFieldAnchor('phone'),
-                type: data.personalInfo.iconConfig?.phoneIcon || 'phone',
-                value: data.personalInfo.phone,
-                href: sanitizeUrl(data.personalInfo.phone),
-              },
-              {
-                anchor: personalInfoFieldAnchor('location'),
-                type: data.personalInfo.iconConfig?.locationIcon || 'map-pin',
-                value: data.personalInfo.location,
-                href: undefined,
-              },
-              {
-                anchor: personalInfoFieldAnchor('website'),
-                type: data.personalInfo.iconConfig?.websiteIcon || 'globe',
-                value: data.personalInfo.website,
-                href: sanitizeUrl(data.personalInfo.website),
-              },
-              {
-                anchor: personalInfoFieldAnchor('linkedin'),
-                type: data.personalInfo.iconConfig?.linkedinIcon || 'linkedin',
-                value: data.personalInfo.linkedin,
-                href: sanitizeUrl(data.personalInfo.linkedin),
-              },
-              {
-                anchor: personalInfoFieldAnchor('github'),
-                type: data.personalInfo.iconConfig?.githubIcon || 'github',
-                value: data.personalInfo.github,
-                href: sanitizeUrl(data.personalInfo.github),
-              },
-              ...(data.personalInfo.contacts || [])
-                .filter((contact) => contact.value)
-                .sort((left, right) => left.order - right.order)
-                .map((contact) => ({
-                  anchor: customContactAnchor(contact.id),
-                  type: contact.type,
-                  value: contact.value,
-                  href: contact.href ? sanitizeUrl(contact.href) : sanitizeUrl(contact.value),
-                })),
-            ]
-              .filter((contact) => contact.value)
-              .map((contact, index) => (
-                <SelectableBlock key={`${contact.value}-${index}`} anchor={contact.anchor}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginRight: pxToPt(isDenseLayout ? 10 : 12), marginBottom: isDenseLayout ? 1 : pxToPt(2) }}>
-                    <View
-                      style={{
-                        width: contactIconBoxSize,
-                        height: contactIconBoxSize,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: pxToPt(4),
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Svg viewBox="0 0 24 24" style={{ width: contactIconSize, height: contactIconSize }}>
-                        {getContactIconSvg(contact.type || 'link')}
-                      </Svg>
-                    </View>
-                    <Text inline style={{ color: '#4b5563', lineHeight: theme.lineHeight }}>
-                      {contact.href && isSafePdfUrl(contact.href) && linksEnabled ? (
-                        <Link href={contact.href} style={{ color: '#4b5563', textDecoration: 'none', lineHeight: theme.lineHeight }}>
-                          {contact.value}
-                        </Link>
-                      ) : (
-                        contact.value
-                      )}
-                    </Text>
-                  </View>
-                </SelectableBlock>
-              ))}
-          </View>
-        </SelectableBlock>
+        <ResumeHeader
+          data={data}
+          shared={{ theme, linksEnabled, translations, metrics, SelectableBlock, renderMarkdown }}
+        />
 
         {data.sections
           .filter((section) => section.visible)

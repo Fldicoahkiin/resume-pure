@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { exportToPNG } from '@/lib/image';
+import { exportToPDF } from '@/lib/pdf';
 
 export function ExportButtons() {
   const { t } = useTranslation();
@@ -11,25 +13,27 @@ export function ExportButtons() {
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [loadingPNG, setLoadingPNG] = useState(false);
 
+  const translations = {
+    summary: t('pdf.summary'),
+    experience: t('pdf.experience'),
+    education: t('pdf.education'),
+    projects: t('pdf.projects'),
+    skills: t('pdf.skills'),
+    technologies: t('pdf.technologies'),
+    contributions: t('pdf.contributions'),
+    present: t('pdf.present'),
+    customSection: t('editor.customSection.title'),
+    skillLevel: {
+      core: t('pdf.skillLevel.core'),
+      proficient: t('pdf.skillLevel.proficient'),
+      familiar: t('pdf.skillLevel.familiar'),
+    },
+  };
+
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
-      const { exportToPDF } = await import('@/lib/pdf');
-      await exportToPDF(resume, 'resume.pdf', {
-        summary: t('pdf.summary'),
-        experience: t('pdf.experience'),
-        education: t('pdf.education'),
-        projects: t('pdf.projects'),
-        skills: t('pdf.skills'),
-        technologies: t('pdf.technologies'),
-        contributions: t('pdf.contributions'),
-        present: t('pdf.present'),
-        skillLevel: {
-          core: t('pdf.skillLevel.core'),
-          proficient: t('pdf.skillLevel.proficient'),
-          familiar: t('pdf.skillLevel.familiar'),
-        },
-      });
+      await exportToPDF(resume, 'resume.pdf', translations);
     } catch (error) {
       alert(t('export.pdfExportFailed') + (error as Error).message);
     } finally {
@@ -40,8 +44,7 @@ export function ExportButtons() {
   const handleExportPNG = async () => {
     setLoadingPNG(true);
     try {
-      const { exportToPNG } = await import('@/lib/image');
-      await exportToPNG('resume-preview', 'resume.png');
+      await exportToPNG(resume, 'resume.png', translations);
     } catch (error) {
       alert(t('export.pngExportFailed') + (error as Error).message);
     } finally {

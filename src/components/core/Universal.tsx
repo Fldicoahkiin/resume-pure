@@ -1,63 +1,9 @@
-import React, { createContext, CSSProperties, ReactNode, useContext } from 'react';
-import {
-  Circle as PdfCircle,
-  Image as PdfImage,
-  Link as PdfLink,
-  Path as PdfPath,
-  Svg as PdfSvg,
-  Text as PdfText,
-  View as PdfView,
-} from '@react-pdf/renderer';
-import { createTw } from 'react-pdf-tailwind';
-
-export const tw = createTw({
-  theme: {
-    extend: {
-      colors: {
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
-        },
-        blue: {
-          50: '#eff6ff',
-          400: '#60a5fa',
-          600: '#2563eb',
-          900: '#1e3a8a',
-        },
-        amber: {
-          600: '#d97706',
-        },
-      },
-    },
-  },
-});
-
-interface PdfContextType {
-  isPdf: boolean;
-}
-
-export const PdfContext = createContext<PdfContextType>({ isPdf: false });
-
-export const usePdfContext = () => useContext(PdfContext);
-
-type PdfBehaviorProps = Record<string, unknown>;
-type PdfStyleProp = NonNullable<React.ComponentProps<typeof PdfView>['style']>;
-type ArrayItemOrSelf<T> = T extends readonly (infer Item)[] ? Item : T;
-type PdfStyleToken = ArrayItemOrSelf<PdfStyleProp>;
+import React, { CSSProperties, ReactNode } from 'react';
 
 interface UniversalBaseProps {
   style?: CSSProperties;
   className?: string;
   children?: ReactNode;
-  pdfProps?: PdfBehaviorProps;
   [key: string]: unknown;
 }
 
@@ -85,78 +31,6 @@ export interface CircleProps extends UniversalBaseProps {
   fill?: string;
   stroke?: string;
   strokeWidth?: string | number;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isCssProperties(value: unknown): value is CSSProperties {
-  return isRecord(value);
-}
-
-function toPdfStyle(style: CSSProperties | Record<string, unknown>): PdfStyleToken {
-  return style as unknown as PdfStyleToken;
-}
-
-function resolvePdfStyles(className?: string, customStyle?: CSSProperties): PdfStyleToken[] {
-  const styles: PdfStyleToken[] = [];
-
-  if (className) {
-    const safeClasses = className
-      .split(' ')
-      .filter(
-        (segment) =>
-          segment &&
-          !segment.includes('hover:') &&
-          !segment.includes('focus') &&
-          !segment.includes('ring') &&
-          !segment.includes('transition') &&
-          !segment.includes('cursor') &&
-          !segment.includes('dark:')
-      );
-    const safeClassesString = safeClasses.join(' ');
-
-    if (safeClassesString) {
-      try {
-        styles.push(tw(safeClassesString));
-      } catch (error) {
-        console.warn(`[react-pdf-tailwind] Failed to parse classes: ${safeClassesString}`, error);
-      }
-    }
-  }
-
-  if (customStyle) {
-    styles.push(toPdfStyle(customStyle));
-  }
-
-  return styles;
-}
-
-function resolvePdfRenderConfig(
-  className?: string,
-  style?: CSSProperties,
-  pdfProps?: PdfBehaviorProps
-) {
-  const nextPdfProps = { ...(pdfProps || {}) };
-  const mergedStyles = resolvePdfStyles(className, style);
-  const rawPdfStyle = nextPdfProps.style;
-  delete nextPdfProps.style;
-
-  if (Array.isArray(rawPdfStyle)) {
-    rawPdfStyle.forEach((entry) => {
-      if (isCssProperties(entry)) {
-        mergedStyles.push(toPdfStyle(entry));
-      }
-    });
-  } else if (isCssProperties(rawPdfStyle)) {
-    mergedStyles.push(toPdfStyle(rawPdfStyle));
-  }
-
-  return {
-    pdfStyle: mergedStyles,
-    pdfProps: nextPdfProps,
-  };
 }
 
 function shouldForceFlex(style?: CSSProperties): boolean {
@@ -233,18 +107,7 @@ function normalizeWebStyle(style?: CSSProperties): CSSProperties | undefined {
   return normalizedStyle;
 }
 
-export const View = ({ style, className, children, pdfProps, ...props }: UniversalBaseProps) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    const { pdfStyle, pdfProps: resolvedPdfProps } = resolvePdfRenderConfig(className, style, pdfProps);
-    return (
-      <PdfView style={pdfStyle} {...resolvedPdfProps}>
-        {children}
-      </PdfView>
-    );
-  }
-
+export const View = ({ style, className, children, ...props }: UniversalBaseProps) => {
   const webStyle = normalizeWebStyle(style);
   const nextStyle: CSSProperties = {
     ...(shouldForceFlex(style) && !style?.display ? { display: 'flex' } : {}),
@@ -258,18 +121,7 @@ export const View = ({ style, className, children, pdfProps, ...props }: Univers
   );
 };
 
-export const Text = ({ style, className, children, pdfProps, inline = false, ...props }: TextProps) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    const { pdfStyle, pdfProps: resolvedPdfProps } = resolvePdfRenderConfig(className, style, pdfProps);
-    return (
-      <PdfText style={pdfStyle} {...resolvedPdfProps}>
-        {children}
-      </PdfText>
-    );
-  }
-
+export const Text = ({ style, className, children, inline = false, ...props }: TextProps) => {
   const webStyle = normalizeWebStyle(style);
   const nextStyle: CSSProperties = {
     ...(inline ? {} : { display: 'block' }),
@@ -288,28 +140,21 @@ export const Link = ({
   className,
   href,
   children,
-  pdfProps,
+  inline = true,
   ...props
-}: UniversalBaseProps & { href?: string }) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    const { pdfStyle, pdfProps: resolvedPdfProps } = resolvePdfRenderConfig(className, style, pdfProps);
-    return (
-      <PdfLink src={href || '#'} style={pdfStyle} {...resolvedPdfProps}>
-        {children}
-      </PdfLink>
-    );
-  }
-
+}: UniversalBaseProps & { href?: string; inline?: boolean }) => {
   const { onClick, ...restProps } = props;
   const webStyle = normalizeWebStyle(style);
+  const nextStyle: CSSProperties = {
+    ...(inline ? {} : { display: 'block' }),
+    ...webStyle,
+  };
 
   return (
     <a
       href={href}
       className={className}
-      style={webStyle}
+      style={nextStyle}
       onClick={(event) => {
         event.stopPropagation();
         if (typeof onClick === 'function') {
@@ -327,17 +172,8 @@ export const Image = ({
   style,
   className,
   src,
-  pdfProps,
   ...props
 }: UniversalBaseProps & { src: string }) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    const { pdfStyle, pdfProps: resolvedPdfProps } = resolvePdfRenderConfig(className, style, pdfProps);
-    // eslint-disable-next-line jsx-a11y/alt-text
-    return <PdfImage src={src} style={pdfStyle} {...resolvedPdfProps} />;
-  }
-
   const webStyle = normalizeWebStyle(style);
   const nextStyle: CSSProperties = {
     display: 'block',
@@ -348,18 +184,7 @@ export const Image = ({
   return <img src={src} className={className} style={nextStyle} alt="" {...props} />;
 };
 
-export const Svg = ({ viewBox, className, style, children, pdfProps, ...props }: SvgProps) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    const { pdfStyle, pdfProps: resolvedPdfProps } = resolvePdfRenderConfig(className, style, pdfProps);
-    return (
-      <PdfSvg viewBox={viewBox} style={pdfStyle} {...resolvedPdfProps}>
-        {children}
-      </PdfSvg>
-    );
-  }
-
+export const Svg = ({ viewBox, className, style, children, ...props }: SvgProps) => {
   const webStyle = normalizeWebStyle(style);
   const nextStyle: CSSProperties = {
     display: 'block',
@@ -384,21 +209,6 @@ export const Path = ({
   className,
   style,
 }: PathProps) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    return (
-      <PdfPath
-        d={d}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        strokeLinecap={strokeLinecap}
-        strokeLinejoin={strokeLinejoin}
-      />
-    );
-  }
-
   return (
     <path
       className={className}
@@ -414,13 +224,16 @@ export const Path = ({
 };
 
 export const Circle = ({ cx, cy, r, fill, stroke, strokeWidth, className, style }: CircleProps) => {
-  const { isPdf } = usePdfContext();
-
-  if (isPdf) {
-    return <PdfCircle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />;
-  }
-
   return (
-    <circle className={className} style={normalizeWebStyle(style)} cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+    <circle
+      className={className}
+      style={normalizeWebStyle(style)}
+      cx={cx}
+      cy={cy}
+      r={r}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+    />
   );
 };
