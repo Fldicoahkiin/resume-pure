@@ -26,6 +26,7 @@ type EditorMode = 'form' | 'raw';
 type MobileView = 'edit' | 'preview';
 type PreviewScaleMode = 'fit' | 'manual' | 'actual';
 type RawJumpRequest = { id: number; anchor: string };
+type PreviewRenderSize = { width: number; height: number };
 
 interface BuilderUIState {
   scale: number;
@@ -182,7 +183,8 @@ function renderBuilderPageLayout({
   handleFitScale,
   handleActualScale,
   handlePreviewSelect,
-  paperDimensions,
+  previewRenderSize,
+  onPreviewRenderSizeChange,
 }: {
   t: (key: string) => string;
   ui: BuilderUIState;
@@ -206,8 +208,12 @@ function renderBuilderPageLayout({
   handleFitScale: () => void;
   handleActualScale: () => void;
   handlePreviewSelect: (anchor: string) => void;
-  paperDimensions: { width: number; height: number };
+  previewRenderSize: PreviewRenderSize;
+  onPreviewRenderSizeChange: (size: PreviewRenderSize) => void;
 }) {
+  const scaledPreviewWidth = previewRenderSize.width * ui.scale;
+  const scaledPreviewHeight = previewRenderSize.height * ui.scale;
+
   return (
     <div id="builder-page" className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -406,18 +412,27 @@ function renderBuilderPageLayout({
           >
             <div className="flex justify-center">
               <div
-                id="resume-preview-scale-wrapper"
-                className="will-change-transform"
                 style={{
-                  transform: `scale(${ui.scale})`,
-                  transformOrigin: 'top center',
-                  marginBottom: `calc(${paperDimensions.height}px * ${ui.scale - 1})`,
+                  width: `${scaledPreviewWidth}px`,
+                  height: `${scaledPreviewHeight}px`,
                 }}
               >
-                <ResumePreview
-                  onSelectAnchor={handlePreviewSelect}
-                  activeAnchor={activePreviewAnchor}
-                />
+                <div
+                  id="resume-preview-scale-wrapper"
+                  className="will-change-transform"
+                  style={{
+                    width: `${previewRenderSize.width}px`,
+                    height: `${previewRenderSize.height}px`,
+                    transform: `scale(${ui.scale})`,
+                    transformOrigin: 'top left',
+                  }}
+                >
+                  <ResumePreview
+                    onSelectAnchor={handlePreviewSelect}
+                    activeAnchor={activePreviewAnchor}
+                    onRenderSizeChange={onPreviewRenderSizeChange}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -448,6 +463,10 @@ export default function BuilderPage() {
 
   const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
   const previewBaseWidth = getPaperDimensions(resume.theme.paperSize).width;
+  const [previewRenderSize, setPreviewRenderSize] = useState<PreviewRenderSize>({
+    width: previewBaseWidth,
+    height: getPaperDimensions(resume.theme.paperSize).height,
+  });
 
   const clampScale = useCallback((value: number) => {
     return Math.min(PREVIEW_SCALE_MAX, Math.max(PREVIEW_SCALE_MIN, value));
@@ -558,6 +577,14 @@ export default function BuilderPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleFitScale, handleZoom]);
+
+  useEffect(() => {
+    const paperDimensions = getPaperDimensions(resume.theme.paperSize);
+    setPreviewRenderSize((previous) => ({
+      width: paperDimensions.width,
+      height: previous.height,
+    }));
+  }, [resume.theme.paperSize]);
 
   const clearEditorFlash = useCallback(() => {
     if (!activeEditorElementRef.current) return;
@@ -711,6 +738,7 @@ export default function BuilderPage() {
     handleFitScale,
     handleActualScale,
     handlePreviewSelect,
-    paperDimensions: getPaperDimensions(resume.theme.paperSize),
+    previewRenderSize,
+    onPreviewRenderSizeChange: setPreviewRenderSize,
   });
 }

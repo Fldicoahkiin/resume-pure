@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useResumeStore } from '@/store/resumeStore';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { exportToPNG } from '@/lib/image';
 import { exportToPDF } from '@/lib/pdf';
+import { useResumeStore } from '@/store/resumeStore';
 
 function buildExportErrorMessage(prefix: string, error: unknown) {
   const normalizedPrefix = prefix.trim().replace(/[：:]\s*$/, '');
@@ -24,27 +24,22 @@ export function ExportButtons() {
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [loadingPNG, setLoadingPNG] = useState(false);
 
-  const translations = {
-    summary: t('pdf.summary'),
-    experience: t('pdf.experience'),
-    education: t('pdf.education'),
-    projects: t('pdf.projects'),
-    skills: t('pdf.skills'),
-    technologies: t('pdf.technologies'),
-    contributions: t('pdf.contributions'),
-    present: t('pdf.present'),
-    customSection: t('editor.customSection.title'),
-    skillLevel: {
-      core: t('pdf.skillLevel.core'),
-      proficient: t('pdf.skillLevel.proficient'),
-      familiar: t('pdf.skillLevel.familiar'),
+  const renderOptions = {
+    theme: resume.theme,
+    translations: {
+      experience: t('preview.experience'),
+      education: t('preview.education'),
+      projects: t('preview.projects'),
+      skills: t('preview.skills'),
+      present: t('pdf.present'),
+      customSection: t('editor.customSection.title'),
     },
-  };
+  } as const;
 
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
-      await exportToPDF(resume, 'resume.pdf', translations);
+      await exportToPDF(resume, renderOptions, 'resume.pdf');
     } catch (error) {
       alert(buildExportErrorMessage(t('export.pdfExportFailed'), error));
     } finally {
@@ -55,7 +50,7 @@ export function ExportButtons() {
   const handleExportPNG = async () => {
     setLoadingPNG(true);
     try {
-      await exportToPNG('resume.png');
+      await exportToPNG(resume, renderOptions, 'resume.png');
     } catch (error) {
       alert(buildExportErrorMessage(t('export.pngExportFailed'), error));
     } finally {

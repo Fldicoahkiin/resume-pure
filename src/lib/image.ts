@@ -1,3 +1,11 @@
+import {
+  getRenderArtifactKey,
+  readCachedRenderArtifact,
+} from '@/lib/render/cache';
+import { buildRenderArtifact, disposeRenderArtifact } from '@/lib/render/surface';
+import type { RenderBuildOptions } from '@/lib/render/types';
+import type { ResumeData } from '@/types';
+
 const MAX_EMBEDDED_LOGO_BYTES = 512 * 1024;
 
 function compressImageToDataUrl(file: File, maxBytes: number): Promise<string> {
@@ -69,7 +77,6 @@ export async function readImageFileAsDataUrl(file: File, maxBytes: number = MAX_
 
 export const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==';
-const PNG_EXPORT_PIXEL_RATIO = 2;
 
 
 /** 通过 img+canvas 将外部图片转为 data URL，支持跟随 302 重定向 */
@@ -157,185 +164,67 @@ export async function toDataUrl(src: string): Promise<string> {
   return viaOriginalFetch || TRANSPARENT_PX;
 }
 
-async function replaceImagesWithDataUrls(element: HTMLElement): Promise<() => void> {
-  const images = element.querySelectorAll('img');
-  const savedSrcs: { img: HTMLImageElement; src: string }[] = [];
-  await Promise.all(
-    Array.from(images).map(async (img) => {
-      const src = img.src;
-      if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
-      savedSrcs.push({ img, src });
-      img.src = await toDataUrl(src);
-    }),
-  );
-  return () => {
-    for (const { img, src } of savedSrcs) {
-      img.src = src;
-    }
-  };
+export interface ResumePreviewCapture {
+  blob: Blob;
+  width: number;
+  height: number;
+  pixelWidth: number;
+  pixelHeight: number;
 }
 
-function createExportClone(
-  element: HTMLElement,
-  width: number,
-  height: number
-): {
-  clone: HTMLElement;
-  cleanup: () => void;
-} {
-  const clone = element.cloneNode(true) as HTMLElement;
-  const host = document.createElement('div');
-  const sourceStyle = window.getComputedStyle(element);
-
-  host.style.position = 'fixed';
-  host.style.left = '-99999px';
-  host.style.top = '0';
-  host.style.pointerEvents = 'none';
-  host.style.opacity = '0';
-  host.style.zIndex = '-1';
-  host.style.width = `${width}px`;
-  host.style.height = `${height}px`;
-  host.style.overflow = 'hidden';
-  host.style.backgroundColor = sourceStyle.backgroundColor || '#ffffff';
-
-  clone.style.boxSizing = 'border-box';
-  clone.style.width = `${width}px`;
-  clone.style.minWidth = `${width}px`;
-  clone.style.maxWidth = `${width}px`;
-  clone.style.height = `${height}px`;
-  clone.style.minHeight = `${height}px`;
-  clone.style.margin = '0';
-  clone.style.transform = 'none';
-  clone.style.backgroundColor = sourceStyle.backgroundColor || '#ffffff';
-
-  host.appendChild(clone);
-  document.body.appendChild(host);
-
-  return {
-    clone,
-    cleanup: () => {
-      host.remove();
-    },
-  };
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
-function normalizeCloneForResumeExport(clone: HTMLElement) {
-  clone.style.boxShadow = 'none';
-  clone.style.border = 'none';
-
-  clone.querySelectorAll('[role="button"]').forEach((node) => {
-    if (!(node instanceof HTMLElement)) {
-      return;
-    }
-
-    node.removeAttribute('role');
-    node.removeAttribute('tabindex');
-    node.style.cursor = 'default';
-    node.style.background = 'transparent';
-    node.style.boxShadow = 'none';
-    node.style.outline = 'none';
-  });
-}
-
-async function resolveOptionalFontEmbedCSS(
-  getFontEmbedCSS: (node: HTMLElement, options: { preferredFontFormat: 'woff2' }) => Promise<string>,
-  clone: HTMLElement
-): Promise<string | undefined> {
-  try {
-    return await getFontEmbedCSS(clone, {
-      preferredFontFormat: 'woff2',
-    });
-  } catch (error) {
-    console.warn('PNG 字体内联失败，改用已加载字体继续导出。', error);
-    return undefined;
-  }
-}
-
-export async function downloadElementToPNG(elementId: string, filename: string = 'resume.png'): Promise<void> {
-  const { getFontEmbedCSS, toBlob } = await import('html-to-image');
-
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error('未找到要导出的元素');
-  }
-
-  await document.fonts.ready;
+export async function captureResumePreview(
+  data: ResumeData,
+  options: RenderBuildOptions,
+): Promise<ResumePreviewCapture> {
+  const cacheKey = getRenderArtifactKey(data, options);
+  const cachedArtifact = readCachedRenderArtifact(cacheKey);
+  const artifact = cachedArtifact || await buildRenderArtifact(data, options);
 
   try {
-    const width = Math.max(
-      Math.ceil(element.getBoundingClientRect().width),
-      Math.ceil(element.scrollWidth),
-      1
-    );
-    const height = Math.max(
-      Math.ceil(element.getBoundingClientRect().height),
-      Math.ceil(element.scrollHeight),
-      1
-    );
-    const { clone, cleanup } = createExportClone(element, width, height);
-    let blob: Blob | null = null;
-
-    try {
-      normalizeCloneForResumeExport(clone);
-      const restoreImages = await replaceImagesWithDataUrls(clone);
-
-      try {
-        const exportOptions = {
-          width,
-          height,
-          pixelRatio: PNG_EXPORT_PIXEL_RATIO,
-          backgroundColor: '#ffffff',
-          cacheBust: false,
-          imagePlaceholder: TRANSPARENT_PX,
-          filter: (node: Node) => {
-            if (node instanceof HTMLElement && node.classList.contains('hide-in-export')) {
-              return false;
-            }
-            return true;
-          },
-        };
-        const fontEmbedCSS = await resolveOptionalFontEmbedCSS(getFontEmbedCSS, clone);
-
-        try {
-          blob = await toBlob(clone, {
-            ...exportOptions,
-            fontEmbedCSS,
-          });
-        } catch (error) {
-          if (!fontEmbedCSS) {
-            throw error;
-          }
-
-          console.warn('PNG 导出回退到非字体内联模式。', error);
-          blob = await toBlob(clone, exportOptions);
-        }
-      } finally {
-        restoreImages();
-      }
-    } finally {
-      cleanup();
+    return {
+      blob: artifact.blob,
+      width: artifact.width,
+      height: artifact.height,
+      pixelWidth: artifact.pixelWidth,
+      pixelHeight: artifact.pixelHeight,
+    };
+  } finally {
+    if (!cachedArtifact) {
+      disposeRenderArtifact(artifact);
     }
-
-    if (!blob) throw new Error('导出引擎未生成有效数据');
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.rel = 'noopener';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-  } catch (error) {
-    console.error('PNG 导出失败:', error);
-    throw new Error('PNG 导出失败');
   }
 }
 
 export async function exportToPNG(
-  filename: string = 'resume.png'
+  data: ResumeData,
+  options: RenderBuildOptions,
+  filename: string = 'resume.png',
 ): Promise<void> {
-  await downloadElementToPNG('resume-preview', filename);
+  const cacheKey = getRenderArtifactKey(data, options);
+  const cachedArtifact = readCachedRenderArtifact(cacheKey);
+  const artifact = cachedArtifact || await buildRenderArtifact(data, options);
+
+  try {
+    downloadBlob(artifact.blob, filename);
+  } catch (error) {
+    console.error('PNG 导出失败:', error);
+    throw new Error('PNG 导出失败');
+  } finally {
+    if (!cachedArtifact) {
+      disposeRenderArtifact(artifact);
+    }
+  }
 }

@@ -1,0 +1,242 @@
+[
+  {
+    "family": "Roboto",
+    "displayName": "Roboto",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmUiA8.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWuYjalmUiA8.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Inter",
+    "displayName": "Inter",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjQ.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hjQ.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Lato",
+    "displayName": "Lato",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/lato/v25/S6uyw4BMUTPHjx4wWw.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh6UVSwiPHA.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Montserrat",
+    "displayName": "Montserrat",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aX8.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w5aX8.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Open Sans",
+    "displayName": "Open Sans",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVc.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4gaVc.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Raleway",
+    "displayName": "Raleway",
+    "category": "sans-serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/raleway/v37/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaorCIPrQ.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/raleway/v37/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVs9pbCIPrQ.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Merriweather",
+    "displayName": "Merriweather",
+    "category": "serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/merriweather/v33/u-4D0qyriQwlOrhSvowK_l5UcA6zuSYEqOzpPe3HOZJ5eX1WtLaQwmYiScCmDxhtNOKl8yDr3icaFF3w.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/merriweather/v33/u-4D0qyriQwlOrhSvowK_l5UcA6zuSYEqOzpPe3HOZJ5eX1WtLaQwmYiScCmDxhtNOKl8yDrOSAaFF3w.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Lora",
+    "displayName": "Lora",
+    "category": "serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787weuxJBkqg.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787z5vBJBkqg.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Playfair Display",
+    "displayName": "Playfair Display",
+    "category": "serif",
+    "language": "en",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtY.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKeiunDXbtY.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Noto Sans SC",
+    "displayName": "思源黑体",
+    "category": "sans-serif",
+    "language": "zh",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "/fonts/noto-sans-sc-400.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "/fonts/noto-sans-sc-700.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "Noto Serif SC",
+    "displayName": "思源宋体",
+    "category": "serif",
+    "language": "zh",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://fonts.gstatic.com/s/notoserifsc/v35/H4cyBXePl9DZ0Xe7gG9cyOj7uK2-n-D2rd4FY7SCqxWN-Yo.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://fonts.gstatic.com/s/notoserifsc/v35/H4cyBXePl9DZ0Xe7gG9cyOj7uK2-n-D2rd4FY7RlrBWN-Yo.ttf",
+        "format": "truetype"
+      }
+    ]
+  },
+  {
+    "family": "LXGW WenKai",
+    "displayName": "霞鹜文楷",
+    "category": "handwriting",
+    "language": "zh",
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai@v1.501/fonts/TTF/LXGWWenKai-Regular.ttf",
+        "format": "truetype"
+      },
+      {
+        "style": "normal",
+        "weight": 700,
+        "src": "https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai@v1.501/fonts/TTF/LXGWWenKai-Bold.ttf",
+        "format": "truetype"
+      }
+    ]
+  }
+]
