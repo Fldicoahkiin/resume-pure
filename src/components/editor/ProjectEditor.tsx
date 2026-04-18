@@ -413,7 +413,7 @@ function ProjectTechPanel({
           return (
             <span
               key={tech}
-              className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-200"
             >
               {logo && (
                 <svg viewBox="0 0 24 24" fill={logo.color} xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0">

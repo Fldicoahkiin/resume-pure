@@ -81,6 +81,19 @@ const CONTACT_TOP_GAP_DENSE = 3;
 const CONTACT_TOP_GAP_DEFAULT = 4;
 const SUMMARY_TOP_GAP_DENSE = 4;
 const SUMMARY_TOP_GAP_DEFAULT = 6;
+const DENSE_PROJECT_ITEM_EXTRA_GAP = 1;
+const DEFAULT_PROJECT_ITEM_EXTRA_GAP = 0.5;
+const DENSE_CUSTOM_ITEM_EXTRA_GAP = 1;
+const DEFAULT_CUSTOM_ITEM_EXTRA_GAP = 0.5;
+const DENSE_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 6;
+const DEFAULT_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 7;
+const DENSE_SKILL_CAPSULE_HORIZONTAL_PADDING = 5.5;
+const DEFAULT_SKILL_CAPSULE_HORIZONTAL_PADDING = 7.5;
+const SKILL_CAPSULE_ICON_GAP = 5;
+const DENSE_SKILL_CAPSULE_DIVIDER_SPACING = 4;
+const DEFAULT_SKILL_CAPSULE_DIVIDER_SPACING = 7;
+const DENSE_SKILL_CAPSULE_TRAILING_WIDTH = 5;
+const DEFAULT_SKILL_CAPSULE_TRAILING_WIDTH = 8;
 const HEADER_FALLBACK_ICON = 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
 const CONTACT_MAIL_ICON = 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z';
 const CONTACT_PHONE_ICON = 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z';
@@ -551,7 +564,9 @@ function buildTechnologyPill(
     },
   );
   const textSize = measureParagraph(context, textSpec);
-  const horizontalPadding = metrics.isDenseLayout ? 5 : 6;
+  const horizontalPadding = metrics.isDenseLayout
+    ? DENSE_TECHNOLOGY_PILL_HORIZONTAL_PADDING
+    : DEFAULT_TECHNOLOGY_PILL_HORIZONTAL_PADDING;
   const marginRight = metrics.isDenseLayout ? 3 : 4;
   const marginBottom = metrics.isDenseLayout ? 1 : 2;
   const iconBoxWidth = icon ? metrics.inlineIconBoxSize + 2 : 0;
@@ -669,19 +684,28 @@ function buildSkillCapsule(
   const contextSize = contextSpec ? measureParagraph(context, contextSpec) : null;
   const logo = item.showLogo === false ? undefined : item.logo ? null : resolveSkillLogo(item.name);
   const customLogo = item.showLogo === false ? undefined : item.logo;
-  const basePadding = metrics.isDenseLayout ? 4.5 : 6.5;
-  const gapAfterLogo = customLogo || logo ? 4 : 0;
-  const dividerSpacing = contextSize ? (metrics.isDenseLayout ? 3 : 6) : 0;
+  const basePadding = metrics.isDenseLayout
+    ? DENSE_SKILL_CAPSULE_HORIZONTAL_PADDING
+    : DEFAULT_SKILL_CAPSULE_HORIZONTAL_PADDING;
+  const gapAfterLogo = customLogo || logo ? SKILL_CAPSULE_ICON_GAP : 0;
+  const dividerSpacing = contextSize
+    ? metrics.isDenseLayout
+      ? DENSE_SKILL_CAPSULE_DIVIDER_SPACING
+      : DEFAULT_SKILL_CAPSULE_DIVIDER_SPACING
+    : 0;
   const dividerWidth = contextSize ? ptToPx(1) : 0;
   const iconSize = withPointDelta(theme.fontSize, -1);
   const iconWidth = customLogo || logo ? iconSize : 0;
+  const trailingWidth = metrics.isDenseLayout
+    ? DENSE_SKILL_CAPSULE_TRAILING_WIDTH
+    : DEFAULT_SKILL_CAPSULE_TRAILING_WIDTH;
   const width =
     basePadding * 2 +
     iconWidth +
     gapAfterLogo +
     labelSize.width +
     (contextSize ? dividerSpacing * 2 + dividerWidth + contextSize.width : 0) +
-    (metrics.isDenseLayout ? 4 : 7);
+    trailingWidth;
   const marginBottom = ptToPx(metrics.isDenseLayout ? 1 : 2.5);
   const height = Math.max(
     metrics.skillCapsuleMinHeight,
@@ -695,7 +719,7 @@ function buildSkillCapsule(
     height,
     place: (x: number, y: number) => {
       const capsuleHeight = height - marginBottom;
-      const capsuleWidth = width - (metrics.isDenseLayout ? 4 : 7);
+      const capsuleWidth = width - trailingWidth;
       context.drawOps.push(
         createRectFill(
           { x, y, width: capsuleWidth, height: capsuleHeight },
@@ -1481,7 +1505,9 @@ function addProjectItem(context: LayoutContext, project: Project) {
     width: context.contentWidth,
     height: context.cursorY - itemStartY,
   });
-  context.cursorY += metrics.itemMarginBottom;
+  context.cursorY +=
+    metrics.itemMarginBottom +
+    ptToPx(metrics.isDenseLayout ? DENSE_PROJECT_ITEM_EXTRA_GAP : DEFAULT_PROJECT_ITEM_EXTRA_GAP);
 }
 
 function addSkillGroup(context: LayoutContext, skill: Skill) {
@@ -1688,7 +1714,9 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
     width: context.contentWidth,
     height: context.cursorY - itemStartY,
   });
-  context.cursorY += metrics.itemMarginBottom;
+  context.cursorY +=
+    metrics.itemMarginBottom +
+    ptToPx(metrics.isDenseLayout ? DENSE_CUSTOM_ITEM_EXTRA_GAP : DEFAULT_CUSTOM_ITEM_EXTRA_GAP);
 }
 
 function addExperienceSection(context: LayoutContext, section: SectionConfig, items: Experience[]) {

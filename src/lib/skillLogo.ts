@@ -66,6 +66,10 @@ function normalizeSkillName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '').trim();
 }
 
+function canUseFuzzyMatch(input: string, candidate: string): boolean {
+  return input.length >= 5 && candidate.length >= 5;
+}
+
 function levenshteinDistance(a: string, b: string): number {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
@@ -101,7 +105,7 @@ export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
     for (const candidate of candidates) {
       // a. 包含关系：例如输入 "Vuejs3" 或 "React Native" 或 "Spring Boot" 这种长尾版，包含了基座库 Vue/React/Spring
       // 避免字母太少（如 c）被所有词包含而引发重大误伤
-      if (candidate.length >= 3 && normalized.length >= 3) {
+      if (canUseFuzzyMatch(normalized, candidate)) {
         if (normalized.includes(candidate) || candidate.includes(normalized)) {
           // 偏差值即两者长度差距，越小说明越匹配
           const score = Math.abs(normalized.length - candidate.length);
@@ -113,10 +117,11 @@ export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
       }
 
       // b. Levenshtein 编辑距离算法：如用户打错： "typscript" (漏e) 或 "javascirpt" (打反)
-      if (normalized.length >= 4) {
+      if (canUseFuzzyMatch(normalized, candidate) && normalized[0] === candidate[0]) {
         const dist = levenshteinDistance(normalized, candidate);
-        // 允许最高容忍 2 个字宽的拼写错误，并且分数比包含关系更好才拿走
-        if (dist <= 2 && dist < minScore) {
+        const maxLength = Math.max(normalized.length, candidate.length);
+        // 只接受低比例的编辑距离，避免短词被错误纠正到无关 logo。
+        if (dist <= 2 && dist / maxLength <= 0.2 && dist < minScore) {
           minScore = dist;
           bestCandidate = candidate;
         }
