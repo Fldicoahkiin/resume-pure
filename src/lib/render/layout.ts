@@ -99,6 +99,10 @@ function ptToPx(value: number) {
   return value * POINT_TO_CSS_PIXEL;
 }
 
+function withPointDelta(base: number, delta: number) {
+  return base + ptToPx(delta);
+}
+
 function getRenderLayoutMetrics(theme: ResumeData['theme']): ResumeLayoutMetrics {
   const metrics = getResumeLayoutMetrics(theme);
 
@@ -531,7 +535,7 @@ function buildTechnologyPill(
 ): InlinePlacementItem {
   const { metrics } = context;
   const { theme } = context.data;
-  const fontSize = theme.fontSize - (metrics.isDenseLayout ? 2.5 : 2);
+  const fontSize = withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 2.5 : 2));
   const textColor = muted ? LIGHT_MUTED_TEXT_COLOR : '#4b5563';
   const textData = createPlainSegments(label, { color: textColor });
   const textSpec = buildParagraphSpec(
@@ -642,7 +646,7 @@ function buildSkillCapsule(
     }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - (metrics.isDenseLayout ? 1 : 0.5),
+      fontSize: withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 1 : 0.5)),
       lineHeight: metrics.capsuleLabelLineHeight,
       color: capsuleStyle.color,
     },
@@ -656,7 +660,7 @@ function buildSkillCapsule(
         createPlainSegments(item.context, { color: capsuleStyle.contextColor }),
         {
           fontFamily: theme.fontFamily,
-          fontSize: theme.fontSize - (metrics.isDenseLayout ? 2.5 : 1.5),
+          fontSize: withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 2.5 : 1.5)),
           lineHeight: metrics.capsuleContextLineHeight,
           color: capsuleStyle.contextColor,
         },
@@ -668,8 +672,9 @@ function buildSkillCapsule(
   const basePadding = metrics.isDenseLayout ? 4.5 : 6.5;
   const gapAfterLogo = customLogo || logo ? 4 : 0;
   const dividerSpacing = contextSize ? (metrics.isDenseLayout ? 3 : 6) : 0;
-  const dividerWidth = contextSize ? 1 : 0;
-  const iconWidth = customLogo || logo ? theme.fontSize - 1 : 0;
+  const dividerWidth = contextSize ? ptToPx(1) : 0;
+  const iconSize = withPointDelta(theme.fontSize, -1);
+  const iconWidth = customLogo || logo ? iconSize : 0;
   const width =
     basePadding * 2 +
     iconWidth +
@@ -677,7 +682,7 @@ function buildSkillCapsule(
     labelSize.width +
     (contextSize ? dividerSpacing * 2 + dividerWidth + contextSize.width : 0) +
     (metrics.isDenseLayout ? 4 : 7);
-  const marginBottom = metrics.isDenseLayout ? 1 : 2.5;
+  const marginBottom = ptToPx(metrics.isDenseLayout ? 1 : 2.5);
   const height = Math.max(
     metrics.skillCapsuleMinHeight,
     labelSize.height,
@@ -708,24 +713,24 @@ function buildSkillCapsule(
         context.drawOps.push({
           kind: 'image',
           x: cursorX,
-          y: centerY - (theme.fontSize - 1) / 2,
-          width: theme.fontSize - 1,
-          height: theme.fontSize - 1,
+          y: centerY - iconSize / 2,
+          width: iconSize,
+          height: iconSize,
           src: customLogo,
         } satisfies RenderImage);
-        cursorX += theme.fontSize - 1 + gapAfterLogo;
+        cursorX += iconSize + gapAfterLogo;
       } else if (logo) {
         context.drawOps.push(
           createPath(
             logo.svgPath,
             cursorX,
-            centerY - (theme.fontSize - 1) / 2,
-            theme.fontSize - 1,
-            theme.fontSize - 1,
+            centerY - iconSize / 2,
+            iconSize,
+            iconSize,
             logo.color,
           ),
         );
-        cursorX += theme.fontSize - 1 + gapAfterLogo;
+        cursorX += iconSize + gapAfterLogo;
       }
 
       addParagraph(context, {
@@ -742,7 +747,7 @@ function buildSkillCapsule(
             {
               x: cursorX,
               y: centerY - theme.fontSize / 2,
-              width: 1,
+              width: dividerWidth,
               height: theme.fontSize,
             },
             capsuleStyle.dividerColor,
@@ -777,7 +782,7 @@ function addSectionHeading(context: LayoutContext, anchor: string, title: string
     titleData,
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize + 2,
+      fontSize: withPointDelta(theme.fontSize, 2),
       lineHeight: metrics.headingLineHeight,
       color: DEFAULT_TEXT_COLOR,
     },
@@ -837,7 +842,7 @@ function addDescriptionLines(
         bulletData,
         {
           fontFamily: context.data.theme.fontFamily,
-          fontSize: context.data.theme.fontSize - 1,
+          fontSize: withPointDelta(context.data.theme.fontSize, -1),
           lineHeight: options.lineHeight,
           color: LIGHT_MUTED_TEXT_COLOR,
         },
@@ -850,7 +855,7 @@ function addDescriptionLines(
         contentData,
         {
           fontFamily: context.data.theme.fontFamily,
-          fontSize: context.data.theme.fontSize - 1,
+          fontSize: withPointDelta(context.data.theme.fontSize, -1),
           lineHeight: options.lineHeight,
           color: DEFAULT_TEXT_COLOR,
           linkColor: context.data.theme.primaryColor,
@@ -871,7 +876,7 @@ function addDescriptionLines(
       paragraphData,
       {
         fontFamily: context.data.theme.fontFamily,
-        fontSize: context.data.theme.fontSize - 1,
+        fontSize: withPointDelta(context.data.theme.fontSize, -1),
         lineHeight: options.lineHeight,
         color: DEFAULT_TEXT_COLOR,
         linkColor: context.data.theme.primaryColor,
@@ -922,7 +927,7 @@ function addHeader(context: LayoutContext) {
     }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize + 8,
+      fontSize: withPointDelta(theme.fontSize, 8),
       lineHeight: metrics.headingLineHeight,
       color: theme.primaryColor,
     },
@@ -931,7 +936,7 @@ function addHeader(context: LayoutContext) {
   context.cursorY += nameSize.height;
 
   if (personalInfo.title) {
-    const titleGap = metrics.isDenseLayout ? 3 : 4;
+    const titleGap = ptToPx(metrics.isDenseLayout ? 3 : 4);
     const titleSpec = buildParagraphSpec(
       context.contentX,
       context.cursorY + titleGap,
@@ -939,7 +944,7 @@ function addHeader(context: LayoutContext) {
       createPlainSegments(personalInfo.title, { color: '#4b5563' }),
       {
         fontFamily: theme.fontFamily,
-        fontSize: theme.fontSize + 2,
+        fontSize: withPointDelta(theme.fontSize, 2),
         lineHeight: metrics.headingLineHeight,
         color: '#4b5563',
       },
@@ -957,7 +962,7 @@ function addHeader(context: LayoutContext) {
       createMarkdownSegments(personalInfo.summary, theme.primaryColor, DEFAULT_TEXT_COLOR),
       {
         fontFamily: theme.fontFamily,
-        fontSize: theme.fontSize - 1,
+        fontSize: withPointDelta(theme.fontSize, -1),
         lineHeight: metrics.detailLineHeight,
         color: DEFAULT_TEXT_COLOR,
         linkColor: theme.primaryColor,
@@ -1020,13 +1025,14 @@ function addHeader(context: LayoutContext) {
       ? CONTACT_TOP_GAP_DENSE
       : CONTACT_TOP_GAP_DEFAULT
     : 1;
+  const normalizedContactTopGap = ptToPx(contactTopGap);
 
   const contactItems = contacts.map((contact) => {
     const metadata = buildInlineMetadataItem(context, {
       value: contact.value || '',
       href: theme.enableLinks === false ? undefined : contact.href,
       color: '#4b5563',
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.metadataLineHeight,
       iconBoxSize: metrics.contactIconBoxSize,
       iconGap: 4,
@@ -1050,12 +1056,12 @@ function addHeader(context: LayoutContext) {
 
   const contactsLayout = layoutInlineItems(contactItems, {
     x: context.contentX,
-    y: context.cursorY + contactTopGap,
+    y: context.cursorY + normalizedContactTopGap,
     maxWidth: context.contentWidth,
     rowGap: 0,
   });
 
-  context.cursorY += contactTopGap + contactsLayout.height;
+  context.cursorY += normalizedContactTopGap + contactsLayout.height;
   addBlockHitRegion(context, 'personalInfo', {
     x: context.contentX,
     y: headerStartY,
@@ -1078,7 +1084,7 @@ function addExperienceItem(context: LayoutContext, item: Experience, previous: E
     createPlainSegments(dateText, { color: '#666666' }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.metadataLineHeight,
       color: '#666666',
     },
@@ -1099,7 +1105,7 @@ function addExperienceItem(context: LayoutContext, item: Experience, previous: E
       },
     );
     const companySize = addParagraph(context, companySpec);
-    context.cursorY += companySize.height + 1;
+    context.cursorY += companySize.height + ptToPx(1);
   }
 
   const roleGroups = [
@@ -1115,7 +1121,7 @@ function addExperienceItem(context: LayoutContext, item: Experience, previous: E
     mergeSegmentGroups(roleGroups),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.detailLineHeight,
       color: DEFAULT_TEXT_COLOR,
     },
@@ -1126,13 +1132,13 @@ function addExperienceItem(context: LayoutContext, item: Experience, previous: E
     x: context.contentX + context.contentWidth - dateSize.width,
     y: context.cursorY,
   });
-  context.cursorY += Math.max(roleSize.height, dateSize.height) + 2;
+  context.cursorY += Math.max(roleSize.height, dateSize.height) + ptToPx(2);
 
   addDescriptionLines(context, item.description, {
     x: context.contentX,
     width: context.contentWidth,
     showBulletPoints: item.showBulletPoints !== false,
-    itemGap: 2.5,
+    itemGap: ptToPx(2.5),
     lineHeight: metrics.detailLineHeight,
   });
   const itemHeight = context.cursorY - itemStartY;
@@ -1158,7 +1164,7 @@ function addEducationItem(context: LayoutContext, item: Education, previous: Edu
     createPlainSegments(dateText, { color: '#666666' }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.metadataLineHeight,
       color: '#666666',
     },
@@ -1179,7 +1185,7 @@ function addEducationItem(context: LayoutContext, item: Education, previous: Edu
       },
     );
     const schoolSize = addParagraph(context, schoolSpec);
-    context.cursorY += schoolSize.height + 1;
+    context.cursorY += schoolSize.height + ptToPx(1);
   }
 
   const titleGroups = [
@@ -1198,7 +1204,7 @@ function addEducationItem(context: LayoutContext, item: Education, previous: Edu
     mergeSegmentGroups(titleGroups),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.detailLineHeight,
       color: DEFAULT_TEXT_COLOR,
     },
@@ -1209,13 +1215,13 @@ function addEducationItem(context: LayoutContext, item: Education, previous: Edu
     x: context.contentX + context.contentWidth - dateSize.width,
     y: context.cursorY,
   });
-  context.cursorY += Math.max(titleSize.height, dateSize.height) + 2;
+  context.cursorY += Math.max(titleSize.height, dateSize.height) + ptToPx(2);
 
   addDescriptionLines(context, item.description || [], {
     x: context.contentX,
     width: context.contentWidth,
     showBulletPoints: item.showBulletPoints !== false,
-    itemGap: 2.5,
+    itemGap: ptToPx(2.5),
     lineHeight: metrics.detailLineHeight,
   });
   const itemHeight = context.cursorY - itemStartY;
@@ -1264,7 +1270,7 @@ function buildProjectInlineItems(
       createPlainSegments(project.role, { color: MUTED_TEXT_COLOR }),
       {
         fontFamily: theme.fontFamily,
-        fontSize: theme.fontSize - 1,
+        fontSize: withPointDelta(theme.fontSize, -1),
         lineHeight: metrics.detailLineHeight,
         color: MUTED_TEXT_COLOR,
       },
@@ -1285,7 +1291,7 @@ function buildProjectInlineItems(
         value: formatGitHubPath(project.repoUrl),
         href: theme.enableLinks === false ? undefined : sanitizeUrl(project.repoUrl),
         color: LIGHT_MUTED_TEXT_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_GAP,
@@ -1300,7 +1306,7 @@ function buildProjectInlineItems(
       buildInlineMetadataItem(context, {
         value: formatCompactNumber(project.repoStars),
         color: STAR_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_GAP,
@@ -1316,7 +1322,7 @@ function buildProjectInlineItems(
         value: project.url,
         href: theme.enableLinks === false ? undefined : sanitizeUrl(project.url),
         color: LIGHT_MUTED_TEXT_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_LINK_GAP,
@@ -1341,8 +1347,12 @@ function addProjectItem(context: LayoutContext, project: Project) {
   const projectLogoSize = isCompact
     ? (metrics.isDenseLayout ? 20 : 24)
     : (metrics.isDenseLayout ? 28 : 36);
-  const listTopMargin = metrics.isDenseLayout ? (isCompact ? 1 : 2) : (isCompact ? 1.5 : 3.5);
-  const descriptionGap = metrics.isDenseLayout ? (isCompact ? 1 : 1.5) : (isCompact ? 1.5 : 2.5);
+  const listTopMargin = ptToPx(
+    metrics.isDenseLayout ? (isCompact ? 1 : 2) : (isCompact ? 1.5 : 3.5),
+  );
+  const descriptionGap = ptToPx(
+    metrics.isDenseLayout ? (isCompact ? 1 : 1.5) : (isCompact ? 1.5 : 2.5),
+  );
   const proofIndent = hasProjectLogo ? projectLogoSize + PROJECT_LOGO_GAP : 0;
   const dateText = getDateRange(project.startDate, project.endDate, project.current, options.translations.present);
   const dateSpec = buildParagraphSpec(
@@ -1352,7 +1362,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
     createPlainSegments(dateText, { color: '#666666' }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize - 1,
+      fontSize: withPointDelta(theme.fontSize, -1),
       lineHeight: metrics.metadataLineHeight,
       color: '#666666',
     },
@@ -1421,7 +1431,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
   }
 
   if (project.showProofs !== false && projectProofs.length > 0) {
-    context.cursorY += metrics.isDenseLayout ? 1.5 : (isCompact ? 2 : 2.5);
+    context.cursorY += ptToPx(metrics.isDenseLayout ? 1.5 : (isCompact ? 2 : 2.5));
     const proofX = context.contentX + proofIndent;
     const proofWidth = context.contentWidth - proofIndent;
 
@@ -1434,7 +1444,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
         createPlainSegments('•', { color: LIGHT_MUTED_TEXT_COLOR }),
         {
           fontFamily: theme.fontFamily,
-          fontSize: theme.fontSize - 1,
+          fontSize: withPointDelta(theme.fontSize, -1),
           lineHeight: metrics.detailLineHeight,
           color: LIGHT_MUTED_TEXT_COLOR,
         },
@@ -1446,7 +1456,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
         buildProofParagraph(proof.summary, proof.refs, theme.primaryColor),
         {
           fontFamily: theme.fontFamily,
-          fontSize: theme.fontSize - 1,
+          fontSize: withPointDelta(theme.fontSize, -1),
           lineHeight: metrics.detailLineHeight,
           color: DEFAULT_TEXT_COLOR,
           linkColor: LIGHT_MUTED_TEXT_COLOR,
@@ -1461,7 +1471,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
         width: proofWidth,
         height: proofHeight,
       });
-      context.cursorY += proofHeight + (metrics.isDenseLayout ? 0 : 0.5);
+      context.cursorY += proofHeight + ptToPx(metrics.isDenseLayout ? 0 : 0.5);
     }
   }
 
@@ -1491,7 +1501,7 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     },
   );
   const titleSize = addParagraph(context, titleSpec);
-  context.cursorY += titleSize.height + (metrics.isDenseLayout ? 0 : 1);
+  context.cursorY += titleSize.height + ptToPx(metrics.isDenseLayout ? 0 : 1);
 
   const orderedItems = [
     ...skill.items.filter((item) => item.level === 'core'),
@@ -1547,7 +1557,7 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
         createPlainSegments(item.date, { color: '#666666' }),
         {
           fontFamily: theme.fontFamily,
-          fontSize: theme.fontSize - 1,
+          fontSize: withPointDelta(theme.fontSize, -1),
           lineHeight: metrics.metadataLineHeight,
           color: '#666666',
         },
@@ -1596,11 +1606,11 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
       0,
       LARGE_PARAGRAPH_WIDTH,
       createPlainSegments(item.subtitle, { color: MUTED_TEXT_COLOR }),
-      {
-        fontFamily: theme.fontFamily,
-        fontSize: theme.fontSize - 1,
-        lineHeight: metrics.metadataLineHeight,
-        color: MUTED_TEXT_COLOR,
+        {
+          fontFamily: theme.fontFamily,
+          fontSize: withPointDelta(theme.fontSize, -1),
+          lineHeight: metrics.metadataLineHeight,
+          color: MUTED_TEXT_COLOR,
       },
     );
     const subtitleSize = measureParagraph(context, subtitleSpec);
@@ -1616,7 +1626,7 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
         value: formatGitHubPath(item.repoUrl),
         href: theme.enableLinks === false ? undefined : sanitizeUrl(item.repoUrl),
         color: LIGHT_MUTED_TEXT_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_GAP,
@@ -1630,7 +1640,7 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
       buildInlineMetadataItem(context, {
         value: formatCompactNumber(item.repoStars),
         color: STAR_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_GAP,
@@ -1645,7 +1655,7 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
         value: item.url,
         href: theme.enableLinks === false ? undefined : sanitizeUrl(item.url),
         color: LIGHT_MUTED_TEXT_COLOR,
-        fontSize: theme.fontSize - 2,
+        fontSize: withPointDelta(theme.fontSize, -2),
         lineHeight: metrics.metadataLineHeight,
         iconBoxSize: metrics.inlineIconBoxSize,
         iconGap: INLINE_ICON_LINK_GAP,
@@ -1658,18 +1668,18 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
   if (metaItems.length > 0) {
     const metaLayout = layoutInlineItems(metaItems, {
       x: blockX,
-      y: context.cursorY + 1,
+      y: context.cursorY + ptToPx(1),
       maxWidth: blockWidth,
       rowGap: 0,
     });
-    context.cursorY += 1 + metaLayout.height;
+    context.cursorY += ptToPx(1) + metaLayout.height;
   }
 
   addDescriptionLines(context, item.description, {
     x: blockX,
     width: blockWidth,
     showBulletPoints: item.showBulletPoints !== false,
-    itemGap: metrics.isDenseLayout ? 1 : 1.5,
+    itemGap: ptToPx(metrics.isDenseLayout ? 1 : 1.5),
     lineHeight: metrics.detailLineHeight,
   });
   addBlockHitRegion(context, customItemAnchor(section.id, item.id), {

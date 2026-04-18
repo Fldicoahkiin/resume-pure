@@ -13,6 +13,8 @@ import type {
 import type { ResumeData } from '@/types';
 
 const ICON_VIEWBOX_SIZE = 24;
+const RENDER_FETCH_TIMEOUT_MS = 5000;
+const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
 const imageCache = new Map<string, Promise<Image | null>>();
 
@@ -61,6 +63,89 @@ function revokeObjectUrl(objectUrl: string | null) {
   }
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs: number = RENDER_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+function normalizeRenderImageSrc(src: string) {
+  const githubPngMatch = src.match(/^https?:\/\/github\.com\/([^/]+)\.png/i);
+  if (githubPngMatch) {
+    return `https://avatars.githubusercontent.com/${githubPngMatch[1]}`;
+  }
+
+  const githubUserMatch = src.match(/^https?:\/\/github\.com\/([^/]+)\/?$/i);
+  if (githubUserMatch) {
+    return `https://avatars.githubusercontent.com/${githubUserMatch[1]}`;
+  }
+
+  return src;
+}
+
+function loadImageElementAsDataUrl(src: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const imageElement = document.createElement('img');
+    const timeout = window.setTimeout(() => resolve(null), IMAGE_LOAD_TIMEOUT_MS);
+
+    imageElement.crossOrigin = 'anonymous';
+    imageElement.decoding = 'async';
+    imageElement.onload = () => {
+      window.clearTimeout(timeout);
+
+      try {
+        const canvasElement = document.createElement('canvas');
+        canvasElement.width = imageElement.naturalWidth;
+        canvasElement.height = imageElement.naturalHeight;
+        const renderingContext = canvasElement.getContext('2d');
+        if (!renderingContext) {
+          resolve(null);
+          return;
+        }
+
+        renderingContext.drawImage(imageElement, 0, 0);
+        resolve(canvasElement.toDataURL('image/png'));
+      } catch {
+        resolve(null);
+      }
+    };
+    imageElement.onerror = () => {
+      window.clearTimeout(timeout);
+      resolve(null);
+    };
+    imageElement.src = src;
+  });
+}
+
+async function loadEncodedImageBuffer(src: string) {
+  const normalizedSrc = normalizeRenderImageSrc(src);
+  try {
+    const response = await fetchWithTimeout(normalizedSrc, { cache: 'force-cache' });
+    if (response.ok) {
+      return await response.arrayBuffer();
+    }
+  } catch {
+    // Fall through to the image element path for cross-origin image hosts.
+  }
+
+  const dataUrl = await loadImageElementAsDataUrl(normalizedSrc);
+  if (!dataUrl) {
+    throw new Error(`image-fetch-failed:${normalizedSrc}`);
+  }
+
+  const dataUrlResponse = await fetchWithTimeout(dataUrl, { cache: 'force-cache' });
+  if (!dataUrlResponse.ok) {
+    throw new Error(`image-dataurl-fetch-failed:${normalizedSrc}`);
+  }
+
+  return await dataUrlResponse.arrayBuffer();
+}
+
 async function loadRenderImage(CanvasKitModule: CanvasKit, src: string) {
   const cached = imageCache.get(src);
   if (cached) {
@@ -68,12 +153,7 @@ async function loadRenderImage(CanvasKitModule: CanvasKit, src: string) {
   }
 
   const pending = (async () => {
-    const response = await fetch(src, { cache: 'force-cache' });
-    if (!response.ok) {
-      throw new Error(`image-fetch-failed:${src}`);
-    }
-
-    const buffer = await response.arrayBuffer();
+    const buffer = await loadEncodedImageBuffer(src);
     const image = CanvasKitModule.MakeImageFromEncoded(buffer);
     if (!image) {
       throw new Error(`image-decode-failed:${src}`);
