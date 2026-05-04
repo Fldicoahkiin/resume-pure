@@ -55,8 +55,8 @@ function ResumePreviewSkeleton() {
 
 function getOverlayClassName(isActive: boolean) {
   return isActive
-    ? 'absolute rounded-sm bg-blue-50/70 ring-2 ring-blue-400 dark:bg-blue-900/25'
-    : 'absolute rounded-sm transition hover:bg-blue-50/70 dark:hover:bg-blue-900/20';
+    ? 'absolute appearance-none rounded-sm border-0 bg-transparent p-0 shadow-none ring-2 ring-blue-400/80 focus:outline-none'
+    : 'absolute appearance-none rounded-sm border-0 bg-transparent p-0 shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70';
 }
 
 export function ResumePreview({

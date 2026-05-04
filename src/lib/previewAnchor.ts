@@ -356,6 +356,69 @@ function getOrderedCustomSections(resume: ResumeData) {
   );
 }
 
+function getSectionContentJumpDescriptor(sectionId: string, resume: ResumeData): RawJumpDescriptor | null {
+  if (sectionId === 'summary') {
+    return {
+      fieldPath: ['personalInfo', 'summary'],
+    };
+  }
+
+  if (sectionId === 'experience' || sectionId === 'education' || sectionId === 'projects' || sectionId === 'skills') {
+    return {
+      fieldPath: [sectionId],
+    };
+  }
+
+  const orderedCustomSections = getOrderedCustomSections(resume);
+  const sectionIndex = orderedCustomSections.findIndex((section) => section.id === sectionId);
+  if (sectionIndex === -1) {
+    return null;
+  }
+
+  return {
+    arrayPath: ['customSections'],
+    itemIndex: sectionIndex,
+    focusKey: 'key',
+  };
+}
+
+function getSectionContentSearchPatterns(sectionId: string, resume?: ResumeData): string[] {
+  if (sectionId === 'summary') {
+    return ['"summary"', 'summary:', '"personalInfo"', 'personalInfo:'];
+  }
+
+  if (sectionId === 'experience' || sectionId === 'education' || sectionId === 'projects' || sectionId === 'skills') {
+    return [`"${sectionId}"`, `${sectionId}:`];
+  }
+
+  if (!resume) {
+    return [];
+  }
+
+  const section = resume.sections.find((item) => item.id === sectionId);
+  const rawSectionKey = getRawSectionKeyMap(resume).get(sectionId);
+  const customSectionKey = rawSectionKey?.startsWith('custom:') ? rawSectionKey.slice('custom:'.length) : rawSectionKey;
+  const patterns = [
+    '"customSections"',
+    'customSections:',
+  ];
+
+  if (customSectionKey) {
+    patterns.push(
+      `"key": "${customSectionKey}"`,
+      `key: ${customSectionKey}`,
+      `key: "${customSectionKey}"`,
+      `"${customSectionKey}"`,
+    );
+  }
+
+  if (section?.isCustom && section.title) {
+    patterns.push(...getValueSearchPatterns(section.title));
+  }
+
+  return Array.from(new Set(patterns));
+}
+
 export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJumpDescriptor | null {
   const parsed = parsePreviewAnchor(anchor);
   const ownerSectionId = resolvePreviewAnchorSectionId(parsed, resume);
@@ -388,15 +451,9 @@ export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJu
   }
 
   if (parsed.kind === 'section' && parsed.sectionId && resume) {
-    const orderedSections = getOrderedSections(resume);
-    const sectionIndex = orderedSections.findIndex((item) => item.id === parsed.sectionId);
-
-    if (sectionIndex >= 0) {
-      return {
-        arrayPath: ['sections'],
-        itemIndex: sectionIndex,
-        focusKey: 'key',
-      };
+    const descriptor = getSectionContentJumpDescriptor(parsed.sectionId, resume);
+    if (descriptor) {
+      return descriptor;
     }
   }
 
@@ -625,16 +682,6 @@ export function getRawJumpDescriptor(anchor: string, resume?: ResumeData): RawJu
     };
   }
 
-  if (parsed.kind === 'section' && parsed.sectionId && resume) {
-    const rawKeyMap = getRawSectionKeyMap(resume);
-    const rawSectionKey = rawKeyMap.get(parsed.sectionId);
-    if (rawSectionKey) {
-      return {
-        focusKey: rawSectionKey,
-      };
-    }
-  }
-
   return null;
 }
 
@@ -738,11 +785,16 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
 
   if (parsed.kind === 'section' && parsed.sectionId) {
     const resolvedSectionId = ownerSectionId || parsed.sectionId;
+    const contentPatterns = getSectionContentSearchPatterns(resolvedSectionId, resume);
+    if (contentPatterns.length > 0) {
+      push(...contentPatterns);
+      return Array.from(new Set(patterns));
+    }
+
     let sectionToken = resolvedSectionId;
     if (resume && resolvedSectionId) {
       sectionToken = getRawSectionKeyMap(resume).get(resolvedSectionId) || resolvedSectionId;
     }
-
     push(
       `"key": "${sectionToken}"`,
       `key: ${sectionToken}`,
