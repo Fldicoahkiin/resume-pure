@@ -36,6 +36,9 @@ function loadCanvasKitRuntimeScript() {
     script.addEventListener('load', () => resolve(), { once: true });
     script.addEventListener('error', () => reject(new Error('render-runtime-load-failed')), { once: true });
     document.head.appendChild(script);
+  }).catch((error) => {
+    runtimeScriptPromise = null;
+    throw error;
   });
 
   return runtimeScriptPromise;
@@ -59,7 +62,10 @@ export async function getCanvasKit() {
           return `/vendor/${file}`;
         },
       });
-    })();
+    })().catch((error) => {
+      canvasKitPromise = null;
+      throw error;
+    });
   }
 
   return canvasKitPromise;

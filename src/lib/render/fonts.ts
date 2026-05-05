@@ -45,7 +45,10 @@ export async function loadFontFaceBuffer(src: string) {
     return await cached;
   }
 
-  const pending = loadArrayBuffer(resolvedSrc);
+  const pending = loadArrayBuffer(resolvedSrc).catch((error) => {
+    fontBufferCache.delete(resolvedSrc);
+    throw error;
+  });
   fontBufferCache.set(resolvedSrc, pending);
   return await pending;
 }

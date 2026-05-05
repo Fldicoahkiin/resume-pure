@@ -68,6 +68,7 @@ export function ResumePreview({
   const { t } = useTranslation();
   const [artifact, setArtifact] = useState<RenderArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retryCounter, setRetryCounter] = useState(0);
 
   const renderOptions = useMemo(() => ({
     theme: resume.theme,
@@ -119,7 +120,7 @@ export function ResumePreview({
     return () => {
       disposed = true;
     };
-  }, [artifactKey, hasHydrated, onRenderSizeChange, renderOptions, resume]);
+  }, [artifactKey, hasHydrated, onRenderSizeChange, renderOptions, resume, retryCounter]);
 
   useEffect(() => {
     return () => {
@@ -131,13 +132,23 @@ export function ResumePreview({
   if (error) {
     return (
       <div
-        className="mx-auto bg-white shadow-xl flex items-center justify-center text-sm text-red-600"
+        className="mx-auto bg-white shadow-xl flex flex-col items-center justify-center gap-3 text-sm"
         style={{
           width: `${DEFAULT_PAPER_DIMENSIONS.width}px`,
           minHeight: `${DEFAULT_PAPER_DIMENSIONS.height}px`,
         }}
       >
-        预览渲染失败
+        <span className="text-red-600">预览渲染失败</span>
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setRetryCounter((prev) => prev + 1);
+          }}
+          className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 transition hover:bg-gray-50"
+        >
+          重试
+        </button>
       </div>
     );
   }
