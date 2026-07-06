@@ -14,6 +14,7 @@ import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { UndoRedoButtons } from '@/components/UndoRedoButtons';
 import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, Minus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
@@ -225,6 +226,7 @@ function renderBuilderPageLayout({
               <span className="font-semibold">{t('common.appName')}</span>
             </Link>
             <div className="flex items-center gap-3">
+              <UndoRedoButtons />
               <LanguageToggle />
               <ThemeToggle />
               <ExportButtons />

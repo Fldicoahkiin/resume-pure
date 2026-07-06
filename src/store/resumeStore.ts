@@ -42,19 +42,69 @@ interface ResumeStore {
   reorderCustomSectionItems: (sectionId: string, items: CustomSection['items']) => void;
   importData: (data: unknown) => void;
   reset: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  undo: () => void;
+  redo: () => void;
 }
 
 const initialResume: ResumeData = createInitialResume();
+/** 300ms 内的连续变更合并为一次撤销步（避免逐字符入栈） */
+const HISTORY_GROUP_MS = 300;
+const HISTORY_LIMIT = 100;
 
 export const useResumeStore = create<ResumeStore>()(
   persist(
-    (set) => ({
+    (set, get) => {
+      // past/future 走闭包（不持久化、不触发订阅）；canUndo/canRedo 暴露给 UI。
+      const history = { past: [] as ResumeData[], future: [] as ResumeData[], last: 0 };
+
+      // 包装 set：任何改变 resume 的 action 经此自动记录撤销点，无需逐个改写 action。
+      const commit = (recipe: (state: ResumeStore) => Partial<ResumeStore>) => {
+        const before = get().resume;
+        set(recipe);
+        const after = get().resume;
+        if (after === before) {
+          return;
+        }
+
+        const now = Date.now();
+        if (now - history.last > HISTORY_GROUP_MS) {
+          history.past.push(before);
+          if (history.past.length > HISTORY_LIMIT) {
+            history.past.shift();
+          }
+          history.future = [];
+        }
+        history.last = now;
+        set({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 });
+      };
+
+      return {
       resume: initialResume,
       hasHydrated: false,
+      canUndo: false,
+      canRedo: false,
       setHasHydrated: (state) => set({ hasHydrated: state }),
+      undo: () => {
+        if (history.past.length === 0) {
+          return;
+        }
+        history.future.unshift(get().resume);
+        const previous = history.past.pop() as ResumeData;
+        set({ resume: previous, canUndo: history.past.length > 0, canRedo: true });
+      },
+      redo: () => {
+        if (history.future.length === 0) {
+          return;
+        }
+        history.past.push(get().resume);
+        const next = history.future.shift() as ResumeData;
+        set({ resume: next, canUndo: true, canRedo: history.future.length > 0 });
+      },
 
       updatePersonalInfo: (info) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: { ...state.resume.personalInfo, ...info },
@@ -62,7 +112,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateIconConfig: (config) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: {
@@ -73,7 +123,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateTheme: (theme) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             theme: { ...state.resume.theme, ...theme },
@@ -81,7 +131,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateSectionConfig: (sectionId, config) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             sections: state.resume.sections.map((section) =>
@@ -91,7 +141,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       reorderSections: (sections) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             sections: sections.map((s, idx) => ({ ...s, order: idx + 1 })),
@@ -99,7 +149,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       addExperience: (exp) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             experience: [...state.resume.experience, exp],
@@ -107,7 +157,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateExperience: (id, exp) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             experience: state.resume.experience.map((item) =>
@@ -117,7 +167,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteExperience: (id) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             experience: state.resume.experience.filter((item) => item.id !== id),
@@ -125,7 +175,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       addEducation: (edu) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             education: [...state.resume.education, edu],
@@ -133,7 +183,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateEducation: (id, edu) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             education: state.resume.education.map((item) =>
@@ -143,7 +193,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteEducation: (id) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             education: state.resume.education.filter((item) => item.id !== id),
@@ -151,7 +201,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       addProject: (proj) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             projects: [...state.resume.projects, proj],
@@ -159,7 +209,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateProject: (id, proj) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             projects: state.resume.projects.map((item) =>
@@ -169,7 +219,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteProject: (id) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             projects: state.resume.projects.filter((item) => item.id !== id),
@@ -177,12 +227,12 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       reorderProjects: (projects) =>
-        set((state) => ({
+        commit((state) => ({
           resume: { ...state.resume, projects },
         })),
 
       addSkill: (skill) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             skills: [...state.resume.skills, skill],
@@ -190,7 +240,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateSkill: (id, skill) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             skills: state.resume.skills.map((item) =>
@@ -200,7 +250,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteSkill: (id) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             skills: state.resume.skills.filter((item) => item.id !== id),
@@ -208,13 +258,13 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       reorderSkills: (skills) =>
-        set((state) => ({
+        commit((state) => ({
           resume: { ...state.resume, skills },
         })),
 
       // 联系方式相关
       addContact: (contact) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: {
@@ -225,7 +275,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateContact: (id, contact) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: {
@@ -238,7 +288,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteContact: (id) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: {
@@ -249,7 +299,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       reorderContacts: (contacts) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             personalInfo: {
@@ -262,7 +312,7 @@ export const useResumeStore = create<ResumeStore>()(
       // 自定义模块相关
       addCustomSection: (title) => {
         const sectionId = createEntityId('custom');
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             sections: [
@@ -285,7 +335,7 @@ export const useResumeStore = create<ResumeStore>()(
       },
 
       deleteCustomSection: (sectionId) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             sections: state.resume.sections.filter((s) => s.id !== sectionId),
@@ -294,7 +344,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateCustomSection: (sectionId, update) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             customSections: state.resume.customSections.map((section) =>
@@ -304,7 +354,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       reorderCustomSectionItems: (sectionId, items) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             customSections: state.resume.customSections.map((section) =>
@@ -314,7 +364,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       addCustomSectionItem: (sectionId, item) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             customSections: state.resume.customSections.map((section) =>
@@ -326,7 +376,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       updateCustomSectionItem: (sectionId, itemId, item) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             customSections: state.resume.customSections.map((section) =>
@@ -343,7 +393,7 @@ export const useResumeStore = create<ResumeStore>()(
         })),
 
       deleteCustomSectionItem: (sectionId, itemId) =>
-        set((state) => ({
+        commit((state) => ({
           resume: {
             ...state.resume,
             customSections: state.resume.customSections.map((section) =>
@@ -354,12 +404,15 @@ export const useResumeStore = create<ResumeStore>()(
           },
         })),
 
-      importData: (data) => set({ resume: normalizeResumeData(data) }),
+      importData: (data) => commit(() => ({ resume: normalizeResumeData(data) })),
 
-      reset: () => set({ resume: createInitialResume() }),
-    }),
+      reset: () => commit(() => ({ resume: createInitialResume() })),
+      };
+    },
     {
       name: 'resume-storage',
+      // 仅持久化简历数据；撤销历史与 hydration 状态每次会话重建。
+      partialize: (state) => ({ resume: state.resume }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ResumeStore> | undefined;
 
