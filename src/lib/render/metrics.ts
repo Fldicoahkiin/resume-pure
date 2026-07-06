@@ -1,6 +1,4 @@
-import { CSSProperties } from 'react';
 import type { ResumeData } from '@/types';
-import type { ResumeLayoutMetrics } from './layoutTypes';
 
 const CSS_PIXEL_TO_POINT = 72 / 96;
 
@@ -19,11 +17,29 @@ export function pxToPt(value: number): number {
   return value * CSS_PIXEL_TO_POINT;
 }
 
-export const SECTION_BAR_STYLE: CSSProperties = {
-  width: pxToPt(32),
-  height: pxToPt(4),
-  borderRadius: 999,
-};
+export interface ResumeLayoutMetrics {
+  isDenseLayout: boolean;
+  sectionMarginBottom: number;
+  headerMarginBottom: number;
+  pageHorizontalPadding: number;
+  pageTopPadding: number;
+  pageBottomPadding: number;
+  topBarHeight: number;
+  itemMarginBottom: number;
+  sectionHeadingMarginBottom: number;
+  headingLineHeight: number;
+  metadataLineHeight: number;
+  detailLineHeight: number;
+  capsuleLineHeight: number;
+  capsuleLabelLineHeight: number;
+  capsuleContextLineHeight: number;
+  skillCapsuleMinHeight: number;
+  technologyPillMinHeight: number;
+  inlineIconSize: number;
+  inlineIconBoxSize: number;
+  contactIconSize: number;
+  contactIconBoxSize: number;
+}
 
 export function getResumeLayoutMetrics(theme: ResumeData['theme']): ResumeLayoutMetrics {
   const isDenseLayout = theme.fontSize <= 10 && theme.spacing <= 2;
