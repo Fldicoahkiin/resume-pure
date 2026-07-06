@@ -238,5 +238,20 @@
         "format": "truetype"
       }
     ]
+  },
+  {
+    "family": "Noto Emoji",
+    "displayName": "Noto Emoji",
+    "category": "sans-serif",
+    "language": "en",
+    "hidden": true,
+    "faces": [
+      {
+        "style": "normal",
+        "weight": 400,
+        "src": "/fonts/noto-emoji-400.ttf",
+        "format": "truetype"
+      }
+    ]
   }
 ]

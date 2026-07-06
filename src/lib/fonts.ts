@@ -17,6 +17,8 @@ export interface FontConfig {
   displayName: string;
   category: FontCategory;
   language: FontLanguage;
+  /** 仅作为渲染回退（如 emoji），不出现在字体选择器中 */
+  hidden?: boolean;
   faces: readonly FontFaceConfig[];
 }
 
@@ -61,6 +63,7 @@ function isFontConfig(value: unknown): value is FontConfig {
     typeof candidate.displayName === 'string' &&
     isFontCategory(candidate.category) &&
     isFontLanguage(candidate.language) &&
+    (candidate.hidden === undefined || typeof candidate.hidden === 'boolean') &&
     Array.isArray(candidate.faces) &&
     candidate.faces.every(isFontFaceConfig)
   );
@@ -78,15 +81,16 @@ function readFontManifest(): readonly FontConfig[] {
 const FONT_FAMILIES = readFontManifest();
 
 export function getFontOptions() {
-  const enSansSerif = FONT_FAMILIES.filter((font) => font.language === 'en' && font.category === 'sans-serif');
-  const enSerif = FONT_FAMILIES.filter((font) => font.language === 'en' && font.category === 'serif');
-  const zhFonts = FONT_FAMILIES.filter((font) => font.language === 'zh');
+  const selectable = FONT_FAMILIES.filter((font) => !font.hidden);
+  const enSansSerif = selectable.filter((font) => font.language === 'en' && font.category === 'sans-serif');
+  const enSerif = selectable.filter((font) => font.language === 'en' && font.category === 'serif');
+  const zhFonts = selectable.filter((font) => font.language === 'zh');
 
   return {
     enSansSerif,
     enSerif,
     zhFonts,
-    all: FONT_FAMILIES,
+    all: selectable,
   };
 }
 
