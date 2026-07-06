@@ -2,7 +2,9 @@
   "common": {
     "appName": "Resume Pure",
     "startEditing": "开始编辑",
-    "createResume": "立即制作"
+    "createResume": "立即制作",
+    "confirm": "确认",
+    "cancel": "取消"
   },
   "home": {
     "hero": {
@@ -62,7 +64,9 @@
       "education": "教育背景",
       "projects": "项目经历",
       "skills": "专业技能"
-    }
+    },
+    "undo": "撤销",
+    "redo": "重做"
   },
   "editor": {
     "personalInfo": {
@@ -171,7 +175,24 @@
       "addHint": "点击下方按钮添加你的项目经历",
       "deleteTitle": "删除此项目",
       "addDescription": "+ 添加描述",
-      "addProject": "添加项目"
+      "addProject": "添加项目",
+      "addRef": "添加引用",
+      "compactLayout": "紧凑布局",
+      "compactLayoutHint": "减小该项目的行间距",
+      "confirmImport": "导入 {{count}} 项",
+      "disabled": "关闭",
+      "enabled": "开启",
+      "importPr": "导入 PR",
+      "importPrDialogHint": "从 {{repo}} 选择要导入的 PR",
+      "importPrDialogTitle": "导入 Pull Request",
+      "importPrTitle": "从 GitHub 导入已合并的 PR 作为贡献证明",
+      "mergedAt": "合并于 {{date}}",
+      "mergedSummaryPlaceholder": "合并后的贡献描述",
+      "noRefs": "暂无引用",
+      "prModeMerged": "合并为一条",
+      "prModeSingle": "每条单独",
+      "refs": "引用",
+      "toggleAll": "全选（{{selected}}/{{total}}）"
     },
     "skills": {
       "title": "技能专长",
@@ -274,7 +295,12 @@
       "githubAuthFailed": "GitHub 授权失败，请重试。",
       "githubDeviceHint": "请在打开的页面中输入以下验证码：",
       "githubOpenVerify": "打开验证页面",
-      "githubManualToken": "或手动填入 Personal Access Token ▸"
+      "githubManualToken": "或手动填入 Personal Access Token ▸",
+      "resetToDefault": "回退默认",
+      "resetFontSizeTitle": "恢复默认字号 (11pt)",
+      "resetLineHeightTitle": "恢复默认行高 (1.5)",
+      "resetSpacingTitle": "恢复默认间距 (8px)",
+      "searchFont": "搜索字体..."
     },
     "actions": {
       "delete": "删除",
@@ -350,7 +376,9 @@
       "core": "核心",
       "proficient": "熟练",
       "familiar": "了解"
-    }
+    },
+    "renderFailed": "预览渲染失败",
+    "retry": "重试"
   },
   "draggableSection": {
     "hideSection": "点击隐藏此模块",

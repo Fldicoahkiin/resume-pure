@@ -2,7 +2,9 @@
   "common": {
     "appName": "Resume Pure",
     "startEditing": "Start Editing",
-    "createResume": "Create Now"
+    "createResume": "Create Now",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "home": {
     "hero": {
@@ -62,7 +64,9 @@
       "education": "Education",
       "projects": "Projects",
       "skills": "Skills"
-    }
+    },
+    "undo": "Undo",
+    "redo": "Redo"
   },
   "editor": {
     "personalInfo": {
@@ -171,7 +175,24 @@
       "addHint": "Click the button below to add your projects",
       "deleteTitle": "Delete this project",
       "addDescription": "+ Add description",
-      "addProject": "Add Project"
+      "addProject": "Add Project",
+      "addRef": "Add reference",
+      "compactLayout": "Compact layout",
+      "compactLayoutHint": "Tighten spacing for this project",
+      "confirmImport": "Import {{count}}",
+      "disabled": "Off",
+      "enabled": "On",
+      "importPr": "Import PR",
+      "importPrDialogHint": "Choose PRs to import from {{repo}}",
+      "importPrDialogTitle": "Import pull requests",
+      "importPrTitle": "Import merged PRs from GitHub as contributions",
+      "mergedAt": "Merged {{date}}",
+      "mergedSummaryPlaceholder": "Summary for the merged contribution",
+      "noRefs": "No references",
+      "prModeMerged": "Merge into one",
+      "prModeSingle": "One each",
+      "refs": "References",
+      "toggleAll": "Select all ({{selected}}/{{total}})"
     },
     "skills": {
       "title": "Skills",
@@ -274,7 +295,12 @@
       "githubAuthFailed": "GitHub authorization failed, please try again.",
       "githubDeviceHint": "Enter this code on the page that opened:",
       "githubOpenVerify": "Open verification page",
-      "githubManualToken": "Or paste a Personal Access Token manually ▸"
+      "githubManualToken": "Or paste a Personal Access Token manually ▸",
+      "resetToDefault": "Reset",
+      "resetFontSizeTitle": "Reset font size (11pt)",
+      "resetLineHeightTitle": "Reset line height (1.5)",
+      "resetSpacingTitle": "Reset spacing (8px)",
+      "searchFont": "Search fonts..."
     },
     "actions": {
       "delete": "Delete",
@@ -350,7 +376,9 @@
       "core": "Core",
       "proficient": "Proficient",
       "familiar": "Familiar"
-    }
+    },
+    "renderFailed": "Preview failed to render",
+    "retry": "Retry"
   },
   "draggableSection": {
     "hideSection": "Click to hide this section",

@@ -369,7 +369,7 @@ function SkillItemRow({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`shrink-0 p-1.5 transition sm:opacity-0 group-hover:opacity-100 focus:opacity-100 ${isOpen ? 'text-blue-500 sm:opacity-100' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-          title="高级设置"
+          title={t('editor.skills.advancedSettings')}
         >
           <Settings2 size={16} />
         </button>
@@ -410,7 +410,7 @@ function SkillItemRow({
             className={`flex items-center gap-1 text-xs font-medium ${item.showLogo !== false ? 'text-blue-600' : 'text-gray-400'}`}
           >
             {item.showLogo !== false ? <Eye size={12} /> : <EyeOff size={12} />}
-            Logo: {item.showLogo !== false ? '显示' : '隐藏'}
+            Logo: {item.showLogo !== false ? t('editor.skills.visibleShow') : t('editor.skills.visibleHide')}
           </button>
           <button
             type="button"
@@ -418,7 +418,7 @@ function SkillItemRow({
             className={`flex items-center gap-1 text-xs font-medium ${item.showContext !== false ? 'text-blue-600' : 'text-gray-400'}`}
           >
             {item.showContext !== false ? <Eye size={12} /> : <EyeOff size={12} />}
-            描述: {item.showContext !== false ? '显示' : '隐藏'}
+            {t('editor.skills.descriptionLabel')}: {item.showContext !== false ? t('editor.skills.visibleShow') : t('editor.skills.visibleHide')}
           </button>
         </div>
       )}

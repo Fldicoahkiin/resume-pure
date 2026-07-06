@@ -3,6 +3,7 @@
 import { useResumeStore } from '@/store/resumeStore';
 import { Settings, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { confirmDialog } from '@/components/ConfirmDialog';
 import { FontSelector } from './FontSelector';
 import { PAPER_SIZE_OPTIONS } from '@/lib/paper';
 import { GitHubAuthSection } from './GitHubAuthSection';
@@ -51,8 +52,8 @@ export function ThemeEditor() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            if (confirm(t('editor.theme.resetConfirm'))) {
+          onClick={async () => {
+            if (await confirmDialog(t('editor.theme.resetConfirm'))) {
               reset();
             }
           }}
@@ -141,9 +142,9 @@ export function ThemeEditor() {
                   type="button"
                   onClick={() => updateTheme({ fontSize: 11 })}
                   className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
-                  title="恢复默认字号 (11pt)"
+                  title={t('editor.theme.resetFontSizeTitle')}
                 >
-                  回退默认
+                  {t('editor.theme.resetToDefault')}
                 </button>
               )}
             </div>
@@ -187,9 +188,9 @@ export function ThemeEditor() {
                   type="button"
                   onClick={() => updateTheme({ lineHeight: 1.5 })}
                   className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
-                  title="恢复默认行高 (1.5)"
+                  title={t('editor.theme.resetLineHeightTitle')}
                 >
-                  回退默认
+                  {t('editor.theme.resetToDefault')}
                 </button>
               )}
             </div>
@@ -233,9 +234,9 @@ export function ThemeEditor() {
                   type="button"
                   onClick={() => updateTheme({ spacing: 8 })}
                   className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
-                  title="恢复默认间距 (8px)"
+                  title={t('editor.theme.resetSpacingTitle')}
                 >
-                  回退默认
+                  {t('editor.theme.resetToDefault')}
                 </button>
               )}
             </div>

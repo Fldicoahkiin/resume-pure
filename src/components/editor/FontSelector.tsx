@@ -58,7 +58,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                         <div className="p-2 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm z-10">
                             <input
                                 type="text"
-                                placeholder={t('editor.theme.searchFont', { defaultValue: '搜索字体...' })}
+                                placeholder={t('editor.theme.searchFont')}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
@@ -69,7 +69,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                             {filteredZh.length > 0 && (
                                 <div>
                                     <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
-                                        中文字体 / Chinese
+                                        {t('editor.font.groupZh')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         {filteredZh.map(font => (
@@ -87,7 +87,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                             {filteredSans.length > 0 && (
                                 <div>
                                     <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
-                                        英文字体 / Sans-Serif
+                                        {t('editor.font.groupSans')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         {filteredSans.map(font => (
@@ -105,7 +105,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                             {filteredSerif.length > 0 && (
                                 <div>
                                     <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
-                                        英文字体 / Serif
+                                        {t('editor.font.groupSerif')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         {filteredSerif.map(font => (
@@ -122,7 +122,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 
                             {filteredZh.length === 0 && filteredSans.length === 0 && filteredSerif.length === 0 && (
                                 <div className="p-4 text-center text-sm text-gray-500">
-                                    没有找到相关字体
+                                    {t('editor.font.noResults')}
                                 </div>
                             )}
                         </div>
@@ -134,6 +134,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 }
 
 function FontOption({ font, isSelected, onSelect }: { font: FontConfig, isSelected: boolean, onSelect: () => void }) {
+    const { t } = useTranslation();
     const isZh = font.language === 'zh';
     return (
         <button
@@ -147,7 +148,7 @@ function FontOption({ font, isSelected, onSelect }: { font: FontConfig, isSelect
                     className="flex items-center justify-center w-8 h-8 rounded bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mr-3 text-lg shrink-0 group-hover:bg-white dark:group-hover:bg-gray-600 transition-colors pt-0.5"
                     style={{ fontFamily: font.family }}
                 >
-                    {isZh ? '文' : 'Aa'}
+                    {isZh ? t('editor.font.zhSample') : 'Aa'}
                 </div>
                 <div className="flex flex-col truncate min-w-0">
                     <span

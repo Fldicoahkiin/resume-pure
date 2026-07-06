@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DraggableItemProps {
@@ -29,6 +30,7 @@ export function DraggableItem({
   headerActions,
   initialCollapsed = false,
 }: DraggableItemProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(() => initialCollapsed);
 
   return (
@@ -66,7 +68,7 @@ export function DraggableItem({
               ? 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               : 'text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400'
           }`}
-          title={visible ? '隐藏' : '显示'}
+          title={visible ? t('common.hide') : t('common.show')}
         >
           {visible ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
