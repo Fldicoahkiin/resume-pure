@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { exportToPNG } from '@/lib/image';
 import { exportToPDF } from '@/lib/pdf';
+import { showToast } from '@/components/Toast';
 import { useResumeStore } from '@/store/resumeStore';
 
 function buildExportErrorMessage(prefix: string, error: unknown) {
@@ -41,7 +42,7 @@ export function ExportButtons() {
     try {
       await exportToPDF(resume, renderOptions, 'resume.pdf');
     } catch (error) {
-      alert(buildExportErrorMessage(t('export.pdfExportFailed'), error));
+      showToast('error', buildExportErrorMessage(t('export.pdfExportFailed'), error));
     } finally {
       setLoadingPDF(false);
     }
@@ -52,7 +53,7 @@ export function ExportButtons() {
     try {
       await exportToPNG(resume, renderOptions, 'resume.png');
     } catch (error) {
-      alert(buildExportErrorMessage(t('export.pngExportFailed'), error));
+      showToast('error', buildExportErrorMessage(t('export.pngExportFailed'), error));
     } finally {
       setLoadingPNG(false);
     }

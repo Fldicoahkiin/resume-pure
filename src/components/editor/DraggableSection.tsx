@@ -5,6 +5,7 @@ import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Trash2 } from 'lucid
 import { SectionConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { sectionAnchor } from '@/lib/previewAnchor';
+import { confirmDialog } from '@/components/ConfirmDialog';
 
 interface DraggableSectionProps {
   section: SectionConfig;
@@ -130,9 +131,9 @@ export function DraggableSection({
         {onDelete && (
           <button
             type="button"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              if (confirm(t('draggableSection.confirmDelete'))) {
+              if (await confirmDialog(t('draggableSection.confirmDelete'))) {
                 onDelete();
               }
             }}

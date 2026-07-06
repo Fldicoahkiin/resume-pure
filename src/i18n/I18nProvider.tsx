@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import { ToastHost } from '@/components/Toast';
+import { ConfirmDialogHost } from '@/components/ConfirmDialog';
 import i18n from './config';
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -22,5 +24,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+  return (
+    <I18nextProvider i18n={i18n}>
+      {children}
+      <ToastHost />
+      <ConfirmDialogHost />
+    </I18nextProvider>
+  );
 }
