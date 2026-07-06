@@ -7,7 +7,9 @@ import type {
   RectWithDirection,
 } from 'canvaskit-wasm';
 import { parseInlineMarkdown } from '@/lib/markdown';
-import { createCanvasKitTextStyle } from '@/lib/render/textStyle';
+import type { RenderFontSet } from '@/lib/render/fontSet';
+import { createCanvasKitTextStyle, resolveSegmentColor } from '@/lib/render/textStyle';
+import { isSafePdfUrl } from '@/lib/resumeUtils';
 import type {
   ParagraphSpec,
   RenderLinkRegion,
@@ -49,10 +51,12 @@ export function buildParagraphSegments(text: string) {
     const end = start + token.content.length;
     offset = end;
 
+    const safeHref = token.type === 'link' && token.url && isSafePdfUrl(token.url) ? token.url : undefined;
+
     segments.push({
       text: token.content,
-      kind: token.type,
-      href: token.type === 'link' ? token.url : undefined,
+      kind: token.type === 'link' && !safeHref ? 'text' : token.type,
+      href: safeHref,
       start,
       end,
       fontWeight: getSegmentFontWeight(token.type),
@@ -70,6 +74,7 @@ export function layoutParagraph(
   CanvasKitModule: CanvasKit,
   fontManager: FontMgr,
   paragraph: ParagraphSpec,
+  fallbackFamilies: string[],
 ) {
   const builder = CanvasKitModule.ParagraphBuilder.Make(
     new CanvasKitModule.ParagraphStyle({
@@ -80,7 +85,7 @@ export function layoutParagraph(
             ? CanvasKitModule.TextAlign.Right
             : CanvasKitModule.TextAlign.Left,
       textStyle: {
-        fontFamilies: [paragraph.fontFamily, 'Noto Sans SC'],
+        fontFamilies: fallbackFamilies,
         fontSize: paragraph.fontSize,
         heightMultiplier: paragraph.lineHeight,
       },
@@ -89,7 +94,7 @@ export function layoutParagraph(
   );
 
   for (const segment of paragraph.segments) {
-    builder.pushStyle(createCanvasKitTextStyle(CanvasKitModule, paragraph, segment));
+    builder.pushStyle(createCanvasKitTextStyle(CanvasKitModule, paragraph, segment, fallbackFamilies));
     builder.addText(segment.text);
     builder.pop();
   }
@@ -122,29 +127,51 @@ function decodeRectArray(rawRects: RectWithDirection[]) {
   return rects;
 }
 
-function buildTextRunsForSegmentLine(
-  segment: RenderTextSegment,
-  paragraph: ParagraphSpec,
-  line: LineMetrics,
-  text: string,
-  boxes: RenderRect[],
-) {
-  if (!text.trim()) {
-    return [];
+interface FamilyRun {
+  start: number;
+  end: number;
+  text: string;
+  family: string;
+}
+
+/**
+ * 将 [start, end) 的文本按实际命中的字体族拆成连续子段。
+ * 与 CanvasKit 段落的逐字形回退一致，保证 PDF 用同一字体绘制同一段文本。
+ */
+function splitRangeByFamily(
+  rawText: string,
+  start: number,
+  end: number,
+  preferredFamily: string,
+  fontSet: RenderFontSet,
+): FamilyRun[] {
+  const runs: FamilyRun[] = [];
+  const text = rawText.slice(start, end);
+  const codepoints = Array.from(text);
+  let cursor = start;
+  let index = 0;
+
+  for (const char of codepoints) {
+    const codepoint = char.codePointAt(0) ?? 0;
+    const next = codepoints[index + 1];
+    const nextCodepoint = next ? next.codePointAt(0) : undefined;
+    const resolved = fontSet.resolveFamily(preferredFamily, codepoint, nextCodepoint);
+    const family = resolved ?? (runs.length > 0 ? runs[runs.length - 1].family : preferredFamily);
+    const charEnd = cursor + char.length;
+
+    const lastRun = runs[runs.length - 1];
+    if (lastRun && lastRun.family === family && lastRun.end === cursor) {
+      lastRun.end = charEnd;
+      lastRun.text += char;
+    } else {
+      runs.push({ start: cursor, end: charEnd, text: char, family });
+    }
+
+    cursor = charEnd;
+    index += 1;
   }
 
-  return boxes.map<SemanticTextRun>((box) => ({
-    text,
-    x: paragraph.x + box.x,
-    y: paragraph.y + box.y,
-    width: box.width,
-    height: box.height || line.height,
-    fontFamily: paragraph.fontFamily,
-    fontSize: paragraph.fontSize * (paragraph.semanticScale ?? 1),
-    fontWeight: segment.fontWeight,
-    fontStyle: segment.fontStyle,
-    href: segment.href,
-  }));
+  return runs;
 }
 
 function buildLinkRegionsForBoxes(
@@ -162,15 +189,17 @@ function buildLinkRegionsForBoxes(
 }
 
 export function extractParagraphSemantics(
-  CanvasKitModule: CanvasKit,
   builtParagraph: ReturnType<typeof layoutParagraph>,
   paragraph: ParagraphSpec,
+  fontSet: RenderFontSet,
 ) {
-  const lineMetrics = builtParagraph.getLineMetrics();
+  const lineMetrics = builtParagraph.getLineMetrics() as LineMetrics[];
   const textRuns: SemanticTextRun[] = [];
   const linkRegions: RenderLinkRegion[] = [];
 
   for (const segment of paragraph.segments) {
+    const segmentColor = resolveSegmentColor(paragraph, segment);
+
     for (const line of lineMetrics) {
       const rangeStart = Math.max(segment.start, line.startIndex);
       const rangeEnd = Math.min(segment.end, line.endExcludingWhitespaces);
@@ -179,19 +208,65 @@ export function extractParagraphSemantics(
         continue;
       }
 
-      const text = paragraph.rawText.slice(rangeStart, rangeEnd);
-      const rawRects = builtParagraph.getRectsForRange(
+      const baselineY = paragraph.y + line.baseline;
+      const familyRuns = splitRangeByFamily(
+        paragraph.rawText,
         rangeStart,
         rangeEnd,
-        DEFAULT_RECT_HEIGHT_STYLE,
-        DEFAULT_RECT_WIDTH_STYLE,
+        paragraph.fontFamily,
+        fontSet,
       );
-      const boxes = decodeRectArray(rawRects);
 
-      textRuns.push(...buildTextRunsForSegmentLine(segment, paragraph, line, text, boxes));
+      for (const familyRun of familyRuns) {
+        if (!familyRun.text.trim()) {
+          continue;
+        }
+
+        const rawRects = builtParagraph.getRectsForRange(
+          familyRun.start,
+          familyRun.end,
+          DEFAULT_RECT_HEIGHT_STYLE,
+          DEFAULT_RECT_WIDTH_STYLE,
+        );
+        const boxes = decodeRectArray(rawRects);
+        if (boxes.length === 0) {
+          continue;
+        }
+
+        // 同一 family-run 在一行内可能被 CanvasKit 拆成多个 box（如加粗切换点）。
+        // 合并成单个 run 只画一次文本——PDF 侧用相同字体的 advance 自行排列，
+        // 避免逐 box 重复绘制导致的字符错位。
+        const left = Math.min(...boxes.map((box) => box.x));
+        const right = Math.max(...boxes.map((box) => box.x + box.width));
+        const top = Math.min(...boxes.map((box) => box.y));
+        const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+
+        textRuns.push({
+          text: familyRun.text,
+          x: paragraph.x + left,
+          y: paragraph.y + top,
+          width: right - left,
+          height: bottom - top || line.height,
+          baselineY,
+          fontFamily: familyRun.family,
+          fontSize: paragraph.fontSize,
+          fontWeight: segment.fontWeight,
+          fontStyle: segment.fontStyle,
+          color: segmentColor,
+          backgroundColor: segment.backgroundColor,
+          strike: segment.kind === 'strike' ? true : undefined,
+          href: segment.href,
+        });
+      }
 
       if (segment.href) {
-        linkRegions.push(...buildLinkRegionsForBoxes(paragraph, segment.href, boxes));
+        const rawRects = builtParagraph.getRectsForRange(
+          rangeStart,
+          rangeEnd,
+          DEFAULT_RECT_HEIGHT_STYLE,
+          DEFAULT_RECT_WIDTH_STYLE,
+        );
+        linkRegions.push(...buildLinkRegionsForBoxes(paragraph, segment.href, decodeRectArray(rawRects)));
       }
     }
   }

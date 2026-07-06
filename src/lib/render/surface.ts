@@ -1,9 +1,10 @@
 import type { Canvas, CanvasKit, FontMgr, Image, Surface } from 'canvaskit-wasm';
 import { getCanvasKit } from '@/lib/render/canvaskit';
-import { EXPORT_BACKGROUND, RENDER_SCALE } from '@/lib/render/constants';
+import { EXPORT_BACKGROUND, PAGE_BORDER_COLOR, RENDER_SCALE } from '@/lib/render/constants';
 import { loadRendererFonts } from '@/lib/render/fonts';
+import { createRenderFontSet } from '@/lib/render/fontSet';
 import { buildLayoutDocument } from '@/lib/render/layout';
-import { createCanvasKitTextStyle } from '@/lib/render/textStyle';
+import { layoutParagraph } from '@/lib/render/paragraph';
 import type {
   LayoutDocument,
   RenderArtifact,
@@ -122,7 +123,7 @@ function loadImageElementAsDataUrl(src: string): Promise<string | null> {
   });
 }
 
-async function loadEncodedImageBuffer(src: string) {
+export async function loadEncodedImageBuffer(src: string) {
   const normalizedSrc = normalizeRenderImageSrc(src);
   try {
     const response = await fetchWithTimeout(normalizedSrc, { cache: 'force-cache' });
@@ -162,6 +163,8 @@ async function loadRenderImage(CanvasKitModule: CanvasKit, src: string) {
     return image;
   })().catch((error) => {
     console.error('渲染图片资源失败:', error);
+    // 失败不留缓存，下次重建预览时重试。
+    imageCache.delete(src);
     return null;
   });
 
@@ -260,36 +263,12 @@ function drawParagraphOp(
   fontManager: FontMgr,
   canvas: Canvas,
   operation: Extract<RenderDrawOp, { kind: 'paragraph' }>,
+  fallbackFamilies: string[],
 ) {
   const paragraph = operation.box.paragraph;
-  const built = CanvasKitModule.ParagraphBuilder.Make(
-    new CanvasKitModule.ParagraphStyle({
-      textAlign:
-        paragraph.align === 'center'
-          ? CanvasKitModule.TextAlign.Center
-          : paragraph.align === 'right'
-            ? CanvasKitModule.TextAlign.Right
-            : CanvasKitModule.TextAlign.Left,
-      textStyle: {
-        fontFamilies: [paragraph.fontFamily, 'Noto Sans SC'],
-        fontSize: paragraph.fontSize,
-        heightMultiplier: paragraph.lineHeight,
-      },
-    }),
-    fontManager,
-  );
-
-  for (const segment of paragraph.segments) {
-    built.pushStyle(createCanvasKitTextStyle(CanvasKitModule, paragraph, segment));
-    built.addText(segment.text);
-    built.pop();
-  }
-
-  const renderedParagraph = built.build();
-  renderedParagraph.layout(paragraph.width);
+  const renderedParagraph = layoutParagraph(CanvasKitModule, fontManager, paragraph, fallbackFamilies);
   canvas.drawParagraph(renderedParagraph, paragraph.x, paragraph.y);
   renderedParagraph.delete();
-  built.delete();
 }
 
 async function drawImageOp(
@@ -339,6 +318,7 @@ async function drawOperation(
   fontManager: FontMgr,
   canvas: Canvas,
   operation: RenderDrawOp,
+  fallbackFamilies: string[],
 ) {
   switch (operation.kind) {
     case 'rect':
@@ -354,7 +334,7 @@ async function drawOperation(
       await drawImageOp(CanvasKitModule, canvas, operation);
       return;
     case 'paragraph':
-      drawParagraphOp(CanvasKitModule, fontManager, canvas, operation);
+      drawParagraphOp(CanvasKitModule, fontManager, canvas, operation, fallbackFamilies);
       return;
     default:
       return;
@@ -366,20 +346,31 @@ async function drawDocument(
   fontManager: FontMgr,
   surface: Surface,
   document: LayoutDocument,
+  fallbackFamilies: string[],
 ) {
   const canvas = surface.getCanvas();
   canvas.save();
   canvas.scale(RENDER_SCALE, RENDER_SCALE);
 
-  const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
-  canvas.drawRect(
-    CanvasKitModule.LTRBRect(0, 0, document.width, document.height),
-    backgroundPaint,
-  );
-  backgroundPaint.delete();
+  // 页与页之间留透明空隙，每页画白底与描边，预览呈现独立纸张的观感。
+  canvas.clear(CanvasKitModule.TRANSPARENT);
+  for (const page of document.pages) {
+    const pageRect = CanvasKitModule.LTRBRect(0, page.top, document.width, page.top + page.height);
+    const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
+    canvas.drawRect(pageRect, backgroundPaint);
+    backgroundPaint.delete();
+
+    const borderPaint = createPaint(CanvasKitModule, {
+      color: PAGE_BORDER_COLOR,
+      stroke: true,
+      strokeWidth: 1,
+    });
+    canvas.drawRect(pageRect, borderPaint);
+    borderPaint.delete();
+  }
 
   for (const operation of document.drawOps) {
-    await drawOperation(CanvasKitModule, fontManager, canvas, operation);
+    await drawOperation(CanvasKitModule, fontManager, canvas, operation, fallbackFamilies);
   }
 
   canvas.restore();
@@ -391,20 +382,23 @@ export async function buildRenderArtifact(
   options: RenderBuildOptions,
 ): Promise<RenderArtifact> {
   const CanvasKitModule = await getCanvasKit();
-  const { buffers } = await loadRendererFonts(data.theme.fontFamily);
-  const fontManager = CanvasKitModule.FontMgr.FromData(...buffers);
+  const { faces } = await loadRendererFonts(data.theme.fontFamily);
+  const fontManager = CanvasKitModule.FontMgr.FromData(...faces.map((face) => face.buffer));
   if (!fontManager) {
     throw new Error('render-font-manager-unavailable');
   }
 
+  const fontSet = createRenderFontSet(CanvasKitModule, faces);
+  const fallbackFamilies = fontSet.fallbackFamilies(data.theme.fontFamily);
+
   try {
-    const document = await buildLayoutDocument(CanvasKitModule, fontManager, data, options);
+    const document = await buildLayoutDocument(CanvasKitModule, fontManager, fontSet, data, options);
     const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
     const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
     const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
 
     try {
-      await drawDocument(CanvasKitModule, fontManager, surface, document);
+      await drawDocument(CanvasKitModule, fontManager, surface, document, fallbackFamilies);
       const snapshot = surface.makeImageSnapshot();
       if (!snapshot) {
         throw new Error('render-snapshot-unavailable');
@@ -426,6 +420,7 @@ export async function buildRenderArtifact(
             schemaVersion: data.schemaVersion,
             width: document.width,
             height: document.height,
+            pages: document.pages.length,
             ops: document.drawOps.length,
             text: document.textRuns.length,
             links: document.linkRegions.length,
@@ -440,6 +435,7 @@ export async function buildRenderArtifact(
           pixelWidth,
           pixelHeight,
           document,
+          fonts: faces,
           objectUrl,
           fingerprint,
         };
@@ -450,6 +446,7 @@ export async function buildRenderArtifact(
       surface.delete();
     }
   } finally {
+    fontSet.dispose();
     fontManager.delete();
   }
 }

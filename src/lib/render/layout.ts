@@ -1,6 +1,8 @@
-import { getResumeLayoutMetrics } from '@/components/resume/layoutMetrics';
-import type { ResumeLayoutMetrics } from '@/components/resume/layoutTypes';
+import { getResumeLayoutMetrics } from '@/lib/render/metrics';
+import type { ResumeLayoutMetrics } from '@/lib/render/metrics';
 import { getPaperDimensions } from '@/lib/paper';
+import { PAGE_GAP } from '@/lib/render/constants';
+import type { RenderFontSet } from '@/lib/render/fontSet';
 import {
   buildParagraphSegments,
   extractParagraphSemantics,
@@ -8,6 +10,7 @@ import {
 } from '@/lib/render/paragraph';
 import type {
   LayoutDocument,
+  LayoutPage,
   ParagraphSpec,
   RenderBuildOptions,
   RenderDrawOp,
@@ -141,6 +144,9 @@ function getRenderLayoutMetrics(theme: ResumeData['theme']): ResumeLayoutMetrics
 interface LayoutContext {
   CanvasKitModule: CanvasKit;
   fontManager: FontManager;
+  fontSet: RenderFontSet;
+  /** 段落字体回退链（选中字体 → Noto Sans SC → Noto Emoji），构建时算好 */
+  fallbackFamilies: string[];
   data: ResumeData;
   options: RenderBuildOptions;
   metrics: ResumeLayoutMetrics;
@@ -152,6 +158,28 @@ interface LayoutContext {
   textRuns: SemanticTextRun[];
   linkRegions: RenderLinkRegion[];
   hitRegions: RenderHitRegion[];
+  /** 允许分页的位置（元素索引快照），块与块之间可断页，块内不可 */
+  breakMarks: BreakMark[];
+}
+
+/** 分页断点：记录此刻各元素数组的长度，两个断点之间的内容作为整体移动 */
+interface BreakMark {
+  y: number;
+  opIndex: number;
+  runIndex: number;
+  linkIndex: number;
+  hitIndex: number;
+}
+
+/** 在当前位置登记一个可断页点。调用时机：节标题前、条目之间、描述行之间。 */
+function markBreakpoint(context: LayoutContext) {
+  context.breakMarks.push({
+    y: context.cursorY,
+    opIndex: context.drawOps.length,
+    runIndex: context.textRuns.length,
+    linkIndex: context.linkRegions.length,
+    hitIndex: context.hitRegions.length,
+  });
 }
 
 interface MeasuredParagraph {
@@ -308,7 +336,7 @@ function measureParagraph(
   context: LayoutContext,
   paragraph: ParagraphSpec,
 ): MeasuredParagraph {
-  const built = layoutParagraph(context.CanvasKitModule, context.fontManager, paragraph);
+  const built = layoutParagraph(context.CanvasKitModule, context.fontManager, paragraph, context.fallbackFamilies);
   const measured = {
     width: Math.ceil(Math.max(built.getLongestLine(), 0)),
     height: Math.ceil(Math.max(built.getHeight(), paragraph.fontSize * paragraph.lineHeight)),
@@ -321,8 +349,8 @@ function addParagraph(
   context: LayoutContext,
   paragraph: ParagraphSpec,
 ): MeasuredParagraph {
-  const built = layoutParagraph(context.CanvasKitModule, context.fontManager, paragraph);
-  const semantics = extractParagraphSemantics(context.CanvasKitModule, built, paragraph);
+  const built = layoutParagraph(context.CanvasKitModule, context.fontManager, paragraph, context.fallbackFamilies);
+  const semantics = extractParagraphSemantics(built, paragraph, context.fontSet);
   const measured = {
     width: Math.ceil(Math.max(built.getLongestLine(), 0)),
     height: Math.ceil(Math.max(semantics.height, paragraph.fontSize * paragraph.lineHeight)),
@@ -854,6 +882,7 @@ function addDescriptionLines(
   const lines = items.filter((line) => line.trim().length > 0);
 
   for (let index = 0; index < lines.length; index += 1) {
+    if (index > 0) markBreakpoint(context);
     const line = lines[index];
     const bottomGap = index === lines.length - 1 ? 0 : options.itemGap;
 
@@ -1721,9 +1750,13 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
 
 function addExperienceSection(context: LayoutContext, section: SectionConfig, items: Experience[]) {
   if (items.length === 0) return;
+  markBreakpoint(context);
   const sectionStartY = context.cursorY;
   addSectionHeading(context, sectionAnchor(section.id), section.title || context.options.translations.experience);
-  items.forEach((item, index) => addExperienceItem(context, item, items[index - 1]));
+  items.forEach((item, index) => {
+    if (index > 0) markBreakpoint(context);
+    addExperienceItem(context, item, items[index - 1]);
+  });
   addBlockHitRegion(context, sectionAnchor(section.id), {
     x: context.contentX,
     y: sectionStartY,
@@ -1734,9 +1767,13 @@ function addExperienceSection(context: LayoutContext, section: SectionConfig, it
 
 function addEducationSection(context: LayoutContext, section: SectionConfig, items: Education[]) {
   if (items.length === 0) return;
+  markBreakpoint(context);
   const sectionStartY = context.cursorY;
   addSectionHeading(context, sectionAnchor(section.id), section.title || context.options.translations.education);
-  items.forEach((item, index) => addEducationItem(context, item, items[index - 1]));
+  items.forEach((item, index) => {
+    if (index > 0) markBreakpoint(context);
+    addEducationItem(context, item, items[index - 1]);
+  });
   addBlockHitRegion(context, sectionAnchor(section.id), {
     x: context.contentX,
     y: sectionStartY,
@@ -1748,9 +1785,13 @@ function addEducationSection(context: LayoutContext, section: SectionConfig, ite
 function addProjectSection(context: LayoutContext, section: SectionConfig, items: Project[]) {
   const visibleProjects = items.filter((item) => item.visible !== false);
   if (visibleProjects.length === 0) return;
+  markBreakpoint(context);
   const sectionStartY = context.cursorY;
   addSectionHeading(context, sectionAnchor(section.id), section.title || context.options.translations.projects);
-  visibleProjects.forEach((item) => addProjectItem(context, item));
+  visibleProjects.forEach((item, index) => {
+    if (index > 0) markBreakpoint(context);
+    addProjectItem(context, item);
+  });
   addBlockHitRegion(context, sectionAnchor(section.id), {
     x: context.contentX,
     y: sectionStartY,
@@ -1762,10 +1803,14 @@ function addProjectSection(context: LayoutContext, section: SectionConfig, items
 function addSkillSection(context: LayoutContext, section: SectionConfig, items: Skill[]) {
   const visibleSkills = items.filter((item) => item.visible !== false);
   if (visibleSkills.length === 0) return;
+  markBreakpoint(context);
   const sectionStartY = context.cursorY;
   addSectionHeading(context, sectionAnchor(section.id), section.title || context.options.translations.skills);
+  let renderedGroups = 0;
   visibleSkills.forEach((skill) => {
     if (skill.items.length > 0) {
+      if (renderedGroups > 0) markBreakpoint(context);
+      renderedGroups += 1;
       addSkillGroup(context, skill);
     }
   });
@@ -1818,13 +1863,17 @@ function addCustomSection(context: LayoutContext, section: SectionConfig, custom
 
   const customItems = customSection.items.filter(isCustomSectionItem);
   if (customItems.length === 0) return;
+  markBreakpoint(context);
   const sectionStartY = context.cursorY;
   addSectionHeading(
     context,
     sectionAnchor(section.id),
-    section.title || context.options.translations.customSection || '自定义模块',
+    section.title || context.options.translations.customSection,
   );
-  customItems.forEach((item) => addGenericCustomItem(context, section, item));
+  customItems.forEach((item, index) => {
+    if (index > 0) markBreakpoint(context);
+    addGenericCustomItem(context, section, item);
+  });
   addBlockHitRegion(context, sectionAnchor(section.id), {
     x: context.contentX,
     y: sectionStartY,
@@ -1833,9 +1882,157 @@ function addCustomSection(context: LayoutContext, section: SectionConfig, custom
   });
 }
 
+/** 取绘制元素的纵向范围，分页时据此判断块是否越过页底 */
+function getDrawOpBounds(op: RenderDrawOp): { top: number; bottom: number } {
+  switch (op.kind) {
+    case 'rect':
+      return { top: op.rect.y, bottom: op.rect.y + op.rect.height };
+    case 'line':
+      return { top: Math.min(op.y1, op.y2), bottom: Math.max(op.y1, op.y2) };
+    case 'path':
+    case 'image':
+      return { top: op.y, bottom: op.y + op.height };
+    case 'paragraph':
+      return { top: op.box.y, bottom: op.box.y + op.box.height };
+  }
+}
+
+function shiftDrawOp(op: RenderDrawOp, dy: number) {
+  switch (op.kind) {
+    case 'rect':
+      op.rect.y += dy;
+      return;
+    case 'line':
+      op.y1 += dy;
+      op.y2 += dy;
+      return;
+    case 'path':
+    case 'image':
+      op.y += dy;
+      return;
+    case 'paragraph':
+      op.box.y += dy;
+      op.box.paragraph.y += dy;
+      return;
+  }
+}
+
+interface ReflowChunk {
+  ops: RenderDrawOp[];
+  runs: SemanticTextRun[];
+  links: RenderLinkRegion[];
+  top: number;
+  bottom: number;
+}
+
+/** 按断点切块，块整体下移到下一页；返回分页切片并原位修改所有坐标。 */
+function paginateDocument(context: LayoutContext, paperHeight: number): LayoutPage[] {
+  const { metrics } = context;
+  const marks: BreakMark[] = [
+    { y: 0, opIndex: 0, runIndex: 0, linkIndex: 0, hitIndex: 0 },
+    ...context.breakMarks,
+    {
+      y: context.cursorY,
+      opIndex: context.drawOps.length,
+      runIndex: context.textRuns.length,
+      linkIndex: context.linkRegions.length,
+      hitIndex: context.hitRegions.length,
+    },
+  ];
+
+  const chunks: ReflowChunk[] = [];
+  for (let index = 0; index < marks.length - 1; index += 1) {
+    const from = marks[index];
+    const to = marks[index + 1];
+    const ops = context.drawOps.slice(from.opIndex, to.opIndex);
+    if (ops.length === 0) {
+      continue;
+    }
+
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (const op of ops) {
+      const bounds = getDrawOpBounds(op);
+      top = Math.min(top, bounds.top);
+      bottom = Math.max(bottom, bounds.bottom);
+    }
+
+    chunks.push({
+      ops,
+      runs: context.textRuns.slice(from.runIndex, to.runIndex),
+      links: context.linkRegions.slice(from.linkIndex, to.linkIndex),
+      top,
+      bottom,
+    });
+  }
+
+  const usableFollowingPage = paperHeight - metrics.pageTopPadding - metrics.pageBottomPadding;
+  const pages: LayoutPage[] = [
+    { top: 0, height: paperHeight, drawOps: [], textRuns: [], linkRegions: [] },
+  ];
+  // (原始 y, 累计偏移) 时间线：跨块的 hitRegion 按几何位置分别映射上下边
+  const offsetTimeline: Array<{ fromY: number; offset: number }> = [{ fromY: 0, offset: 0 }];
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    const page = pages[pages.length - 1];
+    const pageBottomLimit = page.top + paperHeight - metrics.pageBottomPadding;
+    const chunkHeight = chunk.bottom - chunk.top;
+
+    if (chunk.bottom + offset > pageBottomLimit && chunk.top + offset > page.top) {
+      if (chunkHeight > usableFollowingPage) {
+        console.warn('渲染分页：单个内容块高于一页，将从新页顶部开始并溢出裁切。');
+      }
+
+      const nextPageTop = page.top + paperHeight + PAGE_GAP;
+      const delta = nextPageTop + metrics.pageTopPadding - (chunk.top + offset);
+      if (delta > 0) {
+        offset += delta;
+        offsetTimeline.push({ fromY: chunk.top, offset });
+        pages.push({ top: nextPageTop, height: paperHeight, drawOps: [], textRuns: [], linkRegions: [] });
+      }
+    }
+
+    if (offset > 0) {
+      for (const op of chunk.ops) shiftDrawOp(op, offset);
+      for (const run of chunk.runs) {
+        run.y += offset;
+        run.baselineY += offset;
+      }
+      for (const link of chunk.links) link.y += offset;
+    }
+
+    const target = pages[pages.length - 1];
+    target.drawOps.push(...chunk.ops);
+    target.textRuns.push(...chunk.runs);
+    target.linkRegions.push(...chunk.links);
+  }
+
+  // hitRegion 可能跨多个块（如整节区域）：上下边分别按原始 y 查偏移，实现跨页拉伸。
+  const offsetAt = (y: number) => {
+    let applied = 0;
+    for (const entry of offsetTimeline) {
+      if (y >= entry.fromY) {
+        applied = entry.offset;
+      }
+    }
+    return applied;
+  };
+
+  for (const region of context.hitRegions) {
+    const topOffset = offsetAt(region.y);
+    const bottomOffset = offsetAt(region.y + region.height);
+    region.y += topOffset;
+    region.height += bottomOffset - topOffset;
+  }
+
+  return pages;
+}
+
 export async function buildLayoutDocument(
   CanvasKitModule: CanvasKit,
   fontManager: FontManager,
+  fontSet: RenderFontSet,
   data: ResumeData,
   options: RenderBuildOptions,
 ): Promise<LayoutDocument> {
@@ -1851,6 +2048,8 @@ export async function buildLayoutDocument(
   const context: LayoutContext = {
     CanvasKitModule,
     fontManager,
+    fontSet,
+    fallbackFamilies: fontSet.fallbackFamilies(renderData.theme.fontFamily),
     data: renderData,
     options,
     metrics,
@@ -1862,6 +2061,7 @@ export async function buildLayoutDocument(
     textRuns: [],
     linkRegions: [],
     hitRegions: [],
+    breakMarks: [],
   };
 
   addHeader(context);
@@ -1905,9 +2105,13 @@ export async function buildLayoutDocument(
     addCustomSection(context, section, customSection);
   }
 
+  const pages = paginateDocument(context, paper.height);
+  const lastPage = pages[pages.length - 1];
+
   return {
     width: paper.width,
-    height: Math.ceil(context.cursorY + metrics.pageBottomPadding),
+    height: Math.ceil(lastPage.top + lastPage.height),
+    pages,
     drawOps: context.drawOps,
     textRuns: context.textRuns,
     linkRegions: context.linkRegions,

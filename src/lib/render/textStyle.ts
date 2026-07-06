@@ -1,7 +1,7 @@
 import type { CanvasKit } from 'canvaskit-wasm';
 import type { ParagraphSpec, RenderTextSegment } from '@/lib/render/types';
 
-function resolveSegmentColor(paragraph: ParagraphSpec, segment: RenderTextSegment) {
+export function resolveSegmentColor(paragraph: ParagraphSpec, segment: RenderTextSegment) {
   return (
     segment.color ||
     (segment.kind === 'link' && paragraph.linkColor ? paragraph.linkColor : paragraph.color)
@@ -25,6 +25,7 @@ export function createCanvasKitTextStyle(
   CanvasKitModule: CanvasKit,
   paragraph: ParagraphSpec,
   segment: RenderTextSegment,
+  fallbackFamilies: string[],
 ) {
   const segmentColor = resolveSegmentColor(paragraph, segment);
 
@@ -33,7 +34,7 @@ export function createCanvasKitTextStyle(
     backgroundColor: segment.backgroundColor
       ? CanvasKitModule.parseColorString(segment.backgroundColor)
       : undefined,
-    fontFamilies: segment.fontFamilies || [paragraph.fontFamily, 'Noto Sans SC'],
+    fontFamilies: fallbackFamilies,
     fontSize: paragraph.fontSize,
     heightMultiplier: paragraph.lineHeight,
     fontStyle: {

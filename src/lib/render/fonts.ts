@@ -3,6 +3,17 @@ import { getFontManifest } from '@/lib/fonts';
 const fontBufferCache = new Map<string, Promise<ArrayBuffer>>();
 const FONT_FETCH_TIMEOUT_MS = 5000;
 
+/** 渲染必备字体：中文回退 + emoji 回退，始终随选中字体一起加载。 */
+export const RENDER_FALLBACK_FAMILY = 'Noto Sans SC';
+export const RENDER_EMOJI_FAMILY = 'Noto Emoji';
+
+export interface RendererFontFace {
+  family: string;
+  weight: number;
+  style: 'normal' | 'italic';
+  buffer: ArrayBuffer;
+}
+
 function isAbsoluteUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
@@ -53,26 +64,54 @@ export async function loadFontFaceBuffer(src: string) {
   return await pending;
 }
 
-function getPreferredFontFamilies(selectedFamily: string) {
+async function loadFamilyFaces(family: string): Promise<RendererFontFace[]> {
   const manifest = getFontManifest();
-  const selected = manifest.find((font) => font.family === selectedFamily);
-  const preferred = new Set<string>(['Noto Sans SC']);
+  const config = manifest.find((font) => font.family === family);
+  if (!config) {
+    throw new Error(`font-family-unknown:${family}`);
+  }
 
-  if (selected) {
-    preferred.add(selected.family);
-    if (selected.language === 'en') {
-      preferred.add('Noto Sans SC');
+  return await Promise.all(
+    config.faces.map(async (face) => ({
+      family,
+      weight: face.weight,
+      style: face.style,
+      buffer: await loadFontFaceBuffer(face.src),
+    })),
+  );
+}
+
+/**
+ * 加载渲染所需的全部字体 face。
+ * 选中字体加载失败时降级到 Noto Sans SC（保持预览可用），emoji 回退加载失败时跳过；
+ * 两种失败都会 console.error，Noto Sans SC 本体失败则抛出。
+ */
+export async function loadRendererFonts(selectedFamily: string): Promise<{ faces: RendererFontFace[] }> {
+  const families: string[] = [RENDER_FALLBACK_FAMILY];
+  if (selectedFamily !== RENDER_FALLBACK_FAMILY && selectedFamily !== RENDER_EMOJI_FAMILY) {
+    families.unshift(selectedFamily);
+  }
+
+  const faces: RendererFontFace[] = [];
+
+  for (const family of families) {
+    if (family === RENDER_FALLBACK_FAMILY) {
+      faces.push(...(await loadFamilyFaces(family)));
+      continue;
+    }
+
+    try {
+      faces.push(...(await loadFamilyFaces(family)));
+    } catch (error) {
+      console.error(`渲染字体 ${family} 加载失败，降级到 ${RENDER_FALLBACK_FAMILY}:`, error);
     }
   }
 
-  return Array.from(preferred);
-}
+  try {
+    faces.push(...(await loadFamilyFaces(RENDER_EMOJI_FAMILY)));
+  } catch (error) {
+    console.error('emoji 回退字体加载失败，emoji 将显示为缺字占位:', error);
+  }
 
-export async function loadRendererFonts(selectedFamily: string) {
-  const manifest = getFontManifest();
-  const families = new Set(getPreferredFontFamilies(selectedFamily));
-  const faces = manifest.filter((font) => families.has(font.family)).flatMap((font) => font.faces);
-
-  const buffers = await Promise.all(faces.map((face) => loadFontFaceBuffer(face.src)));
-  return { buffers, families: Array.from(families) };
+  return { faces };
 }

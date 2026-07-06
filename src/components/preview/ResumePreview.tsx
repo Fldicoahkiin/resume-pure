@@ -4,6 +4,7 @@ import {
   CSSProperties,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import Image from 'next/image';
@@ -20,6 +21,8 @@ import { useResumeStore } from '@/store/resumeStore';
 
 const SKELETON_SECTION_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
 const DEFAULT_PAPER_DIMENSIONS = getPaperDimensions('A4');
+/** 连续编辑时的重建防抖窗口；首次渲染与重试不受此延迟影响 */
+const PREVIEW_DEBOUNCE_MS = 250;
 
 interface ResumePreviewProps {
   onSelectAnchor?: (anchor: string) => void;
@@ -69,6 +72,8 @@ export function ResumePreview({
   const [artifact, setArtifact] = useState<RenderArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryCounter, setRetryCounter] = useState(0);
+  const isFirstBuildRef = useRef(true);
+  const lastRetryRef = useRef(retryCounter);
 
   const renderOptions = useMemo(() => ({
     theme: resume.theme,
@@ -94,7 +99,7 @@ export function ResumePreview({
     let disposed = false;
     setError(null);
 
-    void (async () => {
+    const runBuild = async () => {
       try {
         const nextArtifact = await buildRenderArtifact(resume, renderOptions);
 
@@ -115,10 +120,24 @@ export function ResumePreview({
           setError('resume-preview-render-failed');
         }
       }
-    })();
+    };
 
+    const retried = lastRetryRef.current !== retryCounter;
+    lastRetryRef.current = retryCounter;
+    const immediate = isFirstBuildRef.current || retried;
+    isFirstBuildRef.current = false;
+
+    if (immediate) {
+      void runBuild();
+      return () => {
+        disposed = true;
+      };
+    }
+
+    const timer = window.setTimeout(() => void runBuild(), PREVIEW_DEBOUNCE_MS);
     return () => {
       disposed = true;
+      window.clearTimeout(timer);
     };
   }, [artifactKey, hasHydrated, onRenderSizeChange, renderOptions, resume, retryCounter]);
 
@@ -138,7 +157,7 @@ export function ResumePreview({
           minHeight: `${DEFAULT_PAPER_DIMENSIONS.height}px`,
         }}
       >
-        <span className="text-red-600">预览渲染失败</span>
+        <span className="text-red-600">{t('preview.renderFailed')}</span>
         <button
           type="button"
           onClick={() => {
@@ -147,7 +166,7 @@ export function ResumePreview({
           }}
           className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 transition hover:bg-gray-50"
         >
-          重试
+          {t('preview.retry')}
         </button>
       </div>
     );
@@ -165,7 +184,7 @@ export function ResumePreview({
   return (
     <div
       id="resume-preview"
-      className="relative bg-white mx-auto shadow-xl print:shadow-none overflow-hidden"
+      className="relative mx-auto overflow-hidden"
       style={previewStyle}
     >
       <Image

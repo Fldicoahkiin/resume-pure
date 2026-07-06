@@ -1,3 +1,4 @@
+import type { RendererFontFace } from '@/lib/render/fonts';
 import type { ResumeData } from '@/types';
 
 export interface RenderRect {
@@ -31,7 +32,6 @@ export interface RenderTextSegment extends InlineTextSegment {
   fontStyle: RenderFontStyle;
   color?: string;
   backgroundColor?: string;
-  fontFamilies?: string[];
 }
 
 export interface ParagraphSpec {
@@ -46,7 +46,6 @@ export interface ParagraphSpec {
   color: string;
   align?: 'left' | 'center' | 'right';
   letterSpacing?: number;
-  semanticScale?: number;
   linkColor?: string;
 }
 
@@ -54,16 +53,23 @@ export interface RenderParagraphBox extends RenderRect {
   paragraph: ParagraphSpec;
 }
 
+/** 单行内一段同字体、同样式的文本，坐标为文档 CSS 像素。矢量 PDF 直接按此绘制。 */
 export interface SemanticTextRun {
   text: string;
   x: number;
   y: number;
   width: number;
   height: number;
+  /** 行基线的文档 y 坐标（PDF 文本定位以基线为准） */
+  baselineY: number;
+  /** 实际渲染该段文本的字体族（含 emoji 等回退结果） */
   fontFamily: string;
   fontSize: number;
   fontWeight: RenderFontWeight;
   fontStyle: RenderFontStyle;
+  color: string;
+  backgroundColor?: string;
+  strike?: boolean;
   href?: string;
 }
 
@@ -115,9 +121,20 @@ export interface RenderParagraph {
 
 export type RenderDrawOp = RenderRectFill | RenderLine | RenderPath | RenderImage | RenderParagraph;
 
+/** 分页后的单页切片：top 为页面顶边在文档坐标系中的 y，内容坐标仍是文档坐标。 */
+export interface LayoutPage {
+  top: number;
+  height: number;
+  drawOps: RenderDrawOp[];
+  textRuns: SemanticTextRun[];
+  linkRegions: RenderLinkRegion[];
+}
+
 export interface LayoutDocument {
+  /** 文档总宽高（含页间空隙），预览画布使用 */
   width: number;
   height: number;
+  pages: LayoutPage[];
   drawOps: RenderDrawOp[];
   textRuns: SemanticTextRun[];
   linkRegions: RenderLinkRegion[];
@@ -132,6 +149,8 @@ export interface RenderArtifact {
   pixelWidth: number;
   pixelHeight: number;
   document: LayoutDocument;
+  /** 布局使用的字体 face（PDF 导出据此嵌入同一批字体） */
+  fonts: RendererFontFace[];
   objectUrl: string;
   fingerprint: string;
 }
