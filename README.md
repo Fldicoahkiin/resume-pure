@@ -52,6 +52,19 @@ pnpm build
 pnpm start
 ```
 
+### 渲染字体生成
+
+预览与 PDF 导出共用 `public/fonts/` 下的子集字体（Noto Sans SC 正/粗体、Noto Emoji）。
+这些文件已随仓库提交，仅在需要更新字体时重新生成：
+
+```bash
+brew install fonttools   # 提供 pyftsubset，仅首次需要
+bash scripts/generate-render-fonts.sh
+```
+
+脚本从 Google Fonts 官方 static 字体子集化，保证 name 表与 cmap 正确
+（PDF 文本可被复制与被 ATS 解析）。字符集清单见 `scripts/render-font-unicodes.txt`。
+
 ### Docker
 
 ```bash
