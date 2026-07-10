@@ -16,7 +16,11 @@ const useConfirmStore = create<ConfirmStore>((set, get) => ({
   open: false,
   message: '',
   resolve: null,
-  request: (message, resolve) => set({ open: true, message, resolve }),
+  request: (message, resolve) => {
+    // 覆盖前先取消上一个未决请求，避免其 Promise 永远挂起
+    get().resolve?.(false);
+    set({ open: true, message, resolve });
+  },
   settle: (confirmed) => {
     get().resolve?.(confirmed);
     set({ open: false, message: '', resolve: null });
