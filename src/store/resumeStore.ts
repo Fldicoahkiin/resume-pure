@@ -7,7 +7,6 @@ import { createEntityId } from '@/lib/id';
 interface ResumeStore {
   resume: ResumeData;
   hasHydrated: boolean;
-  setHasHydrated: (state: boolean) => void;
   updatePersonalInfo: (info: Partial<ResumeData['personalInfo']>) => void;
   updateIconConfig: (config: Partial<ContactIconConfig>) => void;
   updateTheme: (theme: Partial<ThemeConfig>) => void;
@@ -85,13 +84,15 @@ export const useResumeStore = create<ResumeStore>()(
       hasHydrated: false,
       canUndo: false,
       canRedo: false,
-      setHasHydrated: (state) => set({ hasHydrated: state }),
       undo: () => {
         if (history.past.length === 0) {
           return;
         }
         history.future.unshift(get().resume);
         const previous = history.past.pop() as ResumeData;
+        // 撤销后的下一次编辑必须新开检查点并清空 future，否则 300ms 分组窗口内的
+        // 编辑会跳过入栈，redo 把内容跳回撤销前的旧状态
+        history.last = 0;
         set({ resume: previous, canUndo: history.past.length > 0, canRedo: true });
       },
       redo: () => {
@@ -100,6 +101,7 @@ export const useResumeStore = create<ResumeStore>()(
         }
         history.past.push(get().resume);
         const next = history.future.shift() as ResumeData;
+        history.last = 0;
         set({ resume: next, canUndo: true, canRedo: history.future.length > 0 });
       },
 
