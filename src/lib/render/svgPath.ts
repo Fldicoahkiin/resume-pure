@@ -227,8 +227,11 @@ export function parseSvgPath(data: string): PathSegment[] {
       command = nextCommand;
     } else if (!scanner.hasMoreNumbers() || command === null) {
       break;
+    } else if (command === 'Z' || command === 'z') {
+      // 命令缺省时按 SVG 规则重复上一命令，但 Z 不消费数字——
+      // "Z 后跟裸数字"的畸形输入会让扫描指针停滞，报错而非死循环
+      throw new Error(`svg-path-number-after-close:${data.slice(0, 24)}`);
     }
-    // 命令缺省时按 SVG 规则重复上一命令（M 的重复隐式变为 L）
 
     const activeCommand: string = command;
     const isRelative = activeCommand === activeCommand.toLowerCase();
