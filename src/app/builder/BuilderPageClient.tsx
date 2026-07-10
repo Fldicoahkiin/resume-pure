@@ -2,11 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PersonalInfoEditor } from '@/components/editor/PersonalInfoEditor';
-import { ExperienceEditor } from '@/components/editor/ExperienceEditor';
-import { EducationEditor } from '@/components/editor/EducationEditor';
-import { ProjectEditor } from '@/components/editor/ProjectEditor';
-import { SkillEditor } from '@/components/editor/SkillEditor';
 import { CustomSectionEditor } from '@/components/editor/CustomSectionEditor';
+import { BUILTIN_SECTIONS } from '@/components/editor/sectionRegistry';
 import { ThemeEditor } from '@/components/editor/ThemeEditor';
 import { DraggableSection } from '@/components/editor/DraggableSection';
 import { RawEditor } from '@/components/editor/RawEditor';
@@ -15,7 +12,7 @@ import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { UndoRedoButtons } from '@/components/UndoRedoButtons';
-import { FileText, Code, FormInput, Briefcase, GraduationCap, FolderKanban, Wrench, Plus, Minus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
+import { FileText, Code, FormInput, Plus, Minus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeStore } from '@/store/resumeStore';
 import { useTranslation } from 'react-i18next';
@@ -51,20 +48,6 @@ const EDITOR_FLASH_CLASSES = [
   'ring-offset-white',
   'dark:ring-offset-gray-900',
 ];
-
-const sectionIcons: Record<string, React.ReactNode> = {
-  experience: <Briefcase size={18} />,
-  education: <GraduationCap size={18} />,
-  projects: <FolderKanban size={18} />,
-  skills: <Wrench size={18} />,
-};
-
-const sectionEditors: Record<string, React.ReactNode> = {
-  experience: <ExperienceEditor embedded />,
-  education: <EducationEditor embedded />,
-  projects: <ProjectEditor embedded />,
-  skills: <SkillEditor embedded />,
-};
 
 interface SectionActions {
   sortableSections: SectionConfig[];
@@ -305,7 +288,7 @@ function renderBuilderPageLayout({
                   <DraggableSection
                     key={section.id}
                     section={section}
-                    icon={section.isCustom ? <CustomIcon size={18} /> : sectionIcons[section.id]}
+                    icon={section.isCustom ? <CustomIcon size={18} /> : BUILTIN_SECTIONS[section.id]?.icon}
                     title={getSectionTitle(section.id)}
                     isCollapsed={ui.collapsedSections.has(section.id)}
                     onToggleCollapse={() => toggleCollapse(section.id)}
@@ -320,7 +303,7 @@ function renderBuilderPageLayout({
                     {section.isCustom ? (
                       <CustomSectionEditor sectionId={section.id} embedded />
                     ) : (
-                      sectionEditors[section.id]
+                      BUILTIN_SECTIONS[section.id]?.editor
                     )}
                   </DraggableSection>
                 ))}
