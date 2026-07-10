@@ -1,10 +1,10 @@
 import type {
   CanvasKit,
-  FontMgr,
   LineMetrics,
   RectHeightStyle,
   RectWidthStyle,
   RectWithDirection,
+  TypefaceFontProvider,
 } from 'canvaskit-wasm';
 import { parseInlineMarkdown } from '@/lib/markdown';
 import type { RenderFontSet } from '@/lib/render/fontSet';
@@ -72,11 +72,11 @@ export function buildParagraphSegments(text: string) {
 
 export function layoutParagraph(
   CanvasKitModule: CanvasKit,
-  fontManager: FontMgr,
+  fontProvider: TypefaceFontProvider,
   paragraph: ParagraphSpec,
   fallbackFamilies: string[],
 ) {
-  const builder = CanvasKitModule.ParagraphBuilder.Make(
+  const builder = CanvasKitModule.ParagraphBuilder.MakeFromFontProvider(
     new CanvasKitModule.ParagraphStyle({
       textAlign:
         paragraph.align === 'center'
@@ -90,7 +90,7 @@ export function layoutParagraph(
         heightMultiplier: paragraph.lineHeight,
       },
     }),
-    fontManager,
+    fontProvider,
   );
 
   for (const segment of paragraph.segments) {

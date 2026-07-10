@@ -1,4 +1,5 @@
 import { getFontManifest } from '@/lib/fonts';
+import { stripLayoutTables } from '@/lib/render/fontSubset';
 
 const fontBufferCache = new Map<string, Promise<ArrayBuffer>>();
 const FONT_FETCH_TIMEOUT_MS = 5000;
@@ -34,7 +35,8 @@ async function loadArrayBuffer(src: string): Promise<ArrayBuffer> {
   if (!response.ok) {
     throw new Error(`font-fetch-failed:${src}`);
   }
-  return await response.arrayBuffer();
+  // 剥离 kerning 等 layout 表，保证 CanvasKit 排版与 PDF 子集绘制度量一致
+  return stripLayoutTables(await response.arrayBuffer());
 }
 
 function getFontSourcePath(src: string) {

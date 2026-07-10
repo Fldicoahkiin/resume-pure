@@ -60,6 +60,48 @@ function parseSfntTables(bytes: Uint8Array): Map<string, TableRecord> {
   return tables;
 }
 
+/** 影响文本 shaping 度量的 OpenType/AAT layout 表 */
+const LAYOUT_TABLE_TAGS = new Set(['GSUB', 'GPOS', 'GDEF', 'BASE', 'JSTF', 'kern', 'kerx', 'morx', 'feat']);
+
+/**
+ * 剥离字体的 layout 表（kerning/连字等）。
+ *
+ * 预览用 CanvasKit 排版（会应用 GPOS kerning），PDF 用运行时子集绘制（子集只保留
+ * glyf/hmtx，无 GPOS）。若加载的字体带 kerning，两侧 advance 不一致，行内元素
+ * 的间隙在 PDF 中会被吃掉。统一在加载入口剥离，保证两个渲染后端度量一致。
+ * 对已无这些表的字体（本地预子集产物）原样返回。
+ */
+export function stripLayoutTables(buffer: ArrayBuffer): ArrayBuffer {
+  const src = new Uint8Array(buffer);
+  const records = parseSfntTables(src);
+
+  const kept = new Map<string, Uint8Array>();
+  let dropped = false;
+  for (const [tag, record] of Array.from(records.entries())) {
+    if (LAYOUT_TABLE_TAGS.has(tag)) {
+      dropped = true;
+      continue;
+    }
+
+    if (tag === 'head') {
+      // 表集合变了，整表校验和不再成立；置 0（渲染器均不校验）
+      const headCopy = src.slice(record.offset, record.offset + record.length);
+      new DataView(headCopy.buffer).setUint32(8, 0);
+      kept.set(tag, headCopy);
+      continue;
+    }
+
+    kept.set(tag, src.subarray(record.offset, record.offset + record.length));
+  }
+
+  if (!dropped) {
+    return buffer;
+  }
+
+  const repacked = repackSfnt(kept);
+  return repacked.buffer.slice(repacked.byteOffset, repacked.byteOffset + repacked.byteLength) as ArrayBuffer;
+}
+
 function groupContiguous(codeToGid: Map<number, number>) {
   const sorted = Array.from(codeToGid.entries()).sort((left, right) => left[0] - right[0]);
   const groups: Array<{ start: number; end: number; startGid: number }> = [];

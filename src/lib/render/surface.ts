@@ -1,4 +1,4 @@
-import type { Canvas, CanvasKit, FontMgr, Image, Surface } from 'canvaskit-wasm';
+import type { Canvas, CanvasKit, Image, Surface, TypefaceFontProvider } from 'canvaskit-wasm';
 import { getCanvasKit } from '@/lib/render/canvaskit';
 import { EXPORT_BACKGROUND, PAGE_BORDER_COLOR, RENDER_SCALE } from '@/lib/render/constants';
 import { loadRendererFonts } from '@/lib/render/fonts';
@@ -260,13 +260,13 @@ function drawLineOp(CanvasKitModule: CanvasKit, canvas: Canvas, operation: Extra
 
 function drawParagraphOp(
   CanvasKitModule: CanvasKit,
-  fontManager: FontMgr,
+  fontProvider: TypefaceFontProvider,
   canvas: Canvas,
   operation: Extract<RenderDrawOp, { kind: 'paragraph' }>,
   fallbackFamilies: string[],
 ) {
   const paragraph = operation.box.paragraph;
-  const renderedParagraph = layoutParagraph(CanvasKitModule, fontManager, paragraph, fallbackFamilies);
+  const renderedParagraph = layoutParagraph(CanvasKitModule, fontProvider, paragraph, fallbackFamilies);
   canvas.drawParagraph(renderedParagraph, paragraph.x, paragraph.y);
   renderedParagraph.delete();
 }
@@ -315,7 +315,7 @@ async function drawImageOp(
 
 async function drawOperation(
   CanvasKitModule: CanvasKit,
-  fontManager: FontMgr,
+  fontProvider: TypefaceFontProvider,
   canvas: Canvas,
   operation: RenderDrawOp,
   fallbackFamilies: string[],
@@ -334,7 +334,7 @@ async function drawOperation(
       await drawImageOp(CanvasKitModule, canvas, operation);
       return;
     case 'paragraph':
-      drawParagraphOp(CanvasKitModule, fontManager, canvas, operation, fallbackFamilies);
+      drawParagraphOp(CanvasKitModule, fontProvider, canvas, operation, fallbackFamilies);
       return;
     default:
       return;
@@ -343,7 +343,7 @@ async function drawOperation(
 
 async function drawDocument(
   CanvasKitModule: CanvasKit,
-  fontManager: FontMgr,
+  fontProvider: TypefaceFontProvider,
   surface: Surface,
   document: LayoutDocument,
   fallbackFamilies: string[],
@@ -370,7 +370,7 @@ async function drawDocument(
   }
 
   for (const operation of document.drawOps) {
-    await drawOperation(CanvasKitModule, fontManager, canvas, operation, fallbackFamilies);
+    await drawOperation(CanvasKitModule, fontProvider, canvas, operation, fallbackFamilies);
   }
 
   canvas.restore();
@@ -383,22 +383,25 @@ export async function buildRenderArtifact(
 ): Promise<RenderArtifact> {
   const CanvasKitModule = await getCanvasKit();
   const { faces } = await loadRendererFonts(data.theme.fontFamily);
-  const fontManager = CanvasKitModule.FontMgr.FromData(...faces.map((face) => face.buffer));
-  if (!fontManager) {
-    throw new Error('render-font-manager-unavailable');
+  // 按 manifest 的 family 名注册（registerFont 的 alias），绕开字体内部 name 表：
+  // Google static TTF 常把 family 标成带字重的名字（如 "Noto Serif SC ExtraLight"），
+  // 按内部名匹配会静默回退，导致预览与 PDF 用上不同的字体。
+  const fontProvider = CanvasKitModule.TypefaceFontProvider.Make();
+  for (const face of faces) {
+    fontProvider.registerFont(face.buffer, face.family);
   }
 
   const fontSet = createRenderFontSet(CanvasKitModule, faces);
   const fallbackFamilies = fontSet.fallbackFamilies(data.theme.fontFamily);
 
   try {
-    const document = await buildLayoutDocument(CanvasKitModule, fontManager, fontSet, data, options);
+    const document = await buildLayoutDocument(CanvasKitModule, fontProvider, fontSet, data, options);
     const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
     const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
     const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
 
     try {
-      await drawDocument(CanvasKitModule, fontManager, surface, document, fallbackFamilies);
+      await drawDocument(CanvasKitModule, fontProvider, surface, document, fallbackFamilies);
       const snapshot = surface.makeImageSnapshot();
       if (!snapshot) {
         throw new Error('render-snapshot-unavailable');
@@ -447,7 +450,7 @@ export async function buildRenderArtifact(
     }
   } finally {
     fontSet.dispose();
-    fontManager.delete();
+    fontProvider.delete();
   }
 }
 

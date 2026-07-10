@@ -59,7 +59,7 @@ import type {
   Skill,
   SkillItem,
 } from '@/types';
-import type { CanvasKit, FontMgr } from 'canvaskit-wasm';
+import type { CanvasKit, TypefaceFontProvider } from 'canvaskit-wasm';
 
 const LARGE_PARAGRAPH_WIDTH = 4096;
 const DEFAULT_TEXT_COLOR = '#374151';
@@ -109,7 +109,7 @@ const GITHUB_ICON = CONTACT_GITHUB_ICON;
 const STAR_ICON = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
 const LINK_ICON = 'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z';
 
-type FontManager = FontMgr;
+type FontManager = TypefaceFontProvider;
 
 function ptToPx(value: number) {
   return value * POINT_TO_CSS_PIXEL;
