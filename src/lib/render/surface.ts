@@ -377,12 +377,28 @@ async function drawDocument(
   surface.flush();
 }
 
-export async function buildRenderArtifact(
-  data: ResumeData,
-  options: RenderBuildOptions,
-): Promise<RenderArtifact> {
-  const CanvasKitModule = await getCanvasKit();
-  const { faces } = await loadRendererFonts(data.theme.fontFamily);
+interface FontContext {
+  key: string;
+  faces: Awaited<ReturnType<typeof loadRendererFonts>>['faces'];
+  fontProvider: TypefaceFontProvider;
+  fontSet: ReturnType<typeof createRenderFontSet>;
+  fallbackFamilies: string[];
+}
+
+let cachedFontContext: FontContext | null = null;
+/** 换字体后延迟释放旧对象：可能仍有 in-flight 的构建在使用 */
+const FONT_CONTEXT_DISPOSE_DELAY_MS = 5000;
+
+/**
+ * 字体装配结果按 fontFamily 缓存：wasm 侧的 typeface 解析与 buffer 拷贝
+ * 是每次重建预览的固定开销，字体不变时无需重做。
+ */
+async function acquireFontContext(CanvasKitModule: CanvasKit, selectedFamily: string): Promise<FontContext> {
+  if (cachedFontContext && cachedFontContext.key === selectedFamily) {
+    return cachedFontContext;
+  }
+
+  const { faces } = await loadRendererFonts(selectedFamily);
   // 按 manifest 的 family 名注册（registerFont 的 alias），绕开字体内部 name 表：
   // Google static TTF 常把 family 标成带字重的名字（如 "Noto Serif SC ExtraLight"），
   // 按内部名匹配会静默回退，导致预览与 PDF 用上不同的字体。
@@ -390,67 +406,88 @@ export async function buildRenderArtifact(
   for (const face of faces) {
     fontProvider.registerFont(face.buffer, face.family);
   }
-
   const fontSet = createRenderFontSet(CanvasKitModule, faces);
-  const fallbackFamilies = fontSet.fallbackFamilies(data.theme.fontFamily);
+
+  const previous = cachedFontContext;
+  if (previous) {
+    window.setTimeout(() => {
+      previous.fontSet.dispose();
+      previous.fontProvider.delete();
+    }, FONT_CONTEXT_DISPOSE_DELAY_MS);
+  }
+
+  cachedFontContext = {
+    key: selectedFamily,
+    faces,
+    fontProvider,
+    fontSet,
+    fallbackFamilies: fontSet.fallbackFamilies(selectedFamily),
+  };
+  return cachedFontContext;
+}
+
+export async function buildRenderArtifact(
+  data: ResumeData,
+  options: RenderBuildOptions,
+): Promise<RenderArtifact> {
+  const CanvasKitModule = await getCanvasKit();
+  const { faces, fontProvider, fontSet, fallbackFamilies } = await acquireFontContext(
+    CanvasKitModule,
+    data.theme.fontFamily,
+  );
+
+  const document = await buildLayoutDocument(CanvasKitModule, fontProvider, fontSet, data, options);
+  const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
+  const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
+  const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
 
   try {
-    const document = await buildLayoutDocument(CanvasKitModule, fontProvider, fontSet, data, options);
-    const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
-    const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
-    const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
+    await drawDocument(CanvasKitModule, fontProvider, surface, document, fallbackFamilies);
+    const snapshot = surface.makeImageSnapshot();
+    if (!snapshot) {
+      throw new Error('render-snapshot-unavailable');
+    }
 
     try {
-      await drawDocument(CanvasKitModule, fontProvider, surface, document, fallbackFamilies);
-      const snapshot = surface.makeImageSnapshot();
-      if (!snapshot) {
-        throw new Error('render-snapshot-unavailable');
+      const encoded = snapshot.encodeToBytes(CanvasKitModule.ImageFormat.PNG, 100);
+      if (!encoded) {
+        throw new Error('render-encode-failed');
       }
 
-      try {
-        const encoded = snapshot.encodeToBytes(CanvasKitModule.ImageFormat.PNG, 100);
-        if (!encoded) {
-          throw new Error('render-encode-failed');
-        }
-
-        const pngBytes = new Uint8Array(encoded);
-        const pngBuffer = pngBytes.buffer.slice(pngBytes.byteOffset, pngBytes.byteOffset + pngBytes.byteLength);
-        const blob = new Blob([pngBuffer], { type: 'image/png' });
-        const objectUrl = URL.createObjectURL(blob);
-        const fingerprint = hashString(
-          JSON.stringify({
-            theme: data.theme,
-            schemaVersion: data.schemaVersion,
-            width: document.width,
-            height: document.height,
-            pages: document.pages.length,
-            ops: document.drawOps.length,
-            text: document.textRuns.length,
-            links: document.linkRegions.length,
-          }),
-        );
-
-        return {
-          blob,
-          pngBytes,
+      const pngBytes = new Uint8Array(encoded);
+      const pngBuffer = pngBytes.buffer.slice(pngBytes.byteOffset, pngBytes.byteOffset + pngBytes.byteLength);
+      const blob = new Blob([pngBuffer], { type: 'image/png' });
+      const objectUrl = URL.createObjectURL(blob);
+      const fingerprint = hashString(
+        JSON.stringify({
+          theme: data.theme,
+          schemaVersion: data.schemaVersion,
           width: document.width,
           height: document.height,
-          pixelWidth,
-          pixelHeight,
-          document,
-          fonts: faces,
-          objectUrl,
-          fingerprint,
-        };
-      } finally {
-        snapshot.delete();
-      }
+          pages: document.pages.length,
+          ops: document.drawOps.length,
+          text: document.textRuns.length,
+          links: document.linkRegions.length,
+        }),
+      );
+
+      return {
+        blob,
+        pngBytes,
+        width: document.width,
+        height: document.height,
+        pixelWidth,
+        pixelHeight,
+        document,
+        fonts: faces,
+        objectUrl,
+        fingerprint,
+      };
     } finally {
-      surface.delete();
+      snapshot.delete();
     }
   } finally {
-    fontSet.dispose();
-    fontProvider.delete();
+    surface.delete();
   }
 }
 
