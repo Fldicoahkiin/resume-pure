@@ -24,7 +24,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
 
   const typeSelect = (
     <div className="mb-4 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-      <label>{t('editor.customSection.templateType', '模块模板')}:</label>
+      <label>{t('editor.customSection.templateType')}:</label>
       <select
         value={type}
         onChange={(e) => {

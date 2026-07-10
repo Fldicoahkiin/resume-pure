@@ -4,7 +4,9 @@
     "startEditing": "Start Editing",
     "createResume": "Create Now",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "hide": "Hide",
+    "show": "Show"
   },
   "home": {
     "hero": {
@@ -230,7 +232,11 @@
       "logoUrlPlaceholder": "Optional. When empty, try to match from the skill name",
       "logoAutoHint": "Using an automatically matched logo based on the skill name.",
       "logoTooLarge": "Image is too large. Keep it under 512KB.",
-      "logoUploadFailed": "Failed to upload the logo."
+      "logoUploadFailed": "Failed to upload the logo.",
+      "advancedSettings": "Advanced settings",
+      "visibleShow": "Shown",
+      "visibleHide": "Hidden",
+      "descriptionLabel": "Description"
     },
     "customSection": {
       "title": "Custom Section",
@@ -262,7 +268,8 @@
       "showBulletPoints": "Show bullet points",
       "hideBulletPoints": "Hide bullet points",
       "addItem": "Add Item",
-      "deleteTitle": "Delete this item"
+      "deleteTitle": "Delete this item",
+      "templateType": "Section template"
     },
     "theme": {
       "title": "Settings",
@@ -306,6 +313,13 @@
       "delete": "Delete",
       "moveUp": "Move Up",
       "moveDown": "Move Down"
+    },
+    "font": {
+      "groupZh": "Chinese fonts",
+      "groupSans": "Sans serif",
+      "groupSerif": "Serif",
+      "noResults": "No fonts found",
+      "zhSample": "永"
     }
   },
   "export": {

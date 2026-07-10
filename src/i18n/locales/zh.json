@@ -4,7 +4,9 @@
     "startEditing": "开始编辑",
     "createResume": "立即制作",
     "confirm": "确认",
-    "cancel": "取消"
+    "cancel": "取消",
+    "hide": "隐藏",
+    "show": "显示"
   },
   "home": {
     "hero": {
@@ -230,7 +232,11 @@
       "logoUrlPlaceholder": "可选，不填则尝试按技能名称自动匹配",
       "logoAutoHint": "当前使用技能名称自动匹配的 logo。",
       "logoTooLarge": "图片过大，请控制在 512KB 以内。",
-      "logoUploadFailed": "logo 上传失败，请重试。"
+      "logoUploadFailed": "logo 上传失败，请重试。",
+      "advancedSettings": "高级设置",
+      "visibleShow": "显示",
+      "visibleHide": "隐藏",
+      "descriptionLabel": "描述"
     },
     "customSection": {
       "title": "自定义模块",
@@ -262,7 +268,8 @@
       "showBulletPoints": "显示项目符号",
       "hideBulletPoints": "隐藏项目符号",
       "addItem": "添加条目",
-      "deleteTitle": "删除此条目"
+      "deleteTitle": "删除此条目",
+      "templateType": "模块模板"
     },
     "theme": {
       "title": "自定义设置",
@@ -306,6 +313,13 @@
       "delete": "删除",
       "moveUp": "上移",
       "moveDown": "下移"
+    },
+    "font": {
+      "groupZh": "中文字体",
+      "groupSans": "无衬线字体",
+      "groupSerif": "衬线字体",
+      "noResults": "未找到匹配字体",
+      "zhSample": "永"
     }
   },
   "export": {
