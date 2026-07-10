@@ -333,12 +333,13 @@ function renderBuilderPageLayout({
         {/* 右侧预览区 - 移动端根据 mobileView 切换显示 */}
         <div id="builder-preview-area" className={`bg-gray-100 dark:bg-gray-950 h-full min-h-0 overflow-hidden relative flex flex-col ${ui.mobileView === 'edit' ? 'hidden lg:!flex' : 'flex'}`}>
           {/* 缩放控制 */}
-          <div data-print-hide className="flex h-auto sm:h-14 shrink-0 flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <p className="hidden md:block text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+          <div data-print-hide className="flex min-h-14 shrink-0 flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2 sm:py-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            {/* 预览列窄时提示截断让位，保证右侧控件始终单行不溢出 */}
+            <p className="hidden md:block flex-1 min-w-0 truncate text-xs text-gray-400 dark:text-gray-500">
               {t('builder.previewHelp')}
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex shrink-0 items-center justify-center gap-3">
               <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
                 <button
                   type="button"
