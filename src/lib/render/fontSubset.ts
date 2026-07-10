@@ -247,21 +247,68 @@ export function subsetFont(buffer: ArrayBuffer, codePoints: Set<number>): Uint8A
     }
   }
 
-  // GID 0（.notdef）必须保留；其余按用到的字形升序重新编号
-  const usedOldGids = Array.from(new Set<number>([0, ...Array.from(codeToOldGid.values())])).sort(
-    (left, right) => left - right,
-  );
+  const isCompositeGlyph = (gid: number) => {
+    const start = readLocaEntry(gid);
+    const end = readLocaEntry(gid + 1);
+    return end > start && view.getInt16(glyf.offset + start) < 0;
+  };
+
+  // 遍历复合字形的 component 序列，对每个 component 调用 visit（返回新 GID 时原地重写）
+  const walkComponents = (
+    glyphView: DataView,
+    baseOffset: number,
+    visit: (glyphIndex: number, indexOffset: number) => void,
+  ) => {
+    let offset = baseOffset + 10; // 跳过 numberOfContours + bbox
+    for (;;) {
+      const flags = glyphView.getUint16(offset);
+      visit(glyphView.getUint16(offset + 2), offset + 2);
+      offset += 4;
+      offset += flags & 0x0001 ? 4 : 2; // ARG_1_AND_2_ARE_WORDS
+      if (flags & 0x0008) offset += 2; // WE_HAVE_A_SCALE
+      else if (flags & 0x0040) offset += 4; // X_AND_Y_SCALE
+      else if (flags & 0x0080) offset += 8; // TWO_BY_TWO
+      if (!(flags & 0x0020)) break; // MORE_COMPONENTS
+    }
+  };
+
+  // GID 0（.notdef）必须保留；复合字形引用的 component 也要纳入（闭包展开），
+  // 否则重音拉丁等复合字形在子集里指向失效的旧编号。
+  const usedGidSet = new Set<number>();
+  const pendingGids = [0, ...Array.from(codeToOldGid.values())];
+  while (pendingGids.length > 0) {
+    const gid = pendingGids.pop() as number;
+    if (usedGidSet.has(gid)) {
+      continue;
+    }
+    usedGidSet.add(gid);
+    if (isCompositeGlyph(gid)) {
+      walkComponents(view, glyf.offset + readLocaEntry(gid), (componentGid) => {
+        pendingGids.push(componentGid);
+      });
+    }
+  }
+
+  const usedOldGids = Array.from(usedGidSet).sort((left, right) => left - right);
   const oldToNewGid = new Map<number, number>(usedOldGids.map((oldGid, newGid) => [oldGid, newGid]));
   const newNumGlyphs = usedOldGids.length;
 
-  // 重建 glyf / loca（long 格式），字形字节原样搬运
+  // 重建 glyf / loca（统一 long 格式）；复合字形复制后原地重写 component 的新 GID
   const glyphParts: Uint8Array[] = [];
   const newLocaOffsets: number[] = [0];
   let glyfCursor = 0;
   for (const oldGid of usedOldGids) {
     const start = readLocaEntry(oldGid);
     const end = readLocaEntry(oldGid + 1);
-    const glyphBytes = src.subarray(glyf.offset + start, glyf.offset + end);
+    let glyphBytes: Uint8Array = src.subarray(glyf.offset + start, glyf.offset + end);
+    if (isCompositeGlyph(oldGid)) {
+      const copy = src.slice(glyf.offset + start, glyf.offset + end);
+      const copyView = new DataView(copy.buffer);
+      walkComponents(copyView, 0, (componentGid, indexOffset) => {
+        copyView.setUint16(indexOffset, oldToNewGid.get(componentGid) as number);
+      });
+      glyphBytes = copy;
+    }
     glyphParts.push(glyphBytes);
     glyfCursor += glyphBytes.length;
     if (glyfCursor % 2 !== 0) {
@@ -291,6 +338,8 @@ export function subsetFont(buffer: ArrayBuffer, codePoints: Set<number>): Uint8A
 
   const newHead = src.slice(head.offset, head.offset + head.length);
   new DataView(newHead.buffer).setUint32(8, 0); // checkSumAdjustment：整表校验，置 0
+  // 源字体可能是 short loca（如 Roboto），而新 loca 恒为 long 格式，必须显式声明
+  new DataView(newHead.buffer).setInt16(50, 1);
 
   const newName = src.slice(name.offset, name.offset + name.length);
 
