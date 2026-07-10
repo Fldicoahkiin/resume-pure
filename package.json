@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
     "render-assets:update": "node scripts/sync-render-assets.js",
     "fonts:update": "node scripts/generate-font-css.js",
     "icons:update": "node scripts/generate-icons.js"
