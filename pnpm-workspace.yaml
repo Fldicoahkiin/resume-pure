@@ -1,0 +1,3 @@
+allowBuilds:
+  # eslint 的可选原生 resolver，不执行构建脚本也正常工作（回退 JS 实现）
+  unrs-resolver: false
