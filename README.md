@@ -41,15 +41,15 @@ Resume Pure 的核心目标是：
 ```bash
 git clone https://github.com/Fldicoahkiin/resume-pure.git
 cd resume-pure
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
 
 ### 生产构建
 
 ```bash
-pnpm build
-pnpm start
+bun run build
+bun run start
 ```
 
 ### 渲染字体生成
@@ -97,7 +97,7 @@ docker run -p 3000:80 resume-pure
 3. 选择 Connect to Git，关联你 Fork 的仓库
 4. 构建设置：
    - **Framework preset**: `Next.js (Static HTML Export)`
-   - **Build command**: `pnpm build`
+   - **Build command**: `bun run build`
    - **Build output directory**: `out`
 5. 点击 Save and Deploy
 

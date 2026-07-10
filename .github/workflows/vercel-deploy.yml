@@ -25,17 +25,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 9
+          bun-version: latest
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
 
       - name: Validate Vercel Secrets
         run: |
@@ -44,13 +43,13 @@ jobs:
           [ -n "$VERCEL_PROJECT_ID" ] || (echo "::error::Missing secret VERCEL_PROJECT_ID" && exit 1)
 
       - name: Pull Vercel Environment
-        run: pnpm dlx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+        run: bunx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: pnpm dlx vercel build --token="$VERCEL_TOKEN"
+        run: bunx vercel build --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Preview
-        run: pnpm dlx vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+        run: bunx vercel deploy --prebuilt --token="$VERCEL_TOKEN"
 
   deploy-production:
     if: github.event_name != 'pull_request'
@@ -61,17 +60,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 9
+          bun-version: latest
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
 
       - name: Validate Vercel Secrets
         run: |
@@ -80,10 +78,10 @@ jobs:
           [ -n "$VERCEL_PROJECT_ID" ] || (echo "::error::Missing secret VERCEL_PROJECT_ID" && exit 1)
 
       - name: Pull Vercel Environment
-        run: pnpm dlx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: bunx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: pnpm dlx vercel build --prod --token="$VERCEL_TOKEN"
+        run: bunx vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel Production
-        run: pnpm dlx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        run: bunx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

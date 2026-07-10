@@ -1,0 +1,335 @@
+- generic [active] [ref=f17e1]:
+  - alert [ref=f17e2]
+  - generic [ref=f17e3]:
+    - banner [ref=f17e4]:
+      - generic [ref=f17e6]:
+        - link "Resume Pure" [ref=f17e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f17e12]:
+          - generic [ref=f17e13]:
+            - button "撤销" [disabled] [ref=f17e14]
+            - button "重做" [disabled] [ref=f17e18]
+          - button "Switch to English" [ref=f17e22] [cursor=pointer]
+          - button "切换到深色模式" [ref=f17e27] [cursor=pointer]
+          - generic [ref=f17e35]:
+            - button "PNG" [ref=f17e36] [cursor=pointer]
+            - button "PDF" [ref=f17e40] [cursor=pointer]
+    - generic [ref=f17e44]:
+      - generic [ref=f17e45]:
+        - generic [ref=f17e47]:
+          - button "表单" [ref=f17e48] [cursor=pointer]
+          - button "Raw" [ref=f17e51] [cursor=pointer]
+        - generic [ref=f17e56]:
+          - generic [ref=f17e57]:
+            - heading "个人信息" [level=2] [ref=f17e62]
+            - generic [ref=f17e63]:
+              - generic [ref=f17e64]:
+                - text: 姓名
+                - textbox "姓名" [ref=f17e65]:
+                  - /placeholder: ""
+                  - text: 张伟民
+              - generic [ref=f17e66]:
+                - text: 职位
+                - textbox "职位" [ref=f17e67]:
+                  - /placeholder: ""
+                  - text: Senior Frontend Engineer 高级前端工程师
+              - generic [ref=f17e68]:
+                - text: 个人简介
+                - textbox "个人简介" [ref=f17e69]:
+                  - /placeholder: ""
+                  - text: 8 年前端开发经验，专注 **性能优化** 与 [开源贡献](https://github.com/zhangweimin)。主导过日活千万级应用的架构演进 🚀，熟悉 React / TypeScript 生态。
+              - generic [ref=f17e70]:
+                - text: 邮箱
+                - generic [ref=f17e71]:
+                  - button [ref=f17e73] [cursor=pointer]
+                  - textbox [ref=f17e79]: zhangweimin@example.com
+              - generic [ref=f17e80]:
+                - text: 电话
+                - generic [ref=f17e81]:
+                  - button [ref=f17e83] [cursor=pointer]
+                  - textbox [ref=f17e88]: 138-0000-1234
+              - generic [ref=f17e89]:
+                - text: 个人网站
+                - generic [ref=f17e90]:
+                  - button [ref=f17e92] [cursor=pointer]
+                  - textbox [ref=f17e98]: https://zhangweimin.dev
+              - generic [ref=f17e99]:
+                - text: LinkedIn
+                - generic [ref=f17e100]:
+                  - button [ref=f17e102] [cursor=pointer]
+                  - textbox [ref=f17e109]
+              - generic [ref=f17e110]:
+                - text: GitHub
+                - generic [ref=f17e111]:
+                  - button [ref=f17e113] [cursor=pointer]
+                  - textbox [ref=f17e119]: https://github.com/zhangweimin
+              - generic [ref=f17e120]:
+                - text: 地点
+                - generic [ref=f17e121]:
+                  - button [ref=f17e123] [cursor=pointer]
+                  - textbox [ref=f17e129]: 上海市浦东新区
+            - generic [ref=f17e130]:
+              - generic [ref=f17e131]:
+                - heading "自定义联系方式" [level=3] [ref=f17e132]
+                - button "添加" [ref=f17e133] [cursor=pointer]
+              - paragraph [ref=f17e135]: 点击"添加"按钮添加自定义联系方式
+          - generic [ref=f17e136]:
+            - generic [ref=f17e137]:
+              - button "工作经历" [ref=f17e151]
+              - button "点击隐藏此模块" [ref=f17e152] [cursor=pointer]
+              - button [ref=f17e156] [cursor=pointer]
+            - generic [ref=f17e159]:
+              - generic [ref=f17e161]:
+                - button "删除此工作经历" [ref=f17e162] [cursor=pointer]
+                - generic [ref=f17e166]:
+                  - text: 公司
+                  - textbox "公司" [ref=f17e167]:
+                    - /placeholder: ""
+                    - text: 字节跳动
+                - generic [ref=f17e168]:
+                  - text: 职位
+                  - textbox "职位" [ref=f17e169]:
+                    - /placeholder: ""
+                    - text: 资深前端工程师 Senior Frontend Engineer
+                - generic [ref=f17e170]:
+                  - text: 时间
+                  - textbox "时间" [ref=f17e171]:
+                    - /placeholder: ""
+                    - text: 2020-03 - - 至今
+                - generic [ref=f17e172]:
+                  - generic [ref=f17e173]:
+                    - generic [ref=f17e174]: 工作内容
+                    - button "隐藏项目符号" [pressed] [ref=f17e175] [cursor=pointer]
+                  - textbox "每行一个要点" [ref=f17e177]: • 负责抖音创作者平台核心链路，首屏 LCP 从 3.2s 优化至 **1.1s**，转化率提升 12% • 搭建团队 CI/CD 流水线与 [组件库](https://example.com/ui)，覆盖 40+ 业务模块 • 推动 TypeScript 全量迁移，类型覆盖率达到 95% 以上，线上事故率下降约三分之一
+              - generic [ref=f17e180]:
+                - button "删除此工作经历" [ref=f17e181] [cursor=pointer]
+                - generic [ref=f17e185]:
+                  - text: 公司
+                  - textbox "公司" [ref=f17e186]:
+                    - /placeholder: ""
+                    - text: Alibaba Group
+                - generic [ref=f17e187]:
+                  - text: 职位
+                  - textbox "职位" [ref=f17e188]:
+                    - /placeholder: ""
+                    - text: Frontend Engineer
+                - generic [ref=f17e189]:
+                  - text: 时间
+                  - textbox "时间" [ref=f17e190]:
+                    - /placeholder: ""
+                    - text: 2019-03 - 2020-02
+                - generic [ref=f17e191]:
+                  - generic [ref=f17e192]:
+                    - generic [ref=f17e193]: 工作内容
+                    - button "隐藏项目符号" [pressed] [ref=f17e194] [cursor=pointer]
+                  - textbox "每行一个要点" [ref=f17e196]: • Built the seller dashboard used by 2M+ merchants with React and GraphQL • Reduced bundle size by 46% via code-splitting and dependency pruning • Led the migration from Webpack 4 to Vite, cutting cold-start time by 80%
+              - generic [ref=f17e199]:
+                - button "删除此工作经历" [ref=f17e200] [cursor=pointer]
+                - generic [ref=f17e204]:
+                  - text: 公司
+                  - textbox "公司" [ref=f17e205]:
+                    - /placeholder: ""
+                    - text: 美团点评
+                - generic [ref=f17e206]:
+                  - text: 职位
+                  - textbox "职位" [ref=f17e207]:
+                    - /placeholder: ""
+                    - text: 前端工程师
+                - generic [ref=f17e208]:
+                  - text: 时间
+                  - textbox "时间" [ref=f17e209]:
+                    - /placeholder: ""
+                    - text: 2018-03 - 2019-02
+                - generic [ref=f17e210]:
+                  - generic [ref=f17e211]:
+                    - generic [ref=f17e212]: 工作内容
+                    - button "隐藏项目符号" [pressed] [ref=f17e213] [cursor=pointer]
+                  - textbox "每行一个要点" [ref=f17e215]: • 参与外卖商家端订单管理系统重构，日均处理订单 300 万单 • 实现基于 WebSocket 的实时订单推送，延迟从 5s 降至 200ms • ~~维护 jQuery 遗留系统~~ 完成向 React 的渐进式迁移
+              - generic [ref=f17e218]:
+                - button "删除此工作经历" [ref=f17e219] [cursor=pointer]
+                - generic [ref=f17e223]:
+                  - text: 公司
+                  - textbox "公司" [ref=f17e224]:
+                    - /placeholder: ""
+                    - text: 初创公司 TechStart
+                - generic [ref=f17e225]:
+                  - text: 职位
+                  - textbox "职位" [ref=f17e226]:
+                    - /placeholder: ""
+                    - text: 全栈实习生
+                - generic [ref=f17e227]:
+                  - text: 时间
+                  - textbox "时间" [ref=f17e228]:
+                    - /placeholder: ""
+                    - text: 2017-03 - 2018-02
+                - generic [ref=f17e229]:
+                  - generic [ref=f17e230]:
+                    - generic [ref=f17e231]: 工作内容
+                    - button "隐藏项目符号" [pressed] [ref=f17e232] [cursor=pointer]
+                  - textbox "每行一个要点" [ref=f17e234]: "• 独立完成后台管理系统前端，使用 `Vue 2` + Element UI • 编写 Node.js 数据抓取服务，日采集数据 10 万条"
+              - button "添加工作" [ref=f17e236] [cursor=pointer]
+          - generic [ref=f17e238]:
+            - generic [ref=f17e239]:
+              - button "项目经历" [ref=f17e252]
+              - button "点击隐藏此模块" [ref=f17e253] [cursor=pointer]
+              - button [ref=f17e257] [cursor=pointer]
+            - generic [ref=f17e260]:
+              - generic [ref=f17e261]:
+                - generic [ref=f17e263]:
+                  - generic [ref=f17e272]: resume-pure
+                  - button "删除此项目" [ref=f17e273] [cursor=pointer]
+                  - button "隐藏" [ref=f17e277] [cursor=pointer]
+                  - button [ref=f17e281] [cursor=pointer]
+                - generic [ref=f17e285]:
+                  - generic [ref=f17e294]: flow-editor
+                  - button "删除此项目" [ref=f17e295] [cursor=pointer]
+                  - button "隐藏" [ref=f17e299] [cursor=pointer]
+                  - button [ref=f17e303] [cursor=pointer]
+              - button "添加项目" [ref=f17e307] [cursor=pointer]
+          - generic [ref=f17e309]:
+            - generic [ref=f17e310]:
+              - button "专业技能" [ref=f17e323]
+              - button "点击隐藏此模块" [ref=f17e324] [cursor=pointer]
+              - button [ref=f17e328] [cursor=pointer]
+            - generic [ref=f17e331]:
+              - generic [ref=f17e332]:
+                - generic [ref=f17e334]:
+                  - generic [ref=f17e343]: 前端框架
+                  - button "删除分类" [ref=f17e344] [cursor=pointer]
+                  - button "隐藏" [ref=f17e348] [cursor=pointer]
+                  - button [ref=f17e352] [cursor=pointer]
+                - generic [ref=f17e356]:
+                  - generic [ref=f17e365]: 工程化
+                  - button "删除分类" [ref=f17e366] [cursor=pointer]
+                  - button "隐藏" [ref=f17e370] [cursor=pointer]
+                  - button [ref=f17e374] [cursor=pointer]
+              - button "添加分类" [ref=f17e378] [cursor=pointer]
+          - generic [ref=f17e380]:
+            - generic [ref=f17e381]:
+              - button "教育背景" [ref=f17e395]
+              - button "点击隐藏此模块" [ref=f17e396] [cursor=pointer]
+              - button [ref=f17e400] [cursor=pointer]
+            - generic [ref=f17e403]:
+              - generic [ref=f17e406]:
+                - button "删除此教育经历" [ref=f17e407] [cursor=pointer]
+                - generic [ref=f17e411]:
+                  - text: 学校
+                  - textbox "学校" [ref=f17e412]:
+                    - /placeholder: ""
+                    - text: 浙江大学
+                - generic [ref=f17e413]:
+                  - text: 学位 / 专业
+                  - textbox "学位 / 专业" [ref=f17e414]:
+                    - /placeholder: ""
+                    - text: 本科 - 计算机科学与技术
+                - generic [ref=f17e415]:
+                  - text: 时间
+                  - textbox "时间" [ref=f17e416]:
+                    - /placeholder: ""
+                    - text: 2014-09 - 2018-06
+                - generic [ref=f17e417]:
+                  - text: GPA
+                  - textbox "GPA" [ref=f17e418]:
+                    - /placeholder: ""
+                    - text: 3.8/4.0
+                - generic [ref=f17e419]:
+                  - generic [ref=f17e420]:
+                    - generic [ref=f17e421]: 描述
+                    - button "隐藏项目符号" [pressed] [ref=f17e422] [cursor=pointer]
+                  - textbox "每行一个要点" [ref=f17e424]: • ACM 校队成员，区域赛银牌 • 担任计算机学院学生会技术部部长
+              - button "添加教育" [ref=f17e426] [cursor=pointer]
+          - button "添加自定义模块" [ref=f17e428] [cursor=pointer]
+          - generic [ref=f17e430]:
+            - generic [ref=f17e431]:
+              - heading "自定义设置" [level=2] [ref=f17e436]
+              - button "重置" [ref=f17e437] [cursor=pointer]
+            - generic [ref=f17e441]:
+              - generic [ref=f17e442]:
+                - generic [ref=f17e443]: 主题颜色
+                - generic [ref=f17e444]:
+                  - button [ref=f17e445] [cursor=pointer]
+                  - button [ref=f17e446] [cursor=pointer]
+                  - button [ref=f17e447] [cursor=pointer]
+                  - button [ref=f17e448] [cursor=pointer]
+                  - button [ref=f17e449] [cursor=pointer]
+                  - button [ref=f17e450] [cursor=pointer]
+                  - button [ref=f17e451] [cursor=pointer]
+                  - button [ref=f17e452] [cursor=pointer]
+                  - button [ref=f17e453] [cursor=pointer]
+                  - button [ref=f17e454] [cursor=pointer]
+                  - textbox "自定义颜色" [ref=f17e455] [cursor=pointer]: "#2563eb"
+              - generic [ref=f17e456]:
+                - generic [ref=f17e457]: 字体
+                - button "思源黑体" [ref=f17e459] [cursor=pointer]
+              - generic [ref=f17e466]:
+                - generic [ref=f17e467]: 纸张尺寸
+                - generic [ref=f17e468]:
+                  - button [ref=f17e469] [cursor=pointer]:
+                    - paragraph [ref=f17e470]: A4
+                    - paragraph [ref=f17e471]: 国际标准（多数国家）
+                  - button [ref=f17e472] [cursor=pointer]:
+                    - paragraph [ref=f17e473]: Letter
+                    - paragraph [ref=f17e474]: 美加常用
+                  - button [ref=f17e475] [cursor=pointer]:
+                    - paragraph [ref=f17e476]: Legal
+                    - paragraph [ref=f17e477]: 美国法律文书
+                  - button [ref=f17e478] [cursor=pointer]:
+                    - paragraph [ref=f17e479]: A3
+                    - paragraph [ref=f17e480]: 大幅内容
+              - generic [ref=f17e481]:
+                - generic [ref=f17e482]:
+                  - generic [ref=f17e483]:
+                    - generic [ref=f17e484]: 基础字号
+                    - button "回退默认" [ref=f17e485] [cursor=pointer]
+                  - generic [ref=f17e486]:
+                    - spinbutton [ref=f17e487]: "10.5"
+                    - generic [ref=f17e488]: pt
+                - generic [ref=f17e489]:
+                  - generic [ref=f17e490]: "7"
+                  - slider [ref=f17e491]: "10.5"
+                  - generic [ref=f17e492]: "24"
+              - generic [ref=f17e493]:
+                - generic [ref=f17e494]:
+                  - generic [ref=f17e495]:
+                    - generic [ref=f17e496]: 行高
+                    - button "回退默认" [ref=f17e497] [cursor=pointer]
+                  - spinbutton [ref=f17e499]: "1.35"
+                - generic [ref=f17e500]:
+                  - generic "紧凑" [ref=f17e501]: "1.0"
+                  - slider [ref=f17e502]: "1.35"
+                  - generic "宽松" [ref=f17e503]: "2.5"
+              - generic [ref=f17e504]:
+                - generic [ref=f17e505]:
+                  - generic [ref=f17e506]:
+                    - generic [ref=f17e507]: 模块间距
+                    - button "回退默认" [ref=f17e508] [cursor=pointer]
+                  - generic [ref=f17e509]:
+                    - spinbutton [ref=f17e510]: "4"
+                    - generic [ref=f17e511]: px
+                - generic [ref=f17e512]:
+                  - generic [ref=f17e513]: "0"
+                  - slider [ref=f17e514]: "4"
+                  - generic [ref=f17e515]: "32"
+              - generic [ref=f17e516]:
+                - generic [ref=f17e517]:
+                  - generic [ref=f17e518]: 启用超链接
+                  - paragraph [ref=f17e519]: 导出 PDF 时可点击跳转
+                - button [ref=f17e520] [cursor=pointer]
+              - generic [ref=f17e522]:
+                - generic [ref=f17e523]: GitHub
+                - generic [ref=f17e528]:
+                  - button "登录 GitHub" [ref=f17e529] [cursor=pointer]
+                  - paragraph [ref=f17e533]: 登录 GitHub 可提高 API 速率限额，支持同步仓库信息。
+                  - group [ref=f17e534]:
+                    - generic "或手动填入 Personal Access Token ▸" [ref=f17e535] [cursor=pointer]
+            - paragraph [ref=f17e537]: 更多设置功能即将推出...
+      - generic [ref=f17e540]:
+        - paragraph [ref=f17e541]: 快捷键：Ctrl/Cmd + 滚轮 或 +/-，Ctrl/Cmd + 0 适配宽度
+        - generic [ref=f17e542]:
+          - generic [ref=f17e543]:
+            - button "缩小预览" [ref=f17e544] [cursor=pointer]
+            - generic [ref=f17e546]: 69%
+            - button "放大预览" [ref=f17e547] [cursor=pointer]
+          - generic [ref=f17e549]:
+            - button "适配宽度" [ref=f17e550] [cursor=pointer]
+            - button "实际尺寸" [ref=f17e551] [cursor=pointer]

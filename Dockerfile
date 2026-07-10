@@ -1,15 +1,16 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@8 --activate
+# next build 经 node 执行（bun 只做包管理）
+RUN apk add --no-cache nodejs
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
-RUN pnpm build
+RUN bun run build
 
 # Production stage
 FROM nginx:alpine

@@ -35,15 +35,15 @@ Resume Pure is built around four principles:
 ```bash
 git clone https://github.com/Fldicoahkiin/resume-pure.git
 cd resume-pure
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
 
 ### Production
 
 ```bash
-pnpm build
-pnpm start
+bun run build
+bun run start
 ```
 
 ### Docker
@@ -78,7 +78,7 @@ You can also deploy manually:
 3. Select Connect to Git and link your forked repository
 4. Build settings:
    - **Framework preset**: `Next.js (Static HTML Export)`
-   - **Build command**: `pnpm build`
+   - **Build command**: `bun run build`
    - **Build output directory**: `out`
 5. Click Save and Deploy
 
