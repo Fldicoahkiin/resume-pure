@@ -130,6 +130,12 @@ export interface LayoutPage {
   linkRegions: RenderLinkRegion[];
 }
 
+/** 章节书签：分页后的文档 y 坐标，PDF 侧生成 outline */
+export interface OutlineEntry {
+  title: string;
+  y: number;
+}
+
 export interface LayoutDocument {
   /** 文档总宽高（含页间空隙），预览画布使用 */
   width: number;
@@ -139,6 +145,7 @@ export interface LayoutDocument {
   textRuns: SemanticTextRun[];
   linkRegions: RenderLinkRegion[];
   hitRegions: RenderHitRegion[];
+  outline: OutlineEntry[];
 }
 
 export interface RenderArtifact {

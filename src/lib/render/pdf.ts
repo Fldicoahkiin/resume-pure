@@ -2,6 +2,7 @@ import fontkit from '@pdf-lib/fontkit';
 import {
   PDFDocument,
   PDFFont,
+  PDFHexString,
   PDFImage,
   PDFName,
   PDFNumber,
@@ -401,6 +402,52 @@ function addLinkAnnotation(
   page.node.addAnnot(pdfDoc.context.register(annotation));
 }
 
+/** 章节书签（PDF outline）：每个 section 标题一条，跳到所在页的对应位置 */
+function addDocumentOutline(pdfDoc: PDFDocument, artifact: RenderArtifact) {
+  const entries = artifact.document.outline;
+  if (entries.length === 0) {
+    return;
+  }
+
+  const pages = artifact.document.pages;
+  const context = pdfDoc.context;
+  const outlinesRef = context.nextRef();
+  const entryRefs = entries.map(() => context.nextRef());
+
+  entries.forEach((entry, index) => {
+    let pageIndex = pages.findIndex((page) => entry.y >= page.top && entry.y < page.top + page.height);
+    if (pageIndex === -1) {
+      pageIndex = 0;
+    }
+    const page = pdfDoc.getPage(pageIndex);
+    const yPt = page.getHeight() - (entry.y - pages[pageIndex].top) * K;
+
+    const item = context.obj({
+      Title: PDFHexString.fromText(entry.title),
+      Parent: outlinesRef,
+      Dest: [page.ref, PDFName.of('XYZ'), null, PDFNumber.of(yPt), null],
+    });
+    if (index > 0) {
+      item.set(PDFName.of('Prev'), entryRefs[index - 1]);
+    }
+    if (index < entries.length - 1) {
+      item.set(PDFName.of('Next'), entryRefs[index + 1]);
+    }
+    context.assign(entryRefs[index], item);
+  });
+
+  context.assign(
+    outlinesRef,
+    context.obj({
+      Type: PDFName.of('Outlines'),
+      First: entryRefs[0],
+      Last: entryRefs[entryRefs.length - 1],
+      Count: PDFNumber.of(entries.length),
+    }),
+  );
+  pdfDoc.catalog.set(PDFName.of('Outlines'), outlinesRef);
+}
+
 export async function exportRenderArtifactToPDF(
   artifact: RenderArtifact,
   filename: string,
@@ -450,6 +497,7 @@ export async function exportRenderArtifactToPDF(
     }
   }
 
+  addDocumentOutline(pdfDoc, artifact);
   pdfDoc.setTitle(filename.replace(/\.pdf$/i, ''));
   pdfDoc.setProducer('resume-pure');
 

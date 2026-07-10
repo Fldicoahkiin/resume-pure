@@ -11,6 +11,7 @@ import {
 import type {
   LayoutDocument,
   LayoutPage,
+  OutlineEntry,
   ParagraphSpec,
   RenderBuildOptions,
   RenderDrawOp,
@@ -158,6 +159,7 @@ interface LayoutContext {
   textRuns: SemanticTextRun[];
   linkRegions: RenderLinkRegion[];
   hitRegions: RenderHitRegion[];
+  outline: OutlineEntry[];
   /** 允许分页的位置（元素索引快照），块与块之间可断页，块内不可 */
   breakMarks: BreakMark[];
 }
@@ -865,6 +867,7 @@ function addSectionHeading(context: LayoutContext, anchor: string, title: string
     width: context.contentWidth,
     height: headingHeight,
   });
+  context.outline.push({ title, y: context.cursorY });
   context.cursorY += headingHeight + metrics.sectionHeadingMarginBottom;
 }
 
@@ -2026,6 +2029,10 @@ function paginateDocument(context: LayoutContext, paperHeight: number): LayoutPa
     region.height += bottomOffset - topOffset;
   }
 
+  for (const entry of context.outline) {
+    entry.y += offsetAt(entry.y);
+  }
+
   return pages;
 }
 
@@ -2061,6 +2068,7 @@ export async function buildLayoutDocument(
     textRuns: [],
     linkRegions: [],
     hitRegions: [],
+    outline: [],
     breakMarks: [],
   };
 
@@ -2116,5 +2124,6 @@ export async function buildLayoutDocument(
     textRuns: context.textRuns,
     linkRegions: context.linkRegions,
     hitRegions: context.hitRegions,
+    outline: context.outline,
   };
 }
