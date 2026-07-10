@@ -359,7 +359,9 @@ async function drawTextRun(
     size,
     font,
     color: parseHexColor(run.color),
-    xSkew: run.fontStyle === 'italic' ? degrees(ITALIC_SKEW_DEGREES) : undefined,
+    // PDF 文本矩阵里 ySkew 进 c 位（x 随 y 偏移）才是"竖笔画倾斜、基线水平"的斜体；
+    // xSkew 进 b 位会让基线随字符前进爬升
+    ySkew: run.fontStyle === 'italic' ? degrees(ITALIC_SKEW_DEGREES) : undefined,
   });
 
   if (run.strike) {
