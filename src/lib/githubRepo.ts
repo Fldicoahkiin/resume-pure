@@ -10,7 +10,7 @@ export interface GitHubRepoMeta extends GitHubRepoReference {
   htmlUrl: string;
 }
 
-import { getStoredToken } from './githubAuth';
+import { clearAuth, getStoredToken } from './githubAuth';
 
 function normalizeInputUrl(input: string): string | null {
   const trimmed = input.trim();
@@ -79,6 +79,11 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
   });
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      // token 已被吊销/失效，清掉存储让 UI 回到未登录态
+      clearAuth();
+    }
+
     if (response.status === 403) {
       throw new Error('rate-limited');
     }
@@ -124,6 +129,9 @@ export async function fetchGitHubPullRequests(repoUrl: string, authorLogin: stri
   });
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      clearAuth();
+    }
     if (response.status === 403) {
       throw new Error('rate-limited');
     }
