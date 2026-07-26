@@ -45,6 +45,26 @@ const ICON_VIEWBOX_SIZE = 24;
 const ITALIC_SKEW_DEGREES = 14;
 /** 三次贝塞尔拟合四分之一圆弧的控制点系数 */
 const BEZIER_ARC_KAPPA = 0.5523;
+/** PDF 字体子集名称使用六位大写字母标签 */
+const PDF_SUBSET_TAG_LENGTH = 6;
+const PDF_SUBSET_TAG_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+export function createPdfSubsetFontName(
+  face: Pick<RendererFontFace, 'family' | 'weight' | 'style'>,
+  index: number,
+) {
+  let value = index;
+  let tag = '';
+  for (let position = 0; position < PDF_SUBSET_TAG_LENGTH; position += 1) {
+    tag = PDF_SUBSET_TAG_ALPHABET[value % PDF_SUBSET_TAG_ALPHABET.length] + tag;
+    value = Math.floor(value / PDF_SUBSET_TAG_ALPHABET.length);
+  }
+
+  const family = face.family.replace(/[^a-z0-9]/gi, '') || 'Font';
+  const weight = face.weight >= 600 ? 'Bold' : 'Regular';
+  const style = face.style === 'italic' ? 'Italic' : '';
+  return `${tag}+${family}-${weight}${style}`;
+}
 
 function parseHexColor(value: string): RGB {
   const hex = value.trim().replace(/^#/, '');
@@ -131,7 +151,8 @@ function createFontEmbedder(
 
     const codePoints = usageByFace.get(key)?.codePoints ?? new Set<number>();
     const subsetBytes = subsetFont(face.buffer, codePoints);
-    const pending = pdfDoc.embedFont(subsetBytes, { subset: false });
+    const customName = createPdfSubsetFontName(face, embedded.size);
+    const pending = pdfDoc.embedFont(subsetBytes, { subset: false, customName });
     embedded.set(key, pending);
     return await pending;
   };
