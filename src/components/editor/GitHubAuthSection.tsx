@@ -154,13 +154,16 @@ export function GitHubAuthSection() {
             <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
               {t('editor.theme.githubManualToken')}
             </summary>
-            <input
-              type="password"
-              defaultValue={getStoredToken()}
-              onChange={(e) => setManualToken(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="ghp_xxxxxxxxxxxx"
-            />
+            <form onSubmit={(event) => event.preventDefault()}>
+              <input
+                type="password"
+                autoComplete="new-password"
+                defaultValue={getStoredToken()}
+                onChange={(e) => setManualToken(e.target.value)}
+                className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                placeholder="ghp_xxxxxxxxxxxx"
+              />
+            </form>
           </details>
         </div>
       )}
