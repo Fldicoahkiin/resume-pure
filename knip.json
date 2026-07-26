@@ -4,7 +4,7 @@
     "src/app/**/*.{ts,tsx}",
     "src/lib/pdf.tsx"
   ],
-  "project": ["src/**/*.{ts,tsx}"],
+  "project": ["src/**/*.{ts,tsx,css}"],
   "ignore": [],
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true
