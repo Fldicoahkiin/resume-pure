@@ -164,14 +164,6 @@ export async function toDataUrl(src: string): Promise<string> {
   return viaOriginalFetch || TRANSPARENT_PX;
 }
 
-export interface ResumePreviewCapture {
-  blob: Blob;
-  width: number;
-  height: number;
-  pixelWidth: number;
-  pixelHeight: number;
-}
-
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -183,29 +175,6 @@ function downloadBlob(blob: Blob, filename: string) {
   link.click();
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-}
-
-export async function captureResumePreview(
-  data: ResumeData,
-  options: RenderBuildOptions,
-): Promise<ResumePreviewCapture> {
-  const cacheKey = getRenderArtifactKey(data, options);
-  const cachedArtifact = readCachedRenderArtifact(cacheKey);
-  const artifact = cachedArtifact || await buildRenderArtifact(data, options);
-
-  try {
-    return {
-      blob: artifact.blob,
-      width: artifact.width,
-      height: artifact.height,
-      pixelWidth: artifact.pixelWidth,
-      pixelHeight: artifact.pixelHeight,
-    };
-  } finally {
-    if (!cachedArtifact) {
-      disposeRenderArtifact(artifact);
-    }
-  }
 }
 
 export async function exportToPNG(
