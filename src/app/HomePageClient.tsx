@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, ArrowRight, Github, Eye, HardDrive, Download, Database, FileSearch, ListChecks } from 'lucide-react';
+import { FileText, ArrowRight, Github, Eye, HardDrive, Download, Database, FileSearch, ListChecks, Check } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useTranslation } from 'react-i18next';
@@ -42,13 +42,6 @@ export default function HomePage() {
       {/* Hero */}
       <section className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center sm:text-left flex justify-center sm:justify-start">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-600 dark:text-gray-300 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            {t('common.startEditing')}
-          </div>
           <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
             {t('home.hero.title')}
           </h1>
@@ -61,7 +54,7 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
             <Link
               href="/builder"
-              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 bg-gray-900 text-white font-medium rounded-xl shadow-lg shadow-gray-900/20 hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-gray-900/30 dark:bg-white dark:text-gray-900 dark:shadow-white/10 dark:hover:bg-gray-100 dark:hover:shadow-white/20 transition-all duration-300"
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-6 py-3 font-medium text-white transition-colors duration-150 hover:bg-gray-800 sm:px-8 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
             >
               {t('common.createResume')}
               <ArrowRight size={18} />
@@ -70,7 +63,7 @@ export default function HomePage() {
               href="https://github.com/Fldicoahkiin/resume-pure"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 sm:px-8 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <Github size={18} />
               GitHub
@@ -81,44 +74,44 @@ export default function HomePage() {
 
       {/* Features */}
       <section className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-gray-100 dark:border-gray-800">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 md:grid-cols-3">
           {[
             {
-              icon: <Eye className="text-blue-500 dark:text-blue-400" size={22} />,
+              icon: <Eye size={22} />,
               title: t('home.features.livePreview.title'),
               desc: t('home.features.livePreview.description'),
             },
             {
-              icon: <HardDrive className="text-green-500 dark:text-green-400" size={22} />,
+              icon: <HardDrive size={22} />,
               title: t('home.features.localStorage.title'),
               desc: t('home.features.localStorage.description'),
             },
             {
-              icon: <Download className="text-purple-500 dark:text-purple-400" size={22} />,
+              icon: <Download size={22} />,
               title: t('home.features.multiFormat.title'),
               desc: t('home.features.multiFormat.description'),
             },
             {
-              icon: <FileSearch className="text-amber-500 dark:text-amber-400" size={22} />,
+              icon: <FileSearch size={22} />,
               title: t('home.features.paperSize.title'),
               desc: t('home.features.paperSize.description'),
             },
             {
-              icon: <Database className="text-pink-500 dark:text-pink-400" size={22} />,
+              icon: <Database size={22} />,
               title: t('home.features.rawData.title'),
               desc: t('home.features.rawData.description'),
             },
             {
-              icon: <ListChecks className="text-cyan-500 dark:text-cyan-400" size={22} />,
+              icon: <ListChecks size={22} />,
               title: t('home.features.editingFlow.title'),
               desc: t('home.features.editingFlow.description'),
             },
           ].map((feat) => (
             <div
               key={feat.title}
-              className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none dark:hover:border-gray-700 transition-all duration-300"
+              className="border-t border-gray-200 pt-5 dark:border-gray-700"
             >
-              <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <div className="mb-4 text-gray-700 dark:text-gray-300">
                 {feat.icon}
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{feat.title}</h3>
@@ -134,7 +127,7 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 bg-gray-50/50 dark:bg-gray-800/20 border-t border-gray-100 dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8 sm:mb-12">{t('home.why.title')}</h2>
-          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+          <ul className="mx-auto grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 text-left sm:grid-cols-2">
             {[
               t('home.why.reasons.pureFocus'),
               t('home.why.reasons.noAccount'),
@@ -142,16 +135,12 @@ export default function HomePage() {
               t('home.why.reasons.professional'),
               t('home.why.reasons.control')
             ].map((reason) => (
-              <div key={reason} className="flex items-start gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
+              <li key={reason} className="flex items-start gap-3">
+                <Check className="mt-0.5 shrink-0 text-gray-900 dark:text-white" size={18} strokeWidth={2.5} />
                 <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300 font-medium">{reason}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
