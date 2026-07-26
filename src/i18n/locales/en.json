@@ -348,6 +348,8 @@
     "copyFailed": "Copy failed",
     "jsonError": "JSON format error",
     "yamlError": "YAML format error",
+    "markdownError": "Markdown format error",
+    "exportFailed": "Unable to generate the selected format",
     "schemaVersionError": "Raw data format is invalid or missing required root fields",
     "unsupportedFormat": "Unsupported file format",
     "parseFailed": "File parse failed"
