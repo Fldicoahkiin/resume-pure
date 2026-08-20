@@ -112,6 +112,7 @@ export interface RenderImage {
   height: number;
   src: string;
   radius?: number;
+  fit?: 'cover' | 'contain';
 }
 
 export interface RenderParagraph {

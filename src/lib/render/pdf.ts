@@ -29,6 +29,7 @@ import {
 } from 'pdf-lib';
 import { RENDER_FALLBACK_FAMILY, type RendererFontFace } from '@/lib/render/fonts';
 import { subsetFont } from '@/lib/render/fontSubset';
+import { fitRenderImage } from '@/lib/render/imageGeometry';
 import { loadEncodedImageBuffer } from '@/lib/render/surface';
 import { svgPathToPdfOperators } from '@/lib/render/svgPath';
 import type {
@@ -335,16 +336,38 @@ async function drawImageOp(
     return;
   }
 
-  const x = op.x * K;
-  const y = toPdfY(geometry, op.y, op.height);
-  const width = op.width * K;
-  const height = op.height * K;
+  const destination = fitRenderImage(
+    { x: op.x, y: op.y, width: op.width, height: op.height },
+    { width: image.width, height: image.height },
+    op.fit,
+  );
+  const x = destination.x * K;
+  const y = toPdfY(geometry, destination.y, destination.height);
+  const width = destination.width * K;
+  const height = destination.height * K;
 
-  if (op.radius) {
-    const radius = Math.min(op.radius * K, width / 2, height / 2);
+  if (op.radius || op.fit === 'cover') {
+    const clipX = op.x * K;
+    const clipY = toPdfY(geometry, op.y, op.height);
+    const clipWidth = op.width * K;
+    const clipHeight = op.height * K;
     page.pushOperators(
       pushGraphicsState(),
-      ...roundedRectOperators(x, y, width, height, radius),
+      ...(op.radius
+        ? roundedRectOperators(
+            clipX,
+            clipY,
+            clipWidth,
+            clipHeight,
+            Math.min(op.radius * K, clipWidth / 2, clipHeight / 2),
+          )
+        : [
+            moveTo(clipX, clipY),
+            lineTo(clipX + clipWidth, clipY),
+            lineTo(clipX + clipWidth, clipY + clipHeight),
+            lineTo(clipX, clipY + clipHeight),
+            closePath(),
+          ]),
       clip(),
       endPath(),
     );

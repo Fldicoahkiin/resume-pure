@@ -1,9 +1,14 @@
 import { sectionAnchor, skillAnchor, skillItemAnchor } from '@/lib/previewAnchor';
 import type { SectionConfig, Skill } from '@/types';
 import { addSectionHeading } from './blocks';
-import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, layoutInlineItems, markBreakpoint, ptToPx } from './context';
+import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, layoutInlineItems, markBreakpoint } from './context';
 import type { InlinePlacementItem, LayoutContext } from './context';
-import { buildSkillCapsule } from './inline';
+import { buildSkillEntry } from './inline';
+
+// 技能区用三级间距区分标题、换行和分类切换。
+const SKILL_TITLE_TO_CONTENT_GAP = 3;
+const SKILL_ROW_GAP = 4;
+const SKILL_GROUP_GAP = 9;
 
 function addSkillGroup(context: LayoutContext, skill: Skill) {
   const { metrics } = context;
@@ -22,7 +27,7 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     },
   );
   const titleSize = addParagraph(context, titleSpec);
-  context.cursorY += titleSize.height + ptToPx(metrics.isDenseLayout ? 0 : 1);
+  context.cursorY += titleSize.height + SKILL_TITLE_TO_CONTENT_GAP;
 
   const orderedItems = [
     ...skill.items.filter((item) => item.level === 'core'),
@@ -30,36 +35,35 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     ...skill.items.filter((item) => item.level === 'familiar'),
   ];
 
-  const capsules = orderedItems.map((item) => {
-    const capsule = buildSkillCapsule(context, item);
+  const entries = orderedItems.map((item) => {
+    const entry = buildSkillEntry(context, item);
     return {
-      ...capsule,
+      ...entry,
       place: (x: number, y: number) => {
-        capsule.place(x, y);
+        entry.place(x, y);
         addBlockHitRegion(context, skillItemAnchor(skill.id, item.id), {
           x,
           y,
-          width: capsule.width,
-          height: capsule.height,
+          width: entry.width,
+          height: entry.height,
         });
       },
     } satisfies InlinePlacementItem;
   });
 
-  const capsuleLayout = layoutInlineItems(capsules, {
+  const entryLayout = layoutInlineItems(entries, {
     x: context.contentX,
     y: context.cursorY,
     maxWidth: context.contentWidth,
-    rowGap: 0,
+    rowGap: SKILL_ROW_GAP,
   });
-  context.cursorY += capsuleLayout.height;
+  context.cursorY += entryLayout.height;
   addBlockHitRegion(context, skillAnchor(skill.id), {
     x: context.contentX,
     y: groupStartY,
     width: context.contentWidth,
     height: context.cursorY - groupStartY,
   });
-  context.cursorY += metrics.isDenseLayout ? 4 : metrics.itemMarginBottom;
 }
 
 export function addSkillSection(context: LayoutContext, section: SectionConfig, items: Skill[]) {
@@ -71,7 +75,10 @@ export function addSkillSection(context: LayoutContext, section: SectionConfig, 
   let renderedGroups = 0;
   visibleSkills.forEach((skill) => {
     if (skill.items.length > 0) {
-      if (renderedGroups > 0) markBreakpoint(context);
+      if (renderedGroups > 0) {
+        markBreakpoint(context);
+        context.cursorY += SKILL_GROUP_GAP;
+      }
       renderedGroups += 1;
       addSkillGroup(context, skill);
     }

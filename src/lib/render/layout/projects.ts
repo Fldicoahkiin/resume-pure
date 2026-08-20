@@ -1,5 +1,6 @@
 import type { RenderImage } from '@/lib/render/types';
 import { projectAnchor, projectProofAnchor, sectionAnchor } from '@/lib/previewAnchor';
+import { resolveProjectLogo } from '@/lib/projectLogo';
 import { formatCompactNumber, formatGitHubPath, getDateRange, sanitizeUrl } from '@/lib/resumeUtils';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import type { Project, SectionConfig } from '@/types';
@@ -121,8 +122,8 @@ function addProjectItem(context: LayoutContext, project: Project) {
   const isCompact = project.layout === 'compact';
   const hasProjectDescription = project.description.some((line) => line.trim().length > 0);
   const projectProofs = project.proofs || [];
-  const hasProjectLogo =
-    project.showLogo !== false && Boolean(project.customLogo?.length || project.repoAvatarUrl?.length);
+  const projectLogo = project.showLogo === false ? undefined : resolveProjectLogo(project);
+  const hasProjectLogo = Boolean(projectLogo);
   const projectLogoSize = isCompact
     ? (metrics.isDenseLayout ? 20 : 24)
     : (metrics.isDenseLayout ? 28 : 36);
@@ -167,15 +168,16 @@ function addProjectItem(context: LayoutContext, project: Project) {
   const blockTop = context.cursorY;
   const blockHeight = Math.max(headingLayout.height, dateSize.height, hasProjectLogo ? projectLogoSize : 0);
 
-  if (hasProjectLogo) {
+  if (projectLogo) {
     context.drawOps.push({
       kind: 'image',
       x: context.contentX,
       y: blockTop,
       width: projectLogoSize,
       height: projectLogoSize,
-      src: project.customLogo || project.repoAvatarUrl || '',
-      radius: projectLogoSize / 2,
+      src: projectLogo.src,
+      radius: projectLogo.source === 'custom' ? 4 : projectLogoSize / 2,
+      fit: projectLogo.source === 'custom' ? 'contain' : 'cover',
     } satisfies RenderImage);
   }
 

@@ -88,6 +88,7 @@ function loadImageAsDataUrl(src: string): Promise<string | null> {
     }, 5000);
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    img.referrerPolicy = 'no-referrer';
     img.onload = () => {
       clearTimeout(timeout);
       try {
@@ -128,7 +129,11 @@ function normalizeCorsUrl(src: string): string {
 
 async function fetchAsDataUrl(src: string): Promise<string | null> {
   try {
-    const resp = await fetch(src, { cache: 'no-cache' });
+    const resp = await fetch(src, {
+      cache: 'no-cache',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
     if (!resp.ok) return null;
     const blob = await resp.blob();
     return await new Promise<string>((resolve) => {
