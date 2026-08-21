@@ -1,26 +1,25 @@
 'use client';
 
-import { ChangeEvent } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import type { ChangeEvent } from 'react';
 import { createEntityId } from '@/lib/id';
-import { Project, ProjectProof, ProjectProofRef } from '@/types';
+import type { Project, ProjectProof, ProjectProofRef } from '@/types';
 
 export type SyncState = 'idle' | 'loading' | 'success' | 'error';
 
 export type TranslationFn = (key: string, options?: Record<string, unknown>) => string;
 
-export interface RepoStatus {
+export type RepoStatus = {
   state: SyncState;
   message?: string;
   syncedUrl?: string;
-}
+};
 
-export interface PrPickerState {
+export type PrPickerState = {
   projectId: string;
   refs: ProjectProofRef[];
-}
+};
 
-export interface ProjectCardProps {
+export type ProjectCardProps = {
   project: Project;
   repoStatus?: RepoStatus;
   logoError?: string;
@@ -36,7 +35,7 @@ export interface ProjectCardProps {
   onUpdateProofRef: (project: Project, proofId: string, refId: string, patch: Partial<ProjectProofRef>) => void;
   onFetchPullRequests?: (project: Project) => Promise<void>;
   fetchStatus?: { loading: boolean };
-}
+};
 
 export function getDateValue(project: Project, presentLabel: string): string {
   if (project.current) {
@@ -110,31 +109,25 @@ export function getRepoErrorMessage(t: TranslationFn, error: unknown): string {
   }
 }
 
-export function ToggleButton({
-  active,
-  activeLabel,
-  inactiveLabel,
-  onClick,
+export function ProjectOption({
+  checked,
+  label,
+  onChange,
 }: {
-  active: boolean;
-  activeLabel: string;
-  inactiveLabel: string;
-  onClick: () => void;
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-        active
-          ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200'
-          : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:text-white'
-      }`}
-      aria-pressed={active}
-    >
-      {active ? <Eye size={14} /> : <EyeOff size={14} />}
-      {active ? activeLabel : inactiveLabel}
-    </button>
+    <label className="inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 rounded border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:focus-visible:ring-offset-gray-800"
+      />
+      <span>{label}</span>
+    </label>
   );
 }
 

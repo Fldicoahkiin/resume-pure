@@ -2,7 +2,7 @@
 
 import { List } from 'lucide-react';
 
-interface BulletListTextareaProps {
+type BulletListTextareaProps = {
   label: string;
   value: string[];
   showBulletPoints: boolean;
@@ -12,7 +12,7 @@ interface BulletListTextareaProps {
   hideBulletPointsLabel: string;
   placeholder?: string;
   className?: string;
-}
+};
 
 const NORMALIZED_LINE_BREAK = '\n';
 
@@ -85,7 +85,7 @@ export function BulletListTextarea({
           title={toggleTitle}
           aria-label={toggleTitle}
           aria-pressed={showBulletPoints}
-          className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition ${
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 ${
             showBulletPoints
               ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
               : 'border-gray-300 text-gray-500 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'

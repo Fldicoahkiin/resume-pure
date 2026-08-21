@@ -1,7 +1,7 @@
 'use client';
 
 import { useResumeStore } from '@/store/resumeStore';
-import { CustomSectionType, CustomSection } from '@/types';
+import type { CustomSectionType, CustomSection } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { ProjectEditor } from './ProjectEditor';
 import { ExperienceEditor } from './ExperienceEditor';
@@ -9,11 +9,12 @@ import { EducationEditor } from './EducationEditor';
 import { SkillEditor } from './SkillEditor';
 import { CustomSectionItemsEditor } from './CustomSectionItemsEditor';
 import { inferCustomSectionType } from '@/lib/resumeUtils';
+import { confirmDialog } from '@/components/ConfirmDialog';
 
-interface CustomSectionEditorProps {
+type CustomSectionEditorProps = {
   sectionId: string;
   embedded?: boolean;
-}
+};
 
 export function CustomSectionEditor({ sectionId, embedded = false }: CustomSectionEditorProps) {
   const { t } = useTranslation();
@@ -23,14 +24,26 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
   const type = customSection ? inferCustomSectionType(customSection) : 'custom';
 
   const typeSelect = (
-    <div className="mb-4 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-      <label>{t('editor.customSection.templateType')}:</label>
+    <div className="mb-5 flex flex-col gap-1.5 border-b border-gray-200 px-1 pb-4 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-300 sm:flex-row sm:items-center sm:justify-between">
+      <label htmlFor={`custom-section-template-${sectionId}`} className="font-medium">
+        {t('editor.customSection.templateType')}
+      </label>
       <select
+        id={`custom-section-template-${sectionId}`}
         value={type}
-        onChange={(e) => {
-          updateCustomSection(sectionId, { type: e.target.value as CustomSectionType, items: [] as CustomSection['items'] });
+        onChange={async (event) => {
+          const selectElement = event.currentTarget;
+          const nextType = event.target.value as CustomSectionType;
+          if (nextType === type) return;
+
+          if (customSection?.items.length && !await confirmDialog(t('editor.customSection.changeTemplateConfirm'))) {
+            selectElement.value = type;
+            return;
+          }
+
+          updateCustomSection(sectionId, { type: nextType, items: [] as CustomSection['items'] });
         }}
-        className="form-select px-3 py-1 text-sm rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+        className="form-select min-h-9 w-full cursor-pointer rounded-md border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20 sm:w-56"
       >
         <option value="project">{t('editor.projects.title')}</option>
         <option value="experience">{t('editor.experience.title')}</option>

@@ -1,13 +1,13 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { useState, type DragEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import { SectionConfig } from '@/types';
+import type { SectionConfig } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { sectionAnchor } from '@/lib/previewAnchor';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
-interface DraggableSectionProps {
+type DraggableSectionProps = {
   section: SectionConfig;
   icon: ReactNode;
   children: ReactNode;
@@ -17,11 +17,11 @@ interface DraggableSectionProps {
   onToggleVisible: () => void;
   onTitleChange?: (title: string) => void;
   onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
+  onDragOver: (event: DragEvent) => void;
   onDragEnd: () => void;
   isDragging: boolean;
   onDelete?: () => void;
-}
+};
 
 export function DraggableSection({
   section,
@@ -43,8 +43,8 @@ export function DraggableSection({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(displayTitle);
 
-  const handleTitleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleTitleClick = (event: MouseEvent) => {
+    event.stopPropagation();
     setEditValue(displayTitle);
     setIsEditing(true);
   };
@@ -56,11 +56,11 @@ export function DraggableSection({
     }
   };
 
-  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+  const handleTitleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       handleTitleBlur();
-    } else if (e.key === 'Escape') {
+    } else if (event.key === 'Escape') {
       setEditValue(displayTitle);
       setIsEditing(false);
     }
@@ -118,12 +118,13 @@ export function DraggableSection({
             e.stopPropagation();
             onToggleVisible();
           }}
-          className={`p-1.5 rounded transition ${
+          className={`rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
             section.visible
               ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
               : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700'
           }`}
           title={section.visible ? t('draggableSection.hideSection') : t('draggableSection.showSection')}
+          aria-label={section.visible ? t('draggableSection.hideSection') : t('draggableSection.showSection')}
         >
           {section.visible ? <Eye size={18} /> : <EyeOff size={18} />}
         </button>
@@ -137,8 +138,9 @@ export function DraggableSection({
                 onDelete();
               }
             }}
-            className="p-1.5 rounded text-red-400 hover:text-red-500 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/20 transition"
+            className="rounded-md p-1.5 text-gray-400 transition-colors hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             title={t('draggableSection.deleteSection')}
+            aria-label={t('draggableSection.deleteSection')}
           >
             <Trash2 size={18} />
           </button>
@@ -150,7 +152,9 @@ export function DraggableSection({
             e.stopPropagation();
             onToggleCollapse();
           }}
-          className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition"
+          className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          title={isCollapsed ? t('common.expand') : t('common.collapse')}
+          aria-label={isCollapsed ? t('common.expand') : t('common.collapse')}
         >
           {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </button>
@@ -158,7 +162,7 @@ export function DraggableSection({
 
       {/* Content */}
       {!isCollapsed && (
-        <div className="p-6 pt-4">
+        <div className="p-4 sm:p-6 sm:pt-4">
           {children}
         </div>
       )}

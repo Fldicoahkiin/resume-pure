@@ -253,7 +253,7 @@ function BuilderPageLayout({
             <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
               <button
                 onClick={() => setUi((prev) => ({ ...prev, editorMode: 'form' }))}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   ui.editorMode === 'form'
                     ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -264,7 +264,7 @@ function BuilderPageLayout({
               </button>
               <button
                 onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   ui.editorMode === 'raw'
                     ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -345,7 +345,7 @@ function BuilderPageLayout({
                   type="button"
                   onClick={() => handleZoom(-PREVIEW_SCALE_STEP)}
                   aria-label={t('builder.previewZoomOut')}
-                  className="p-1 text-gray-500 hover:text-gray-900 hover:bg-white dark:hover:bg-gray-800 dark:hover:text-white rounded-md transition-all focus:outline-none"
+                  className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-800 dark:hover:text-white"
                 >
                   <Minus size={16} />
                 </button>
@@ -356,7 +356,7 @@ function BuilderPageLayout({
                   type="button"
                   onClick={() => handleZoom(PREVIEW_SCALE_STEP)}
                   aria-label={t('builder.previewZoomIn')}
-                  className="p-1 text-gray-500 hover:text-gray-900 hover:bg-white dark:hover:bg-gray-800 dark:hover:text-white rounded-md transition-all focus:outline-none"
+                  className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-800 dark:hover:text-white"
                 >
                   <Plus size={16} />
                 </button>
@@ -366,7 +366,7 @@ function BuilderPageLayout({
                 <button
                   type="button"
                   onClick={handleFitScale}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                     ui.previewScaleMode === 'fit'
                       ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -377,7 +377,7 @@ function BuilderPageLayout({
                 <button
                   type="button"
                   onClick={handleActualScale}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                     ui.previewScaleMode === 'actual'
                       ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'

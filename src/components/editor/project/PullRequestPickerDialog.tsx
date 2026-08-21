@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { ProjectProofRef } from '@/types';
+import type { ProjectProofRef } from '@/types';
 
 export function PullRequestPickerDialog({
   repoUrl,
@@ -57,14 +57,23 @@ export function PullRequestPickerDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm dark:bg-black/60"
+        aria-hidden="true"
+        className="absolute inset-0 bg-gray-900/50 dark:bg-black/70"
         onClick={onClose}
       />
 
-      <div className="relative flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pull-request-picker-title"
+        onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === 'Escape') onClose();
+        }}
+        className="relative flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700"
+      >
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('editor.projects.importPrDialogTitle')}</h3>
+            <h3 id="pull-request-picker-title" className="text-lg font-semibold text-gray-900 dark:text-white">{t('editor.projects.importPrDialogTitle')}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('editor.projects.importPrDialogHint', { repo: repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '') })}
             </p>
@@ -72,7 +81,10 @@ export function PullRequestPickerDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            aria-label={t('common.close')}
+            title={t('common.close')}
+            autoFocus
+            className="rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
           >
             <X size={18} />
           </button>
@@ -84,7 +96,7 @@ export function PullRequestPickerDialog({
               type="checkbox"
               checked={allSelected}
               onChange={toggleAll}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+              className="h-4 w-4 rounded border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:ring-offset-gray-800"
             />
             {t('editor.projects.toggleAll', { selected: selectedIds.size, total: refs.length })}
           </label>
@@ -94,13 +106,13 @@ export function PullRequestPickerDialog({
           {refs.map((ref) => (
             <label
               key={ref.id}
-              className="flex cursor-pointer items-start gap-3 rounded-xl p-3 transition hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              className="flex cursor-pointer items-start gap-3 rounded-md p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               <input
                 type="checkbox"
                 checked={selectedIds.has(ref.id)}
                 onChange={() => toggleItem(ref.id)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                className="mt-1 h-4 w-4 rounded border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:ring-offset-gray-800"
               />
               <div className="flex-1 overflow-hidden">
                 <p className="text-sm font-medium text-gray-900 line-clamp-2 dark:text-white">
@@ -124,18 +136,20 @@ export function PullRequestPickerDialog({
             <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <input
                 type="radio"
+                name="pull-request-import-mode"
                 checked={mode === 'single'}
                 onChange={() => setMode('single')}
-                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                className="h-4 w-4 border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:ring-offset-gray-800"
               />
               {t('editor.projects.prModeSingle')}
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <input
                 type="radio"
+                name="pull-request-import-mode"
                 checked={mode === 'merged'}
                 onChange={() => setMode('merged')}
-                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                className="h-4 w-4 border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:ring-offset-gray-800"
               />
               {t('editor.projects.prModeMerged')}
             </label>
@@ -148,7 +162,7 @@ export function PullRequestPickerDialog({
                 value={mergedSummary}
                 onChange={(e) => setMergedSummary(e.target.value)}
                 placeholder={t('editor.projects.mergedSummaryPlaceholder')}
-                className="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-900 shadow-sm outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
                 autoFocus
               />
             </div>
@@ -158,7 +172,7 @@ export function PullRequestPickerDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               {t('common.cancel')}
             </button>
@@ -166,7 +180,7 @@ export function PullRequestPickerDialog({
               type="button"
               onClick={handleConfirm}
               disabled={selectedRefs.length === 0 || (mode === 'merged' && !mergedSummary.trim())}
-              className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 dark:focus-visible:ring-offset-gray-800"
             >
               {t('editor.projects.confirmImport', { count: selectedRefs.length })}
             </button>

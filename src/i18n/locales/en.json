@@ -6,7 +6,10 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "hide": "Hide",
-    "show": "Show"
+    "show": "Show",
+    "close": "Close",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "home": {
     "hero": {
@@ -141,7 +144,7 @@
       "repoRateLimited": "GitHub rate limit reached. Try again later.",
       "repoSyncFailed": "Failed to sync repository metadata.",
       "logoTitle": "Project Logo",
-      "logoHint": "Use a product logo when set, otherwise show the repository owner avatar.",
+      "logoHint": "A product logo overrides the repository avatar.",
       "customLogo": "Custom logo",
       "repoAvatar": "Repository avatar",
       "uploadedLogo": "Uploaded product logo",
@@ -150,7 +153,7 @@
       "logoSource": "Current source",
       "logoUrl": "Logo URL",
       "logoUrlPlaceholder": "https://example.com/product-logo.svg",
-      "logoUrlHint": "Only HTTPS images are loaded. Uploading embeds the image for more reliable exports; external images must allow cross-origin access.",
+      "logoUrlHint": "HTTPS only. Uploaded images are embedded; external URLs must allow cross-origin access.",
       "logoUrlInvalid": "Only HTTPS image URLs are supported.",
       "uploadLogo": "Upload logo",
       "clearCustomLogo": "Restore repository logo",
@@ -166,6 +169,7 @@
       "hideTechnologies": "Hide stack",
       "technologies": "Technologies",
       "technologiesPlaceholder": "Type a technology...",
+      "removeTechnology": "Remove {{technology}}",
       "contributionsTitle": "Contribution Proof",
       "contributionsHint": "Attach commits, PRs, or code links to make the contribution credible.",
       "showContributions": "Show proof",
@@ -188,12 +192,18 @@
       "addDescription": "+ Add description",
       "addProject": "Add Project",
       "addRef": "Add reference",
+      "deleteRef": "Delete reference",
+      "refType": "Reference type",
+      "refUrl": "Reference URL",
+      "refNumber": "Pull request or issue number",
       "compactLayout": "Compact layout",
       "compactLayoutHint": "Tighten spacing for this project",
       "confirmImport": "Import {{count}}",
       "disabled": "Off",
       "enabled": "On",
       "importPr": "Import PR",
+      "noPullRequests": "No merged pull requests found for this GitHub account.",
+      "pullRequestsFailed": "Could not load pull requests. Try again later.",
       "importPrDialogHint": "Choose PRs to import from {{repo}}",
       "importPrDialogTitle": "Import pull requests",
       "importPrTitle": "Import merged PRs from GitHub as contributions",
@@ -278,7 +288,8 @@
       "hideBulletPoints": "Hide bullet points",
       "addItem": "Add Item",
       "deleteTitle": "Delete this item",
-      "templateType": "Section template"
+      "templateType": "Section template",
+      "changeTemplateConfirm": "Changing the template removes the items in this section. Continue?"
     },
     "theme": {
       "title": "Settings",

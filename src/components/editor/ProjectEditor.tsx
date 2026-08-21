@@ -1,13 +1,13 @@
 'use client';
 
-import { ChangeEvent, useState } from 'react';
+import { useState, type ChangeEvent, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { fetchGitHubRepoMeta, fetchGitHubPullRequests } from '@/lib/githubRepo';
 import { readImageFileAsDataUrl, toDataUrl } from '@/lib/image';
 import { createEntityId } from '@/lib/id';
 import { useResumeStore } from '@/store/resumeStore';
-import { Project, ProjectProof, ProjectProofRef } from '@/types';
+import type { Project, ProjectProof, ProjectProofRef } from '@/types';
 import { DraggableItem } from './DraggableItem';
 import { ProjectCard } from './project/ProjectCard';
 import { PullRequestPickerDialog } from './project/PullRequestPickerDialog';
@@ -19,10 +19,10 @@ import {
   type RepoStatus,
 } from './project/shared';
 
-interface ProjectEditorProps {
+type ProjectEditorProps = {
   embedded?: boolean;
   sectionId?: string;
-}
+};
 
 export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProps) {
   const { t } = useTranslation();
@@ -212,9 +212,20 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
 
     try {
       const refs = await fetchGitHubPullRequests(repoUrl, authorLogin);
-      if (refs.length === 0) return;
+      if (refs.length === 0) {
+        updateRepoStatus(project.id, {
+          state: 'idle',
+          message: t('editor.projects.noPullRequests'),
+        });
+        return;
+      }
 
       setPrPicker({ projectId: project.id, refs });
+    } catch {
+      updateRepoStatus(project.id, {
+        state: 'error',
+        message: t('editor.projects.pullRequestsFailed'),
+      });
     } finally {
       setFetchStatusMap((prev) => ({ ...prev, [project.id]: { loading: false } }));
     }
@@ -258,8 +269,8 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
     setDraggedIdx(idx);
   };
 
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
+  const handleDragOver = (event: DragEvent, idx: number) => {
+    event.preventDefault();
     if (draggedIdx === null || draggedIdx === idx) return;
     const items = [...projects];
     const [removed] = items.splice(draggedIdx, 1);
@@ -281,7 +292,7 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{t('editor.projects.addHint')}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {projects.map((project, idx) => (
             <DraggableItem
               key={project.id}
@@ -297,8 +308,9 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
                 <button
                   type="button"
                   onClick={() => deleteProject(project.id)}
-                  className="p-1 rounded text-gray-400 hover:text-red-500 transition"
+                  className="rounded-md p-1.5 text-gray-400 transition-colors hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   title={t('editor.projects.deleteTitle')}
+                  aria-label={t('editor.projects.deleteTitle')}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -331,7 +343,7 @@ export function ProjectEditor({ embedded = false, sectionId }: ProjectEditorProp
         <button
           type="button"
           onClick={handleAdd}
-          className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:focus-visible:ring-offset-gray-800"
         >
           <Plus size={16} />
           {t('editor.projects.addProject')}

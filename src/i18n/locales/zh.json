@@ -6,7 +6,10 @@
     "confirm": "确认",
     "cancel": "取消",
     "hide": "隐藏",
-    "show": "显示"
+    "show": "显示",
+    "close": "关闭",
+    "expand": "展开",
+    "collapse": "收起"
   },
   "home": {
     "hero": {
@@ -141,7 +144,7 @@
       "repoRateLimited": "GitHub 请求频率受限，请稍后再试。",
       "repoSyncFailed": "仓库信息同步失败，请稍后再试。",
       "logoTitle": "项目图标",
-      "logoHint": "优先显示产品图标，没有自定义图标时使用仓库拥有者头像。",
+      "logoHint": "设置产品图标后会替代仓库头像。",
       "customLogo": "自定义图标",
       "repoAvatar": "仓库头像",
       "uploadedLogo": "已上传的产品图标",
@@ -150,7 +153,7 @@
       "logoSource": "当前来源",
       "logoUrl": "图标 URL",
       "logoUrlPlaceholder": "https://example.com/product-logo.svg",
-      "logoUrlHint": "仅加载 HTTPS 图片；上传会将图片写入简历，导出更稳定。外链图片需允许跨域访问。",
+      "logoUrlHint": "仅支持 HTTPS。上传图片会嵌入简历；外链需允许跨域访问。",
       "logoUrlInvalid": "仅支持 HTTPS 图片链接。",
       "uploadLogo": "上传图标",
       "clearCustomLogo": "恢复仓库图标",
@@ -166,6 +169,7 @@
       "hideTechnologies": "隐藏技术栈",
       "technologies": "技术栈",
       "technologiesPlaceholder": "输入技术名称...",
+      "removeTechnology": "移除 {{technology}}",
       "contributionsTitle": "贡献证明",
       "contributionsHint": "把关键 Commit、PR 或代码链接挂上去，强化可信度。",
       "showContributions": "显示贡献",
@@ -188,12 +192,18 @@
       "addDescription": "+ 添加描述",
       "addProject": "添加项目",
       "addRef": "添加引用",
+      "deleteRef": "删除引用",
+      "refType": "引用类型",
+      "refUrl": "引用链接",
+      "refNumber": "PR 或 Issue 编号",
       "compactLayout": "紧凑布局",
       "compactLayoutHint": "减小该项目的行间距",
       "confirmImport": "导入 {{count}} 项",
       "disabled": "关闭",
       "enabled": "开启",
       "importPr": "导入 PR",
+      "noPullRequests": "没有找到该 GitHub 账号已合并的 PR。",
+      "pullRequestsFailed": "PR 加载失败，请稍后再试。",
       "importPrDialogHint": "从 {{repo}} 选择要导入的 PR",
       "importPrDialogTitle": "导入 Pull Request",
       "importPrTitle": "从 GitHub 导入已合并的 PR 作为贡献证明",
@@ -278,7 +288,8 @@
       "hideBulletPoints": "隐藏项目符号",
       "addItem": "添加条目",
       "deleteTitle": "删除此条目",
-      "templateType": "模块模板"
+      "templateType": "模块模板",
+      "changeTemplateConfirm": "切换模板会清空当前模块中的条目，是否继续？"
     },
     "theme": {
       "title": "自定义设置",

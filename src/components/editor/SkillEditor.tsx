@@ -248,14 +248,14 @@ function SkillCard({
     <div data-editor-anchor={skillAnchor(skill.id)}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex-1 min-w-[220px]">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
             {t('editor.skills.category')}
           </label>
           <input
             type="text"
             value={skill.category}
             onChange={(e) => updateSkill(skill.id, { category: e.target.value })}
-            className="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-medium text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             placeholder={t('editor.skills.categoryPlaceholder')}
           />
         </div>
@@ -263,7 +263,7 @@ function SkillCard({
           <button
             type="button"
             onClick={() => addSkillItem(skill)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-blue-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-blue-400"
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <Plus size={16} />
             {t('editor.skills.addItem')}
@@ -272,19 +272,19 @@ function SkillCard({
       </div>
 
       <div className="mb-4">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-1 block">
+        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
           {t('editor.skills.tags')}
         </label>
         <SkillTagsInput
           tags={skill.tags || []}
           onChange={(tags) => updateSkill(skill.id, { tags })}
-          className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+          className="block w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
           placeholder={t('editor.skills.tagsPlaceholder')}
         />
       </div>
 
       {skill.items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 px-3 py-4 text-center text-xs text-gray-400 dark:border-gray-600 dark:text-gray-500">
+        <div className="rounded-md border border-dashed border-gray-200 px-3 py-4 text-center text-xs text-gray-400 dark:border-gray-600 dark:text-gray-500">
           {t('editor.skills.noItems')}
         </div>
       ) : (
@@ -338,10 +338,10 @@ function SkillItemRow({
   return (
     <div
       data-editor-anchor={skillItemAnchor(skill.id, item.id)}
-      className="group flex flex-col gap-2 rounded-xl bg-white p-2 shadow-sm border border-gray-100 transition focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-300 dark:bg-gray-800 dark:border-gray-700 dark:focus-within:border-blue-500/50"
+      className="group flex flex-col gap-2 rounded-md border border-gray-200 bg-white p-2 transition-colors focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:focus-within:border-blue-500/50"
     >
       <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700/50 ${item.showLogo === false ? 'opacity-50' : ''}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gray-50 dark:bg-gray-700/50 ${item.showLogo === false ? 'opacity-50' : ''}`}>
           {customLogo ? (
             <NextImage
               src={customLogo}
