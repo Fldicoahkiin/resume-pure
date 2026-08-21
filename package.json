@@ -20,7 +20,7 @@
   },
   "scripts": {
     "predev": "node scripts/sync-render-assets.js",
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "prebuild": "node scripts/sync-render-assets.js",
     "build": "next build --webpack",
     "start": "next start",
