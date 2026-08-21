@@ -1,6 +1,8 @@
 'use client';
 
-import { Github, RefreshCw, Search } from 'lucide-react';
+import { RefreshCw, Search } from 'lucide-react';
+import { siGithub } from 'simple-icons';
+import { BrandIcon } from '@/components/BrandIcon';
 import { Project } from '@/types';
 import { getDateValue, parseDateValue, RepoStatusText, type RepoStatus, type TranslationFn } from './shared';
 
@@ -99,7 +101,7 @@ export function ProjectFormFields({
         />
         {repoStatus?.message && (
           <div className="mt-1 flex min-h-5 items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <Github size={12} />
+            <BrandIcon path={siGithub.path} size={12} />
             <RepoStatusText status={repoStatus} />
           </div>
         )}

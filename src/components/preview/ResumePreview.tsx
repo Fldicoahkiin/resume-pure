@@ -97,9 +97,9 @@ export function ResumePreview({
     }
 
     let disposed = false;
-    setError(null);
 
     const runBuild = async () => {
+      setError(null);
       try {
         const nextArtifact = await buildRenderArtifact(resume, renderOptions);
 

@@ -1,24 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { ToastHost } from '@/components/Toast';
 import { ConfirmDialogHost } from '@/components/ConfirmDialog';
 import i18n from './config';
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
+function subscribeToInitialization(onStoreChange: () => void) {
+  i18n.on('initialized', onStoreChange);
+  return () => i18n.off('initialized', onStoreChange);
+}
 
-  useEffect(() => {
-    // Ensure i18n is initialized on client side
-    if (i18n.isInitialized) {
-      setIsReady(true);
-    } else {
-      i18n.on('initialized', () => {
-        setIsReady(true);
-      });
-    }
-  }, []);
+function getInitializationSnapshot() {
+  return i18n.isInitialized;
+}
+
+function getServerInitializationSnapshot() {
+  return false;
+}
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const isReady = useSyncExternalStore(
+    subscribeToInitialization,
+    getInitializationSnapshot,
+    getServerInitializationSnapshot,
+  );
 
   if (!isReady) {
     return null;

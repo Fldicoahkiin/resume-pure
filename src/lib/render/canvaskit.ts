@@ -10,6 +10,7 @@ declare global {
 
 let canvasKitPromise: Promise<CanvasKit> | null = null;
 let runtimeScriptPromise: Promise<void> | null = null;
+const assetBasePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 function loadCanvasKitRuntimeScript() {
   if (runtimeScriptPromise) {
@@ -30,7 +31,7 @@ function loadCanvasKitRuntimeScript() {
     }
 
     const script = document.createElement('script');
-    script.src = '/vendor/canvaskit.js';
+    script.src = `${assetBasePath}/vendor/canvaskit.js`;
     script.async = true;
     script.dataset.canvasKitRuntime = 'true';
     script.addEventListener('load', () => resolve(), { once: true });
@@ -56,10 +57,10 @@ export async function getCanvasKit() {
       return await window.CanvasKitInit({
         locateFile: (file) => {
           if (file === 'canvaskit.wasm') {
-            return '/vendor/canvaskit.wasm';
+            return `${assetBasePath}/vendor/canvaskit.wasm`;
           }
 
-          return `/vendor/${file}`;
+          return `${assetBasePath}/vendor/${file}`;
         },
       });
     })().catch((error) => {

@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1.4.0-alpine AS builder
 
 # next build 经 node 执行（bun 只做包管理）
 RUN apk add --no-cache nodejs

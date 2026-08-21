@@ -2,7 +2,9 @@
 
 import { useReducer, useCallback } from 'react';
 import Image from 'next/image';
-import { Github, LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
+import { siGithub } from 'simple-icons';
+import { BrandIcon } from '@/components/BrandIcon';
 import { useTranslation } from 'react-i18next';
 import {
   getStoredUser,
@@ -80,7 +82,7 @@ export function GitHubAuthSection() {
   return (
     <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
       <div className="mb-3 flex items-center gap-2">
-        <Github size={16} className="text-gray-600 dark:text-gray-400" />
+        <BrandIcon path={siGithub.path} size={16} className="text-gray-600 dark:text-gray-400" />
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
       </div>
 
@@ -117,7 +119,7 @@ export function GitHubAuthSection() {
             disabled={auth.loading}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
           >
-            {auth.loading ? <Loader2 size={16} className="animate-spin" /> : <Github size={16} />}
+            {auth.loading ? <Loader2 size={16} className="animate-spin" /> : <BrandIcon path={siGithub.path} size={16} />}
             {auth.loading ? t('editor.theme.githubAuthWaiting') : t('editor.theme.githubLogin')}
           </button>
 

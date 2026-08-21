@@ -1,7 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
-const rootDir = path.resolve(__dirname, '..');
+const require = createRequire(import.meta.url);
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+const rootDir = path.resolve(scriptDirectory, '..');
 const publicDir = path.join(rootDir, 'public');
 const vendorDir = path.join(publicDir, 'vendor');
 const wasmSourcePath = require.resolve('canvaskit-wasm/bin/canvaskit.wasm');

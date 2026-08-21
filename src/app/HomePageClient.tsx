@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, ArrowRight, Github, Eye, HardDrive, Download, Database, FileSearch, ListChecks, Check } from 'lucide-react';
+import { FileText, ArrowRight, Eye, HardDrive, Download, Database, FileSearch, ListChecks, Check } from 'lucide-react';
+import { siGithub } from 'simple-icons';
+import { BrandIcon } from '@/components/BrandIcon';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useTranslation } from 'react-i18next';
@@ -25,9 +27,10 @@ export default function HomePage() {
               href="https://github.com/Fldicoahkiin/resume-pure"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="GitHub"
               className="hidden sm:block text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition"
             >
-              <Github size={22} />
+              <BrandIcon path={siGithub.path} size={22} />
             </a>
             <Link
               href="/builder"
@@ -65,7 +68,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 sm:px-8 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
             >
-              <Github size={18} />
+              <BrandIcon path={siGithub.path} size={18} />
               GitHub
             </a>
           </div>
@@ -153,7 +156,7 @@ export default function HomePage() {
             rel="noopener noreferrer"
             className="hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center gap-1"
           >
-            <Github size={14} className="sm:w-4 sm:h-4" />
+            <BrandIcon path={siGithub.path} size={14} className="sm:w-4 sm:h-4" />
             GitHub
           </a>
           <span>·</span>

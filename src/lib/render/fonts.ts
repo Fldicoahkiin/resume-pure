@@ -3,6 +3,7 @@ import { stripLayoutTables } from '@/lib/render/fontSubset';
 
 const fontBufferCache = new Map<string, Promise<ArrayBuffer>>();
 const FONT_FETCH_TIMEOUT_MS = 5000;
+const assetBasePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 /** 渲染必备字体：中文回退 + emoji 回退，始终随选中字体一起加载。 */
 export const RENDER_FALLBACK_FAMILY = 'Noto Sans SC';
@@ -45,10 +46,10 @@ function getFontSourcePath(src: string) {
   }
 
   if (src.startsWith('/')) {
-    return src;
+    return `${assetBasePath}${src}`;
   }
 
-  return `/${src}`;
+  return `${assetBasePath}/${src}`;
 }
 
 export async function loadFontFaceBuffer(src: string) {

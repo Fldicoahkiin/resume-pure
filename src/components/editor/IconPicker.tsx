@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import {
-  Mail, Phone, MapPin, Globe, Linkedin, Github,
-  Twitter, Instagram, Facebook, Youtube, Dribbble,
+  Mail, Phone, MapPin, Globe,
   Link, User, Briefcase, Calendar, MessageCircle, AtSign,
   ChevronDown,
 } from 'lucide-react';
+import { siDribbble, siFacebook, siGithub, siInstagram, siX, siYoutube } from 'simple-icons';
+import { BrandIcon } from '@/components/BrandIcon';
 import { ContactIconType } from '@/types';
 import { useTranslation } from 'react-i18next';
+
+const LINKEDIN_ICON_PATH = 'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 6a2 2 0 110-4 2 2 0 010 4z';
 
 interface IconOption {
   type: ContactIconType;
@@ -21,13 +24,13 @@ const iconOptions: IconOption[] = [
   { type: 'phone', icon: <Phone size={16} />, labelKey: 'iconPicker.phone' },
   { type: 'map-pin', icon: <MapPin size={16} />, labelKey: 'iconPicker.location' },
   { type: 'globe', icon: <Globe size={16} />, labelKey: 'iconPicker.website' },
-  { type: 'linkedin', icon: <Linkedin size={16} />, labelKey: 'LinkedIn' },
-  { type: 'github', icon: <Github size={16} />, labelKey: 'GitHub' },
-  { type: 'twitter', icon: <Twitter size={16} />, labelKey: 'Twitter' },
-  { type: 'instagram', icon: <Instagram size={16} />, labelKey: 'Instagram' },
-  { type: 'facebook', icon: <Facebook size={16} />, labelKey: 'Facebook' },
-  { type: 'youtube', icon: <Youtube size={16} />, labelKey: 'YouTube' },
-  { type: 'dribbble', icon: <Dribbble size={16} />, labelKey: 'Dribbble' },
+  { type: 'linkedin', icon: <BrandIcon path={LINKEDIN_ICON_PATH} />, labelKey: 'LinkedIn' },
+  { type: 'github', icon: <BrandIcon path={siGithub.path} />, labelKey: 'GitHub' },
+  { type: 'twitter', icon: <BrandIcon path={siX.path} />, labelKey: 'Twitter' },
+  { type: 'instagram', icon: <BrandIcon path={siInstagram.path} />, labelKey: 'Instagram' },
+  { type: 'facebook', icon: <BrandIcon path={siFacebook.path} />, labelKey: 'Facebook' },
+  { type: 'youtube', icon: <BrandIcon path={siYoutube.path} />, labelKey: 'YouTube' },
+  { type: 'dribbble', icon: <BrandIcon path={siDribbble.path} />, labelKey: 'Dribbble' },
   { type: 'link', icon: <Link size={16} />, labelKey: 'iconPicker.link' },
   { type: 'user', icon: <User size={16} />, labelKey: 'iconPicker.user' },
   { type: 'briefcase', icon: <Briefcase size={16} />, labelKey: 'iconPicker.work' },

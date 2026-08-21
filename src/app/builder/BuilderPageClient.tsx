@@ -144,7 +144,7 @@ function createSectionActions({
   };
 }
 
-function renderBuilderPageLayout({
+function BuilderPageLayout({
   t,
   ui,
   setUi,
@@ -173,8 +173,8 @@ function renderBuilderPageLayout({
   t: (key: string) => string;
   ui: BuilderUIState;
   setUi: React.Dispatch<React.SetStateAction<BuilderUIState>>;
-  editorViewportRef: React.RefObject<HTMLDivElement>;
-  previewViewportRef: React.RefObject<HTMLDivElement>;
+  editorViewportRef: React.RefObject<HTMLDivElement | null>;
+  previewViewportRef: React.RefObject<HTMLDivElement | null>;
   rawJumpRequest: RawJumpRequest | null;
   activePreviewAnchor: string | null;
   sortableSections: SectionActions['sortableSections'];
@@ -204,7 +204,7 @@ function renderBuilderPageLayout({
       <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 z-20">
         <div className="w-full px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
+            <Link href="/" prefetch={false} className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
               <FileText size={20} />
               <span className="font-semibold">{t('common.appName')}</span>
             </Link>
@@ -449,10 +449,13 @@ export default function BuilderPage() {
 
   const { resume, hasHydrated, reorderSections, updateSectionConfig, addCustomSection, deleteCustomSection } = useResumeStore();
   const previewBaseWidth = getPaperDimensions(resume.theme.paperSize).width;
-  const [previewRenderSize, setPreviewRenderSize] = useState<PreviewRenderSize>({
+  const [previewRenderHeight, setPreviewRenderHeight] = useState(
+    () => getPaperDimensions(resume.theme.paperSize).height,
+  );
+  const previewRenderSize: PreviewRenderSize = {
     width: previewBaseWidth,
-    height: getPaperDimensions(resume.theme.paperSize).height,
-  });
+    height: previewRenderHeight,
+  };
 
   const clampScale = useCallback((value: number) => {
     return Math.min(PREVIEW_SCALE_MAX, Math.max(PREVIEW_SCALE_MIN, value));
@@ -516,7 +519,8 @@ export default function BuilderPage() {
   }, [handleZoom]);
 
   useEffect(() => {
-    syncFitScale();
+    const frameId = window.requestAnimationFrame(syncFitScale);
+    return () => window.cancelAnimationFrame(frameId);
   }, [syncFitScale, ui.mobileView]);
 
   useEffect(() => {
@@ -564,13 +568,9 @@ export default function BuilderPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleFitScale, handleZoom]);
 
-  useEffect(() => {
-    const paperDimensions = getPaperDimensions(resume.theme.paperSize);
-    setPreviewRenderSize((previous) => ({
-      width: paperDimensions.width,
-      height: previous.height,
-    }));
-  }, [resume.theme.paperSize]);
+  const handlePreviewRenderSizeChange = useCallback((size: PreviewRenderSize) => {
+    setPreviewRenderHeight(size.height);
+  }, []);
 
   const clearEditorFlash = useCallback(() => {
     if (!activeEditorElementRef.current) return;
@@ -701,30 +701,32 @@ export default function BuilderPage() {
     t,
   });
 
-  return renderBuilderPageLayout({
-    t,
-    ui,
-    setUi,
-    editorViewportRef,
-    previewViewportRef,
-    rawJumpRequest,
-    activePreviewAnchor,
-    sortableSections,
-    getSectionTitle,
-    toggleCollapse,
-    toggleVisible,
-    updateSectionConfig,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    deleteCustomSection,
-    addCustomSection,
-    handlePreviewWheel,
-    handleZoom,
-    handleFitScale,
-    handleActualScale,
-    handlePreviewSelect,
-    previewRenderSize,
-    onPreviewRenderSizeChange: setPreviewRenderSize,
-  });
+  return (
+    <BuilderPageLayout
+      t={t}
+      ui={ui}
+      setUi={setUi}
+      editorViewportRef={editorViewportRef}
+      previewViewportRef={previewViewportRef}
+      rawJumpRequest={rawJumpRequest}
+      activePreviewAnchor={activePreviewAnchor}
+      sortableSections={sortableSections}
+      getSectionTitle={getSectionTitle}
+      toggleCollapse={toggleCollapse}
+      toggleVisible={toggleVisible}
+      updateSectionConfig={updateSectionConfig}
+      handleDragStart={handleDragStart}
+      handleDragOver={handleDragOver}
+      handleDragEnd={handleDragEnd}
+      deleteCustomSection={deleteCustomSection}
+      addCustomSection={addCustomSection}
+      handlePreviewWheel={handlePreviewWheel}
+      handleZoom={handleZoom}
+      handleFitScale={handleFitScale}
+      handleActualScale={handleActualScale}
+      handlePreviewSelect={handlePreviewSelect}
+      previewRenderSize={previewRenderSize}
+      onPreviewRenderSizeChange={handlePreviewRenderSizeChange}
+    />
+  );
 }

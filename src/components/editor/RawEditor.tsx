@@ -39,24 +39,28 @@ export const RawEditor: FC<RawEditorProps> = ({ jumpRequest }) => {
 
   // 当 resume 或 format 变化时更新内容
   useEffect(() => {
-    try {
-      let newContent = '';
-      if (ui.format === 'json') newContent = exportToJSON(resume);
-      else if (ui.format === 'yaml') newContent = exportToYAML(resume);
-      else newContent = exportToMarkdown(resume);
+    const timerId = window.setTimeout(() => {
+      try {
+        let newContent = '';
+        if (ui.format === 'json') newContent = exportToJSON(resume);
+        else if (ui.format === 'yaml') newContent = exportToYAML(resume);
+        else newContent = exportToMarkdown(resume);
 
-      updateUi({
-        content: newContent,
-        hasChanges: false,
-        error: '',
-      });
-    } catch {
-      updateUi({
-        content: '',
-        hasChanges: false,
-        error: t('rawEditor.exportFailed'),
-      });
-    }
+        updateUi({
+          content: newContent,
+          hasChanges: false,
+          error: '',
+        });
+      } catch {
+        updateUi({
+          content: '',
+          hasChanges: false,
+          error: t('rawEditor.exportFailed'),
+        });
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [resume, t, ui.format, updateUi]);
 
   useEffect(() => {
@@ -87,12 +91,20 @@ export const RawEditor: FC<RawEditorProps> = ({ jumpRequest }) => {
     const lineHeight = Number.isFinite(computedLineHeight) ? computedLineHeight : 22;
     textarea.scrollTop = Math.max(0, (lineRange.lineNumber - 3) * lineHeight);
 
-    updateUi({ jumpedLine: lineRange.lineNumber });
-    const timerId = window.setTimeout(() => {
-      updateUi({ jumpedLine: null });
-    }, 2200);
+    let timerId: number | null = null;
+    const frameId = window.requestAnimationFrame(() => {
+      updateUi({ jumpedLine: lineRange.lineNumber });
+      timerId = window.setTimeout(() => {
+        updateUi({ jumpedLine: null });
+      }, 2200);
+    });
 
-    return () => window.clearTimeout(timerId);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+      }
+    };
   }, [jumpRequest, resume, ui.content, ui.format, updateUi]);
 
   const handleCopy = async () => {

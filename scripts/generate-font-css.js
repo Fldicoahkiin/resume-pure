@@ -1,8 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const manifestPath = path.resolve(__dirname, '../src/lib/fontManifest.json');
-const outputPath = path.resolve(__dirname, '../src/app/preview-fonts.css');
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+const manifestPath = path.resolve(scriptDirectory, '../src/lib/fontManifest.json');
+const outputPath = path.resolve(scriptDirectory, '../public/preview-fonts.css');
+
+function getCssFontSource(src) {
+  return src.startsWith('/') ? src.slice(1) : src;
+}
 
 function formatFaceRule(font, face) {
   return `@font-face {
@@ -10,7 +17,7 @@ function formatFaceRule(font, face) {
   font-style: ${face.style};
   font-weight: ${face.weight};
   font-display: swap;
-  src: url('${face.src}') format('${face.format}');
+  src: url('${getCssFontSource(face.src)}') format('${face.format}');
 }`;
 }
 

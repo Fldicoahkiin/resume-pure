@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useState, useEffect } from 'react';
+import { ChangeEvent, useState } from 'react';
 import NextImage from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Image as ImageIcon, Plus, Trash2, Wrench, Settings2 } from 'lucide-react';
@@ -20,25 +20,24 @@ interface SkillTagsInputProps {
   placeholder?: string;
 }
 
+function parseTags(input: string) {
+  return input.split(',').flatMap((segment) => {
+    const trimmed = segment.trim();
+    return trimmed ? [trimmed] : [];
+  });
+}
+
 function SkillTagsInput({ tags, onChange, className, placeholder }: SkillTagsInputProps) {
   const [value, setValue] = useState(() => tags.join(', '));
+  const canonicalTags = tags.join(',');
+  const [lastCanonicalTags, setLastCanonicalTags] = useState(canonicalTags);
 
-  const parseTags = (input: string) =>
-    input.split(',').flatMap((segment) => {
-      const trimmed = segment.trim();
-      return trimmed ? [trimmed] : [];
-    });
-
-  useEffect(() => {
-    // Only update local value if the canonical parsed version differs
-    // This allows the user to type trailing spaces/commas freely
-    const parsedValue = parseTags(value);
-    const tagsStr = tags.join(',');
-    const parsedStr = parsedValue.join(',');
-    if (tagsStr !== parsedStr) {
+  if (lastCanonicalTags !== canonicalTags) {
+    setLastCanonicalTags(canonicalTags);
+    if (parseTags(value).join(',') !== canonicalTags) {
       setValue(tags.join(', '));
     }
-  }, [tags, value]);
+  }
 
   return (
     <input

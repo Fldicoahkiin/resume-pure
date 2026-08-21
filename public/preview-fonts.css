@@ -149,7 +149,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/noto-sans-sc-400.ttf') format('truetype');
+  src: url('fonts/noto-sans-sc-400.ttf') format('truetype');
 }
 
 @font-face {
@@ -157,7 +157,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/noto-sans-sc-700.ttf') format('truetype');
+  src: url('fonts/noto-sans-sc-700.ttf') format('truetype');
 }
 
 @font-face {
@@ -190,4 +190,12 @@
   font-weight: 700;
   font-display: swap;
   src: url('https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai@v1.501/fonts/TTF/LXGWWenKai-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Emoji';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/noto-emoji-400.ttf') format('truetype');
 }

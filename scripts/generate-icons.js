@@ -1,6 +1,9 @@
-const fs = require('fs');
-const si = require('simple-icons');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import * as si from 'simple-icons';
+import { fileURLToPath } from 'node:url';
+
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 function getTopIcons() {
   // 定义高频使用的技术栈白名单
@@ -41,7 +44,7 @@ function getTopIcons() {
   out += `};\n\nexport default ICON_DATA;\n`;
   
   // 将输出写入到 src/lib/iconData.ts
-  const targetPath = path.resolve(__dirname, '../src/lib/iconData.ts');
+  const targetPath = path.resolve(scriptDirectory, '../src/lib/iconData.ts');
   fs.writeFileSync(targetPath, out);
   
   console.log(`✅ [icons:update] 成功提取了 ${count} 个前端高频使用的 SVG 图标写入至 src/lib/iconData.ts！`);
