@@ -6,6 +6,7 @@
 
 **在线体验：**
 
+- <https://resume.pure.flacier.com/>
 - <https://resume-pure.vercel.app/>
 - <https://resume-pure.pages.dev/>
 - <https://fldicoahkiin.github.io/resume-pure>

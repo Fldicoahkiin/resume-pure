@@ -6,6 +6,7 @@ A local-first, no-signup, no-tracking resume editor. You can edit with forms or 
 
 **Live Demo:**
 
+- <https://resume.pure.flacier.com/>
 - <https://resume-pure.vercel.app/>
 - <https://resume-pure.pages.dev/>
 - <https://fldicoahkiin.github.io/resume-pure>
