@@ -33,7 +33,7 @@ export function LogoBadge({
   accentColor,
   className,
 }: LogoBadgeProps) {
-  const radiusClass = variant === 'round' ? 'rounded-full' : 'rounded-xl';
+  const radiusClass = variant === 'round' ? 'rounded-full' : 'rounded-lg';
   const fallbackColor = accentColor || '#2563eb';
 
   return (
@@ -53,6 +53,8 @@ export function LogoBadge({
           fill
           unoptimized
           sizes={`${size}px`}
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
           className={fit === 'cover' ? 'object-cover' : 'object-contain p-1.5'}
         />
       ) : (

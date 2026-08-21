@@ -1,4 +1,5 @@
 import type { RenderImage } from '@/lib/render/types';
+import { normalizeImageSource } from '@/lib/imageSource';
 import { customItemAnchor, sectionAnchor } from '@/lib/previewAnchor';
 import { formatCompactNumber, formatGitHubPath, inferCustomSectionType, sanitizeUrl } from '@/lib/resumeUtils';
 import type { CustomSection, CustomSectionItem, Education, Experience, Project, SectionConfig, Skill } from '@/types';
@@ -46,7 +47,8 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
   const { metrics } = context;
   const { theme } = context.data;
   const itemStartY = context.cursorY;
-  const hasLogo = item.showLogo !== false && Boolean(item.repoAvatarUrl);
+  const logoSource = item.showLogo === false ? undefined : normalizeImageSource(item.repoAvatarUrl);
+  const hasLogo = Boolean(logoSource);
   const logoSize = metrics.isDenseLayout ? 20 : 24;
   const blockX = context.contentX + (hasLogo ? logoSize + PROJECT_LOGO_GAP : 0);
   const blockWidth = context.contentWidth - (hasLogo ? logoSize + PROJECT_LOGO_GAP : 0);
@@ -86,15 +88,16 @@ function addGenericCustomItem(context: LayoutContext, section: SectionConfig, it
     });
   }
 
-  if (hasLogo) {
+  if (logoSource) {
     context.drawOps.push({
       kind: 'image',
       x: context.contentX,
       y: itemStartY,
       width: logoSize,
       height: logoSize,
-      src: item.repoAvatarUrl || '',
+      src: logoSource,
       radius: logoSize / 2,
+      fit: 'cover',
     } satisfies RenderImage);
   }
 
@@ -253,4 +256,3 @@ export function addCustomSection(context: LayoutContext, section: SectionConfig,
     height: context.cursorY - sectionStartY,
   });
 }
-

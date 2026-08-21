@@ -35,6 +35,7 @@ jobs:
 
       - run: bun install --frozen-lockfile
       - run: bun run lint
+      - run: bun run test
 
       - name: Validate Vercel Secrets
         run: |
@@ -70,6 +71,7 @@ jobs:
 
       - run: bun install --frozen-lockfile
       - run: bun run lint
+      - run: bun run test
 
       - name: Validate Vercel Secrets
         run: |

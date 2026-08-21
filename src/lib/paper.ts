@@ -17,7 +17,6 @@ interface PaperDimensions {
  * 这确保预览渲染的宽度与浏览器打印输出完全一致。
  */
 const MM_TO_PX = 96 / 25.4;
-const PX_TO_MM = 25.4 / 96;
 
 const PAPER_DIMENSIONS: Record<PaperSize, PaperDimensions> = {
   A4: {
@@ -58,10 +57,6 @@ export function normalizePaperSize(value: unknown, fallback: PaperSize = 'A4'): 
 
 export function getPaperDimensions(size: PaperSize): PaperDimensions {
   return PAPER_DIMENSIONS[size] || PAPER_DIMENSIONS.A4;
-}
-
-export function convertPxToMm(px: number): number {
-  return px * PX_TO_MM;
 }
 
 export const PAPER_SIZE_OPTIONS: PaperSize[] = ['A4', 'Letter', 'Legal', 'A3'];

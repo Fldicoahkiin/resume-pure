@@ -93,10 +93,6 @@ export function createEmptyProofRef(): ProjectProofRef {
   };
 }
 
-export function getProjectLogo(project: Project): string | undefined {
-  return project.customLogo || project.repoAvatarUrl;
-}
-
 export function getRepoErrorMessage(t: TranslationFn, error: unknown): string {
   if (!(error instanceof Error)) {
     return t('editor.projects.repoSyncFailed');

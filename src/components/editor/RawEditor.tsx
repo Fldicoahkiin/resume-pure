@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, type ChangeEvent, type FC } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { exportToJSON, exportToYAML, exportToMarkdown, importFromJSON, importFromYAML, importFromMarkdown, downloadFile } from '@/lib/export';
 import { Copy, Check, Save, Download, Upload } from 'lucide-react';
-import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRawJumpDescriptor, getRawSearchPatterns } from '@/lib/previewAnchor';
 import { RAW_SCHEMA_ERROR_MESSAGE } from '@/lib/rawData';
@@ -15,11 +14,11 @@ interface RawJumpRequest {
   anchor: string;
 }
 
-interface RawEditorProps {
+type RawEditorProps = {
   jumpRequest?: RawJumpRequest | null;
-}
+};
 
-export function RawEditor({ jumpRequest }: RawEditorProps) {
+export const RawEditor: FC<RawEditorProps> = ({ jumpRequest }) => {
   const { t } = useTranslation();
   const { resume, importData } = useResumeStore();
   const [ui, setUi] = useState({
@@ -40,17 +39,25 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
 
   // 当 resume 或 format 变化时更新内容
   useEffect(() => {
-    let newContent = '';
-    if (ui.format === 'json') newContent = exportToJSON(resume);
-    else if (ui.format === 'yaml') newContent = exportToYAML(resume);
-    else newContent = exportToMarkdown(resume);
+    try {
+      let newContent = '';
+      if (ui.format === 'json') newContent = exportToJSON(resume);
+      else if (ui.format === 'yaml') newContent = exportToYAML(resume);
+      else newContent = exportToMarkdown(resume);
 
-    updateUi({
-      content: newContent,
-      hasChanges: false,
-      error: '',
-    });
-  }, [resume, ui.format, updateUi]);
+      updateUi({
+        content: newContent,
+        hasChanges: false,
+        error: '',
+      });
+    } catch {
+      updateUi({
+        content: '',
+        hasChanges: false,
+        error: t('rawEditor.exportFailed'),
+      });
+    }
+  }, [resume, t, ui.format, updateUi]);
 
   useEffect(() => {
     if (!jumpRequest) {
@@ -117,7 +124,12 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
       }
 
       updateUi({
-        error: ui.format === 'json' ? t('rawEditor.jsonError') : t('rawEditor.yamlError'),
+        error:
+          ui.format === 'json'
+            ? t('rawEditor.jsonError')
+            : ui.format === 'yaml'
+              ? t('rawEditor.yamlError')
+              : t('rawEditor.markdownError'),
       });
     }
   };
@@ -128,7 +140,7 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
     downloadFile(ui.content, filename, type);
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -221,7 +233,7 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".json,.yaml,.yml"
+            accept=".json,.yaml,.yml,.md,.markdown"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -275,4 +287,4 @@ export function RawEditor({ jumpRequest }: RawEditorProps) {
       />
     </div>
   );
-}
+};

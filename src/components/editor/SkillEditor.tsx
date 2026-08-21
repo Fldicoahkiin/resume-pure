@@ -5,6 +5,7 @@ import NextImage from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Image as ImageIcon, Plus, Trash2, Wrench, Settings2 } from 'lucide-react';
 import { readImageFileAsDataUrl } from '@/lib/image';
+import { normalizeImageSource } from '@/lib/imageSource';
 import { createEntityId } from '@/lib/id';
 import { skillAnchor, skillItemAnchor } from '@/lib/previewAnchor';
 import { resolveSkillLogo } from '@/lib/skillLogo';
@@ -319,7 +320,8 @@ function SkillItemRow({
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const resolvedLogo = resolveSkillLogo(item.name);
+  const customLogo = normalizeImageSource(item.logo);
+  const resolvedLogo = customLogo ? undefined : resolveSkillLogo(item.name);
 
   const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -341,8 +343,17 @@ function SkillItemRow({
     >
       <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700/50 ${item.showLogo === false ? 'opacity-50' : ''}`}>
-          {item.logo ? (
-            <NextImage src={item.logo} alt="" width={20} height={20} unoptimized className="h-5 w-5 object-contain" />
+          {customLogo ? (
+            <NextImage
+              src={customLogo}
+              alt=""
+              width={20}
+              height={20}
+              unoptimized
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
+              className="h-5 w-5 object-contain"
+            />
           ) : resolvedLogo ? (
             <svg viewBox="0 0 24 24" fill={resolvedLogo.color} className="h-4 w-4">
               <path d={resolvedLogo.svgPath} />

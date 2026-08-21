@@ -1,8 +1,9 @@
 import type { RenderImage } from '@/lib/render/types';
+import { normalizeImageSource } from '@/lib/imageSource';
 import { formatProofRefLabel, isSafePdfUrl, sanitizeUrl } from '@/lib/resumeUtils';
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import type { ProjectProof, SkillItem } from '@/types';
-import { BACKGROUND_MUTED, DEFAULT_TEXT_COLOR, LARGE_PARAGRAPH_WIDTH, LIGHT_MUTED_TEXT_COLOR, addParagraph, buildParagraphSpec, createMarkdownSegments, createPath, createPlainSegments, createRectFill, measureParagraph, mergeSegmentGroups, ptToPx, withPointDelta } from './context';
+import { DEFAULT_TEXT_COLOR, LARGE_PARAGRAPH_WIDTH, LIGHT_MUTED_TEXT_COLOR, addParagraph, buildParagraphSpec, createMarkdownSegments, createPath, createPlainSegments, createRectFill, measureParagraph, mergeSegmentGroups, ptToPx, withPointDelta } from './context';
 import type { ContactVisual, InlinePlacementItem, LayoutContext } from './context';
 import { pushVisualPaths } from './icons';
 
@@ -14,19 +15,15 @@ const DENSE_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 6;
 
 const DEFAULT_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 7;
 
-const DENSE_SKILL_CAPSULE_HORIZONTAL_PADDING = 5.5;
+const SKILL_ENTRY_ICON_GAP = 5;
 
-const DEFAULT_SKILL_CAPSULE_HORIZONTAL_PADDING = 7.5;
+const DENSE_SKILL_ENTRY_DIVIDER_SPACING = 4;
 
-const SKILL_CAPSULE_ICON_GAP = 5;
+const DEFAULT_SKILL_ENTRY_DIVIDER_SPACING = 6;
 
-const DENSE_SKILL_CAPSULE_DIVIDER_SPACING = 4;
+const DENSE_SKILL_ENTRY_GAP = 9;
 
-const DEFAULT_SKILL_CAPSULE_DIVIDER_SPACING = 7;
-
-const DENSE_SKILL_CAPSULE_TRAILING_WIDTH = 5;
-
-const DEFAULT_SKILL_CAPSULE_TRAILING_WIDTH = 8;
+const DEFAULT_SKILL_ENTRY_GAP = 12;
 
 export function buildInlineMetadataItem(
   context: LayoutContext,
@@ -153,31 +150,25 @@ export function buildTechnologyPill(
   };
 }
 
-function getSkillCapsuleStyle(level: SkillItem['level'], primaryColor: string) {
+function getSkillEntryStyle(level: SkillItem['level']) {
   switch (level) {
     case 'core':
       return {
-        backgroundColor: '#ffffff',
         color: '#111827',
-        borderColor: primaryColor,
         fontWeight: 600 as const,
         contextColor: '#4b5563',
-        dividerColor: `${primaryColor}40`,
+        dividerColor: '#d1d5db',
       };
     case 'proficient':
       return {
-        backgroundColor: '#ffffff',
-        color: '#4b5563',
-        borderColor: '#d1d5db',
+        color: '#374151',
         fontWeight: 500 as const,
         contextColor: '#6b7280',
         dividerColor: '#e5e7eb',
       };
     case 'familiar':
       return {
-        backgroundColor: BACKGROUND_MUTED,
         color: '#6b7280',
-        borderColor: 'transparent',
         fontWeight: 400 as const,
         contextColor: LIGHT_MUTED_TEXT_COLOR,
         dividerColor: '#d1d5db',
@@ -185,26 +176,26 @@ function getSkillCapsuleStyle(level: SkillItem['level'], primaryColor: string) {
   }
 }
 
-export function buildSkillCapsule(
+export function buildSkillEntry(
   context: LayoutContext,
   item: SkillItem,
 ): InlinePlacementItem {
   const { metrics } = context;
   const { theme } = context.data;
-  const capsuleStyle = getSkillCapsuleStyle(item.level, theme.primaryColor);
+  const entryStyle = getSkillEntryStyle(item.level);
   const labelSpec = buildParagraphSpec(
     0,
     0,
     LARGE_PARAGRAPH_WIDTH,
     createPlainSegments(item.name, {
-      color: capsuleStyle.color,
-      fontWeight: capsuleStyle.fontWeight,
+      color: entryStyle.color,
+      fontWeight: entryStyle.fontWeight,
     }),
     {
       fontFamily: theme.fontFamily,
       fontSize: withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 1 : 0.5)),
       lineHeight: metrics.capsuleLabelLineHeight,
-      color: capsuleStyle.color,
+      color: entryStyle.color,
     },
   );
   const labelSize = measureParagraph(context, labelSpec);
@@ -213,66 +204,49 @@ export function buildSkillCapsule(
         0,
         0,
         LARGE_PARAGRAPH_WIDTH,
-        createPlainSegments(item.context, { color: capsuleStyle.contextColor }),
+        createPlainSegments(item.context, { color: entryStyle.contextColor }),
         {
           fontFamily: theme.fontFamily,
           fontSize: withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 2.5 : 1.5)),
           lineHeight: metrics.capsuleContextLineHeight,
-          color: capsuleStyle.contextColor,
+          color: entryStyle.contextColor,
         },
       )
     : null;
   const contextSize = contextSpec ? measureParagraph(context, contextSpec) : null;
-  const logo = item.showLogo === false ? undefined : item.logo ? null : resolveSkillLogo(item.name);
-  const customLogo = item.showLogo === false ? undefined : item.logo;
-  const basePadding = metrics.isDenseLayout
-    ? DENSE_SKILL_CAPSULE_HORIZONTAL_PADDING
-    : DEFAULT_SKILL_CAPSULE_HORIZONTAL_PADDING;
-  const gapAfterLogo = customLogo || logo ? SKILL_CAPSULE_ICON_GAP : 0;
+  const customLogo = item.showLogo === false ? undefined : normalizeImageSource(item.logo);
+  const logo = item.showLogo === false || customLogo ? undefined : resolveSkillLogo(item.name);
+  const gapAfterLogo = customLogo || logo ? SKILL_ENTRY_ICON_GAP : 0;
   const dividerSpacing = contextSize
     ? metrics.isDenseLayout
-      ? DENSE_SKILL_CAPSULE_DIVIDER_SPACING
-      : DEFAULT_SKILL_CAPSULE_DIVIDER_SPACING
+      ? DENSE_SKILL_ENTRY_DIVIDER_SPACING
+      : DEFAULT_SKILL_ENTRY_DIVIDER_SPACING
     : 0;
   const dividerWidth = contextSize ? ptToPx(1) : 0;
   const iconSize = withPointDelta(theme.fontSize, -1);
   const iconWidth = customLogo || logo ? iconSize : 0;
-  const trailingWidth = metrics.isDenseLayout
-    ? DENSE_SKILL_CAPSULE_TRAILING_WIDTH
-    : DEFAULT_SKILL_CAPSULE_TRAILING_WIDTH;
+  const entryGap = metrics.isDenseLayout
+    ? DENSE_SKILL_ENTRY_GAP
+    : DEFAULT_SKILL_ENTRY_GAP;
   const width =
-    basePadding * 2 +
     iconWidth +
     gapAfterLogo +
     labelSize.width +
     (contextSize ? dividerSpacing * 2 + dividerWidth + contextSize.width : 0) +
-    trailingWidth;
-  const marginBottom = ptToPx(metrics.isDenseLayout ? 1 : 2.5);
+    entryGap;
   const height = Math.max(
     metrics.skillCapsuleMinHeight,
     labelSize.height,
     contextSize?.height ?? 0,
     theme.fontSize,
-  ) + marginBottom;
+  );
 
   return {
     width,
     height,
     place: (x: number, y: number) => {
-      const capsuleHeight = height - marginBottom;
-      const capsuleWidth = width - trailingWidth;
-      context.drawOps.push(
-        createRectFill(
-          { x, y, width: capsuleWidth, height: capsuleHeight },
-          capsuleStyle.backgroundColor,
-          capsuleStyle.borderColor,
-          1,
-          100,
-        ),
-      );
-
-      let cursorX = x + basePadding;
-      const centerY = y + capsuleHeight / 2;
+      let cursorX = x;
+      const centerY = y + height / 2;
 
       if (customLogo) {
         context.drawOps.push({
@@ -282,6 +256,7 @@ export function buildSkillCapsule(
           width: iconSize,
           height: iconSize,
           src: customLogo,
+          fit: 'contain',
         } satisfies RenderImage);
         cursorX += iconSize + gapAfterLogo;
       } else if (logo) {
@@ -301,7 +276,7 @@ export function buildSkillCapsule(
       addParagraph(context, {
         ...labelSpec,
         x: cursorX,
-        y: y + (capsuleHeight - labelSize.height) / 2,
+        y: y + (height - labelSize.height) / 2,
       });
       cursorX += labelSize.width;
 
@@ -315,14 +290,14 @@ export function buildSkillCapsule(
               width: dividerWidth,
               height: theme.fontSize,
             },
-            capsuleStyle.dividerColor,
+            entryStyle.dividerColor,
           ),
         );
         cursorX += dividerWidth + dividerSpacing;
         addParagraph(context, {
           ...contextSpec,
           x: cursorX,
-          y: y + (capsuleHeight - contextSize.height) / 2,
+          y: y + (height - contextSize.height) / 2,
         });
       }
     },

@@ -31,27 +31,6 @@ export function formatProofRefLabel(ref: ProjectProofRef): string {
   return ref.title || ref.url.replace(/^https?:\/\/(www\.)?github\.com\//, '');
 }
 
-export function withStableStringKey(items: string[], prefix: string) {
-  const seen = new Map<string, number>();
-
-  return items.map((item) => {
-    const count = (seen.get(item) || 0) + 1;
-    seen.set(item, count);
-
-    return {
-      key: `${prefix}-${item}-${count}`,
-      value: item,
-    };
-  });
-}
-
-export function getDescriptionLines(items: string[], prefix: string) {
-  return withStableStringKey(
-    items.filter((desc) => desc && desc.trim()),
-    prefix
-  );
-}
-
 export function getDateRange(startDate: string, endDate: string, current: boolean | undefined, presentLabel: string): string {
   if (!startDate && !endDate && !current) {
     return '';

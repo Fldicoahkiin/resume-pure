@@ -88,6 +88,7 @@ function loadImageAsDataUrl(src: string): Promise<string | null> {
     }, 5000);
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    img.referrerPolicy = 'no-referrer';
     img.onload = () => {
       clearTimeout(timeout);
       try {
@@ -128,7 +129,11 @@ function normalizeCorsUrl(src: string): string {
 
 async function fetchAsDataUrl(src: string): Promise<string | null> {
   try {
-    const resp = await fetch(src, { cache: 'no-cache' });
+    const resp = await fetch(src, {
+      cache: 'no-cache',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
     if (!resp.ok) return null;
     const blob = await resp.blob();
     return await new Promise<string>((resolve) => {
@@ -164,14 +169,6 @@ export async function toDataUrl(src: string): Promise<string> {
   return viaOriginalFetch || TRANSPARENT_PX;
 }
 
-export interface ResumePreviewCapture {
-  blob: Blob;
-  width: number;
-  height: number;
-  pixelWidth: number;
-  pixelHeight: number;
-}
-
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -183,29 +180,6 @@ function downloadBlob(blob: Blob, filename: string) {
   link.click();
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-}
-
-export async function captureResumePreview(
-  data: ResumeData,
-  options: RenderBuildOptions,
-): Promise<ResumePreviewCapture> {
-  const cacheKey = getRenderArtifactKey(data, options);
-  const cachedArtifact = readCachedRenderArtifact(cacheKey);
-  const artifact = cachedArtifact || await buildRenderArtifact(data, options);
-
-  try {
-    return {
-      blob: artifact.blob,
-      width: artifact.width,
-      height: artifact.height,
-      pixelWidth: artifact.pixelWidth,
-      pixelHeight: artifact.pixelHeight,
-    };
-  } finally {
-    if (!cachedArtifact) {
-      disposeRenderArtifact(artifact);
-    }
-  }
 }
 
 export async function exportToPNG(

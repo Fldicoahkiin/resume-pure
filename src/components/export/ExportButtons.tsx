@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { exportToPNG } from '@/lib/image';
-import { exportToPDF } from '@/lib/pdf';
 import { showToast } from '@/components/Toast';
 import { useResumeStore } from '@/store/resumeStore';
 
@@ -40,6 +38,7 @@ export function ExportButtons() {
   const handleExportPDF = async () => {
     setLoadingPDF(true);
     try {
+      const { exportToPDF } = await import('@/lib/pdf');
       await exportToPDF(resume, renderOptions, 'resume.pdf');
     } catch (error) {
       showToast('error', buildExportErrorMessage(t('export.pdfExportFailed'), error));
@@ -51,6 +50,7 @@ export function ExportButtons() {
   const handleExportPNG = async () => {
     setLoadingPNG(true);
     try {
+      const { exportToPNG } = await import('@/lib/image');
       await exportToPNG(resume, renderOptions, 'resume.png');
     } catch (error) {
       showToast('error', buildExportErrorMessage(t('export.pngExportFailed'), error));

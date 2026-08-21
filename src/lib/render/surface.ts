@@ -1,8 +1,10 @@
 import type { Canvas, CanvasKit, Image, Surface, TypefaceFontProvider } from 'canvaskit-wasm';
+import { isSvgImageContentType, normalizeImageSource } from '@/lib/imageSource';
 import { getCanvasKit } from '@/lib/render/canvaskit';
 import { EXPORT_BACKGROUND, PAGE_BORDER_COLOR, RENDER_SCALE } from '@/lib/render/constants';
 import { loadRendererFonts } from '@/lib/render/fonts';
 import { createRenderFontSet } from '@/lib/render/fontSet';
+import { fitRenderImage } from '@/lib/render/imageGeometry';
 import { buildLayoutDocument } from '@/lib/render/layout';
 import { layoutParagraph } from '@/lib/render/paragraph';
 import type {
@@ -75,26 +77,13 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, ti
   }
 }
 
-function normalizeRenderImageSrc(src: string) {
-  const githubPngMatch = src.match(/^https?:\/\/github\.com\/([^/]+)\.png/i);
-  if (githubPngMatch) {
-    return `https://avatars.githubusercontent.com/${githubPngMatch[1]}`;
-  }
-
-  const githubUserMatch = src.match(/^https?:\/\/github\.com\/([^/]+)\/?$/i);
-  if (githubUserMatch) {
-    return `https://avatars.githubusercontent.com/${githubUserMatch[1]}`;
-  }
-
-  return src;
-}
-
 function loadImageElementAsDataUrl(src: string): Promise<string | null> {
   return new Promise((resolve) => {
     const imageElement = document.createElement('img');
     const timeout = window.setTimeout(() => resolve(null), IMAGE_LOAD_TIMEOUT_MS);
 
     imageElement.crossOrigin = 'anonymous';
+    imageElement.referrerPolicy = 'no-referrer';
     imageElement.decoding = 'async';
     imageElement.onload = () => {
       window.clearTimeout(timeout);
@@ -124,10 +113,18 @@ function loadImageElementAsDataUrl(src: string): Promise<string | null> {
 }
 
 export async function loadEncodedImageBuffer(src: string) {
-  const normalizedSrc = normalizeRenderImageSrc(src);
+  const safeSrc = normalizeImageSource(src);
+  if (!safeSrc) {
+    throw new Error('image-source-unsupported');
+  }
+  const normalizedSrc = safeSrc;
   try {
-    const response = await fetchWithTimeout(normalizedSrc, { cache: 'force-cache' });
-    if (response.ok) {
+    const response = await fetchWithTimeout(normalizedSrc, {
+      cache: 'force-cache',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
+    if (response.ok && !isSvgImageContentType(response.headers.get('content-type'))) {
       return await response.arrayBuffer();
     }
   } catch {
@@ -139,7 +136,11 @@ export async function loadEncodedImageBuffer(src: string) {
     throw new Error(`image-fetch-failed:${normalizedSrc}`);
   }
 
-  const dataUrlResponse = await fetchWithTimeout(dataUrl, { cache: 'force-cache' });
+  const dataUrlResponse = await fetchWithTimeout(dataUrl, {
+    cache: 'force-cache',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
+  });
   if (!dataUrlResponse.ok) {
     throw new Error(`image-dataurl-fetch-failed:${normalizedSrc}`);
   }
@@ -283,28 +284,44 @@ async function drawImageOp(
 
   const draw = () => {
     const srcRect = CanvasKitModule.LTRBRect(0, 0, image.width(), image.height());
+    const destination = fitRenderImage(
+      {
+        x: operation.x,
+        y: operation.y,
+        width: operation.width,
+        height: operation.height,
+      },
+      { width: image.width(), height: image.height() },
+      operation.fit,
+    );
     const destRect = CanvasKitModule.LTRBRect(
-      operation.x,
-      operation.y,
-      operation.x + operation.width,
-      operation.y + operation.height,
+      destination.x,
+      destination.y,
+      destination.x + destination.width,
+      destination.y + destination.height,
     );
     const paint = createPaint(CanvasKitModule, { color: '#ffffff' });
     canvas.drawImageRect(image, srcRect, destRect, paint, true);
     paint.delete();
   };
 
-  if (operation.radius) {
+  if (operation.radius || operation.fit === 'cover') {
     canvas.save();
-    canvas.clipRRect(
-      CanvasKitModule.RRectXY(
-        CanvasKitModule.LTRBRect(operation.x, operation.y, operation.x + operation.width, operation.y + operation.height),
-        operation.radius,
-        operation.radius,
-      ),
-      CanvasKitModule.ClipOp.Intersect,
-      true,
+    const clipRect = CanvasKitModule.LTRBRect(
+      operation.x,
+      operation.y,
+      operation.x + operation.width,
+      operation.y + operation.height,
     );
+    if (operation.radius) {
+      canvas.clipRRect(
+        CanvasKitModule.RRectXY(clipRect, operation.radius, operation.radius),
+        CanvasKitModule.ClipOp.Intersect,
+        true,
+      );
+    } else {
+      canvas.clipRect(clipRect, CanvasKitModule.ClipOp.Intersect, true);
+    }
     draw();
     canvas.restore();
     return;
