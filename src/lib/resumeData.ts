@@ -33,6 +33,7 @@ const BUILTIN_SECTION_ID_SET = new Set(BUILTIN_SECTIONS.map((section) => section
 const CONTACT_ICON_TYPES: ContactIconType[] = [
   'mail',
   'phone',
+  'graduation-cap',
   'map-pin',
   'globe',
   'linkedin',
@@ -293,6 +294,7 @@ function normalizePersonalInfo(input: unknown, fallback: PersonalInfo): Personal
     title: asOptionalString(info.title),
     email: asString(info.email, fallback.email),
     phone: asString(info.phone, fallback.phone),
+    school: asString(info.school, fallback.school),
     location: asString(info.location, fallback.location),
     website: asOptionalString(info.website),
     linkedin: asOptionalString(info.linkedin),
@@ -301,6 +303,7 @@ function normalizePersonalInfo(input: unknown, fallback: PersonalInfo): Personal
     iconConfig: {
       emailIcon: normalizeContactIcon(iconConfig.emailIcon, 'mail'),
       phoneIcon: normalizeContactIcon(iconConfig.phoneIcon, 'phone'),
+      schoolIcon: normalizeContactIcon(iconConfig.schoolIcon, 'graduation-cap'),
       locationIcon: normalizeContactIcon(iconConfig.locationIcon, 'map-pin'),
       websiteIcon: normalizeContactIcon(iconConfig.websiteIcon, 'globe'),
       linkedinIcon: normalizeContactIcon(iconConfig.linkedinIcon, 'linkedin'),
@@ -584,11 +587,13 @@ export function createInitialResume(): ResumeData {
       name: '',
       email: '',
       phone: '',
+      school: '',
       location: '',
       summary: '',
       iconConfig: {
         emailIcon: 'mail',
         phoneIcon: 'phone',
+        schoolIcon: 'graduation-cap',
         locationIcon: 'map-pin',
         websiteIcon: 'globe',
         linkedinIcon: 'linkedin',

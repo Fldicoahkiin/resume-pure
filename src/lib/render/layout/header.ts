@@ -99,6 +99,12 @@ export function addHeader(context: LayoutContext) {
       href: sanitizeUrl(personalInfo.phone),
     },
     {
+      anchor: personalInfoFieldAnchor('school'),
+      type: personalInfo.iconConfig?.schoolIcon || 'graduation-cap',
+      value: personalInfo.school,
+      href: undefined,
+    },
+    {
       anchor: personalInfoFieldAnchor('location'),
       type: personalInfo.iconConfig?.locationIcon || 'map-pin',
       value: personalInfo.location,

@@ -3,6 +3,17 @@ import { createInitialResume } from './resumeData';
 import { exportToMarkdown, importFromMarkdown } from './markdownFormat';
 
 describe('Markdown resume format', () => {
+  it('round-trips the school in personal info', () => {
+    const resume = createInitialResume();
+    resume.personalInfo.school = '四川传媒学院';
+
+    const markdown = exportToMarkdown(resume);
+    const imported = importFromMarkdown(markdown);
+
+    expect(markdown).toContain('学校: 四川传媒学院');
+    expect(imported.personalInfo.school).toBe('四川传媒学院');
+  });
+
   it('round-trips custom section content', () => {
     const resume = createInitialResume();
     resume.sections.push({

@@ -103,6 +103,7 @@ export function exportToMarkdown(data: ResumeData): string {
   if (data.personalInfo.name) lines.push(`姓名: ${data.personalInfo.name}`);
   if (data.personalInfo.email) lines.push(`邮箱: ${data.personalInfo.email}`);
   if (data.personalInfo.phone) lines.push(`电话: ${data.personalInfo.phone}`);
+  if (data.personalInfo.school) lines.push(`学校: ${data.personalInfo.school}`);
   if (data.personalInfo.location) lines.push(`地点: ${data.personalInfo.location}`);
   
   data.personalInfo.contacts?.forEach(contact => {
@@ -353,6 +354,7 @@ export function importFromMarkdown(md: string): ResumeData {
         if (key === '姓名') data.personalInfo.name = val;
         else if (key === '邮箱') data.personalInfo.email = val;
         else if (key === '电话') data.personalInfo.phone = val;
+        else if (key === '学校') data.personalInfo.school = val;
         else if (key === '地点') data.personalInfo.location = val;
       } else if (currentItem) {
         if (key === '描述' || key === '贡献证明' || key === '项') {

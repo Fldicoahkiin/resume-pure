@@ -19,7 +19,7 @@ export function sectionAnchor(sectionId: string): string {
 }
 
 export function personalInfoFieldAnchor(
-  field: 'name' | 'title' | 'summary' | 'email' | 'phone' | 'website' | 'linkedin' | 'github' | 'location'
+  field: 'name' | 'title' | 'summary' | 'email' | 'phone' | 'school' | 'website' | 'linkedin' | 'github' | 'location'
 ): string {
   return `${PERSONAL_INFO_FIELD_PREFIX}${field}`;
 }
@@ -739,6 +739,9 @@ function getRawSearchPatternsWithResume(anchor: string, resume?: ResumeData): st
           break;
         case 'phone':
           push(...getValueSearchPatterns(resume.personalInfo.phone));
+          break;
+        case 'school':
+          push(...getValueSearchPatterns(resume.personalInfo.school));
           break;
         case 'website':
           push(...getValueSearchPatterns(resume.personalInfo.website));

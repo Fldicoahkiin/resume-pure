@@ -153,6 +153,24 @@ export function PersonalInfoEditor() {
           </div>
         </div>
 
+        {/* 学校 - 带图标选择 */}
+        <div data-editor-anchor={personalInfoFieldAnchor('school')} className="col-span-full">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.school')}</span>
+          <div className="flex items-center gap-2 mt-1">
+            <IconPicker
+              value={iconConfig.schoolIcon || 'graduation-cap'}
+              onChange={(type: ContactIconType) => updateIconConfig({ schoolIcon: type })}
+            />
+            <input
+              type="text"
+              value={personalInfo.school}
+              onChange={(e) => updatePersonalInfo({ school: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-base font-normal bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder=""
+            />
+          </div>
+        </div>
+
         {/* 个人网站 - 带图标选择 */}
         <div data-editor-anchor={personalInfoFieldAnchor('website')} className="col-span-full">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.personalInfo.website')}</span>

@@ -81,6 +81,7 @@
       "summaryPlaceholder": "简短的自我介绍...",
       "email": "邮箱",
       "phone": "电话",
+      "school": "学校",
       "website": "个人网站",
       "linkedin": "LinkedIn",
       "github": "GitHub",
@@ -379,6 +380,7 @@
   "iconPicker": {
     "email": "邮箱",
     "phone": "电话",
+    "school": "学校",
     "location": "地点",
     "website": "网站",
     "link": "链接",

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  Mail, Phone, MapPin, Globe,
+  Mail, Phone, GraduationCap, MapPin, Globe,
   Link, User, Briefcase, Calendar, MessageCircle, AtSign,
   ChevronDown,
 } from 'lucide-react';
@@ -22,6 +22,7 @@ interface IconOption {
 const iconOptions: IconOption[] = [
   { type: 'mail', icon: <Mail size={16} />, labelKey: 'iconPicker.email' },
   { type: 'phone', icon: <Phone size={16} />, labelKey: 'iconPicker.phone' },
+  { type: 'graduation-cap', icon: <GraduationCap size={16} />, labelKey: 'iconPicker.school' },
   { type: 'map-pin', icon: <MapPin size={16} />, labelKey: 'iconPicker.location' },
   { type: 'globe', icon: <Globe size={16} />, labelKey: 'iconPicker.website' },
   { type: 'linkedin', icon: <BrandIcon path={LINKEDIN_ICON_PATH} />, labelKey: 'LinkedIn' },

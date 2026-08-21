@@ -129,6 +129,7 @@ interface RawResumeData {
     title?: string;
     email: string;
     phone: string;
+    school: string;
     location: string;
     website?: string;
     linkedin?: string;
@@ -379,6 +380,7 @@ export function exportRawResumeData(data: ResumeData): RawResumeData {
       title: data.personalInfo.title,
       email: data.personalInfo.email,
       phone: data.personalInfo.phone,
+      school: data.personalInfo.school,
       location: data.personalInfo.location,
       website: data.personalInfo.website,
       linkedin: data.personalInfo.linkedin,

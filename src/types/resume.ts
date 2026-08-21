@@ -1,6 +1,6 @@
 // 可用的联系方式图标类型
 export type ContactIconType =
-  | 'mail' | 'phone' | 'map-pin' | 'globe' | 'linkedin' | 'github'
+  | 'mail' | 'phone' | 'graduation-cap' | 'map-pin' | 'globe' | 'linkedin' | 'github'
   | 'twitter' | 'instagram' | 'facebook' | 'youtube' | 'dribbble' | 'behance'
   | 'link' | 'user' | 'briefcase' | 'calendar' | 'message-circle' | 'at-sign';
 
@@ -17,6 +17,7 @@ export interface ContactItem {
 export interface ContactIconConfig {
   emailIcon?: ContactIconType;
   phoneIcon?: ContactIconType;
+  schoolIcon?: ContactIconType;
   locationIcon?: ContactIconType;
   websiteIcon?: ContactIconType;
   linkedinIcon?: ContactIconType;
@@ -28,6 +29,7 @@ export interface PersonalInfo {
   title?: string;
   email: string;
   phone: string;
+  school: string;
   location: string;
   website?: string;
   linkedin?: string;

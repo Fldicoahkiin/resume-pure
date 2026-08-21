@@ -81,6 +81,7 @@
       "summaryPlaceholder": "Brief self-introduction...",
       "email": "Email",
       "phone": "Phone",
+      "school": "School",
       "website": "Website",
       "linkedin": "LinkedIn",
       "github": "GitHub",
@@ -379,6 +380,7 @@
   "iconPicker": {
     "email": "Email",
     "phone": "Phone",
+    "school": "School",
     "location": "Location",
     "website": "Website",
     "link": "Link",
