@@ -10,7 +10,7 @@ import { RawEditor } from '@/components/editor/RawEditor';
 import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ExportButtons } from '@/components/export/ExportButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { UndoRedoButtons } from '@/components/UndoRedoButtons';
 import { FileText, Code, FormInput, Plus, Minus, FileText as CustomIcon, Eye, Edit3 } from 'lucide-react';
 import Link from 'next/link';
@@ -204,13 +204,18 @@ function BuilderPageLayout({
       <header data-print-hide className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0 z-20">
         <div className="w-full px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" prefetch={false} className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition">
+            <Link
+              href="/"
+              prefetch={false}
+              aria-label={t('common.appName')}
+              className="flex items-center gap-2 text-gray-900 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
+            >
               <FileText size={20} />
-              <span className="font-semibold">{t('common.appName')}</span>
+              <span className="hidden font-semibold sm:inline">{t('common.appName')}</span>
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <UndoRedoButtons />
-              <LanguageToggle />
+              <LanguageSelector />
               <ThemeToggle />
               <ExportButtons />
             </div>

@@ -5,7 +5,7 @@ import { FileText, ArrowRight, Eye, HardDrive, Download, Database, FileSearch, L
 import { siGithub } from 'simple-icons';
 import { BrandIcon } from '@/components/BrandIcon';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useTranslation } from 'react-i18next';
 
 export default function HomePage() {
@@ -21,7 +21,7 @@ export default function HomePage() {
             <span className="text-lg sm:text-xl font-semibold dark:text-white">{t('common.appName')}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <LanguageToggle />
+            <LanguageSelector />
             <ThemeToggle />
             <a
               href="https://github.com/Fldicoahkiin/resume-pure"
