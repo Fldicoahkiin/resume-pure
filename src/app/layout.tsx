@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
+import type { ReactNode } from 'react';
+import { ThemeProvider } from '@teispace/next-themes';
 import './globals.css';
-import { ThemeProvider } from '@/components/ThemeProvider';
 import { I18nProvider } from '@/i18n/I18nProvider';
 import { DocumentTitle } from '@/components/DocumentTitle';
 
@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
@@ -39,12 +39,18 @@ export default function RootLayout({
         <link rel="icon" href={`${assetBasePath}/icon.svg`} type="image/svg+xml" />
         <link rel="shortcut icon" href={`${assetBasePath}/icon.svg`} type="image/svg+xml" />
         <link rel="apple-touch-icon" href={`${assetBasePath}/icon-192.png`} />
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var stored=localStorage.getItem('theme');var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;if(stored==='dark'||(!stored&&prefersDark)){document.documentElement.classList.add('dark');}}catch(_e){}})();`}
-        </Script>
       </head>
       <body>
-        <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          storage="local"
+          transition={{
+            type: 'circular',
+            origin: 'cursor',
+            duration: 500,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
           <I18nProvider>
             <DocumentTitle />
             {children}
