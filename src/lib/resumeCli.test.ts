@@ -34,6 +34,34 @@ describe('resume export CLI arguments', () => {
     });
   });
 
+  it('requires explicit consent before sending resume data to a remote builder', () => {
+    expect(() => parseResumeCliArgs([
+      'resume.json',
+      '--format',
+      'pdf',
+      '--output',
+      'resume.pdf',
+      '--url',
+      'https://resume.example.com/builder/',
+    ], '/workspace')).toThrow('--allow-remote is required');
+  });
+
+  it('accepts a remote builder when the user opts in', () => {
+    expect(parseResumeCliArgs([
+      'resume.json',
+      '--format',
+      'pdf',
+      '--output',
+      'resume.pdf',
+      '--url',
+      'https://resume.example.com/builder/',
+      '--allow-remote',
+    ], '/workspace')).toMatchObject({
+      url: 'https://resume.example.com/builder/',
+      allowRemote: true,
+    });
+  });
+
   it('rejects unsupported formats', () => {
     expect(() => parseResumeCliArgs([
       'resume.json',

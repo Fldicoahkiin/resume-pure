@@ -4,7 +4,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { access, mkdir, readFile } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import { parseResumeCliArgs, RESUME_CLI_USAGE } from '../src/lib/resumeCli';
 
 const HOST = '127.0.0.1';
@@ -103,6 +103,9 @@ async function run() {
   const localServer = options.url ? null : await startResumePure();
   const builderUrl = options.url || localServer?.builderUrl;
   if (!builderUrl) throw new Error('No Resume Pure builder URL is available');
+  if (options.allowRemote) {
+    console.warn(`Loading resume data into the remote builder at ${builderUrl}`);
+  }
 
   const browser = await chromium.launch({ headless: true });
   try {

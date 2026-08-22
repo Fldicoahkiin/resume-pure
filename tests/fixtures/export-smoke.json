@@ -1,0 +1,171 @@
+{
+  "personalInfo": {
+    "name": "Lin Chen",
+    "title": "AI Application Engineer",
+    "email": "lin@example.com",
+    "phone": "+86 130 0000 0000",
+    "school": "Example Media University",
+    "location": "Chengdu",
+    "website": "https://example.com",
+    "github": "https://github.com/example",
+    "summary": "Builds AI products from ambiguous requirements through interface design, implementation, testing, and delivery. Comfortable connecting browser applications, agent workflows, model APIs, desktop runtimes, and production feedback loops."
+  },
+  "experience": [
+    {
+      "company": "Independent Product Studio",
+      "position": "AI Product Engineer",
+      "startDate": "2024.01",
+      "endDate": "Present",
+      "current": true,
+      "description": [
+        "Translated product goals into executable milestones spanning web, desktop, API, account, billing, and release work.",
+        "Built model-assisted workflows with explicit task states, recoverable tool calls, and user-visible validation.",
+        "Established browser tests and release checks around the paths most likely to lose user data or produce incorrect exports.",
+        "Worked directly with product feedback, reproduced failures, and verified fixes in the shipped interaction path."
+      ]
+    },
+    {
+      "company": "Open Source Collaboration",
+      "position": "Contributor",
+      "startDate": "2023.06",
+      "endDate": "2024.12",
+      "description": [
+        "Submitted focused pull requests with reproducible evidence and maintained compatibility with existing project conventions.",
+        "Reviewed interface and integration behavior across TypeScript, React, Rust, and local automation code.",
+        "Documented technical decisions so maintainers could verify data flow, failure boundaries, and release impact."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "Example Media University",
+      "degree": "Bachelor",
+      "major": "Digital Media Technology",
+      "startDate": "2020.09",
+      "endDate": "2024.06",
+      "description": [
+        "Coursework and projects covered interactive media, frontend engineering, product prototyping, and visual communication."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Agent Workspace",
+      "role": "Product and Engineering",
+      "startDate": "2025.01",
+      "endDate": "Present",
+      "current": true,
+      "url": "https://example.com/agent-workspace",
+      "description": [
+        "Designed a desktop workspace that discovers agent capabilities, connects tools, and keeps task state visible to the user.",
+        "Implemented cross-platform flows across React, TypeScript, Rust, Tauri, local persistence, and process integration.",
+        "Added validation for configuration changes, provider responses, and browser-visible behavior before release."
+      ],
+      "technologies": ["TypeScript", "React", "Rust", "Tauri", "Agent Tools"],
+      "showTechnologies": true,
+      "layout": "comfortable",
+      "visible": true
+    },
+    {
+      "name": "Storyboard Production Platform",
+      "role": "Product Owner and Full-stack Developer",
+      "startDate": "2024.08",
+      "endDate": "Present",
+      "current": true,
+      "url": "https://example.com/storyboard",
+      "description": [
+        "Planned and delivered a commercial storyboard workflow covering the marketing site, web editor, desktop application, backend, accounts, and paid membership.",
+        "Turned production steps into observable states so users can inspect generation progress, revise outputs, and recover interrupted work.",
+        "Balanced model cost, interaction latency, operational scope, and first-release constraints while retaining the complete customer journey."
+      ],
+      "technologies": ["Next.js", "React", "Rust", "PostgreSQL", "AI Models"],
+      "showTechnologies": true,
+      "layout": "comfortable",
+      "visible": true
+    },
+    {
+      "name": "Local Resume Builder",
+      "role": "Frontend Developer",
+      "startDate": "2025.05",
+      "endDate": "Present",
+      "current": true,
+      "url": "https://example.com/resume",
+      "description": [
+        "Built a local-first resume editor with structured data, real-time canvas preview, vector PDF export, and continuous PNG export.",
+        "Kept import, preview, and exported artifacts on one normalized data path with deterministic pagination and embedded fonts.",
+        "Added multilingual controls, accessible editor states, offline caching, and browser-level export verification."
+      ],
+      "technologies": ["Next.js", "CanvasKit", "PDF", "Playwright"],
+      "showTechnologies": true,
+      "layout": "comfortable",
+      "visible": true
+    },
+    {
+      "name": "Developer Workflow CLI",
+      "role": "Developer",
+      "startDate": "2024.03",
+      "endDate": "2024.11",
+      "description": [
+        "Created a command-line workflow for repeatable local exports and predictable output paths.",
+        "Separated trusted loopback execution from explicit remote-builder use and surfaced boundary errors at the command entry point.",
+        "Covered argument parsing and artifact generation with unit and browser tests."
+      ],
+      "technologies": ["Bun", "TypeScript", "Playwright"],
+      "showTechnologies": true,
+      "layout": "comfortable",
+      "visible": true
+    },
+    {
+      "name": "Web3 Storage Explorer",
+      "role": "Frontend Developer",
+      "startDate": "2023.09",
+      "endDate": "2024.02",
+      "description": [
+        "Presented chain-backed storage records through a task-focused web interface and clear transaction states.",
+        "Mapped asynchronous wallet and network failures into messages users could act on without exposing internal details.",
+        "Used typed data boundaries and browser tests to keep the interface aligned with contract responses."
+      ],
+      "technologies": ["React", "TypeScript", "Web3"],
+      "showTechnologies": true,
+      "layout": "comfortable",
+      "visible": true
+    }
+  ],
+  "skills": [
+    {
+      "category": "Agent Systems",
+      "items": [
+        { "name": "Tool Calling", "level": "core", "context": "Schemas, execution states, and recovery", "showContext": true },
+        { "name": "Multi-agent Workflows", "level": "proficient", "context": "Task decomposition and acceptance", "showContext": true },
+        { "name": "Model APIs", "level": "core", "context": "OpenAI-compatible and Anthropic APIs", "showContext": true }
+      ],
+      "visible": true
+    },
+    {
+      "category": "Application Engineering",
+      "items": [
+        { "name": "TypeScript / React", "level": "core", "context": "Interactive product interfaces", "showContext": true },
+        { "name": "Rust / Tauri", "level": "proficient", "context": "Desktop runtime and system integration", "showContext": true },
+        { "name": "Testing", "level": "core", "context": "Unit, browser, and release acceptance", "showContext": true }
+      ],
+      "visible": true
+    }
+  ],
+  "customSections": [],
+  "sections": [
+    { "key": "summary", "title": "", "visible": true },
+    { "key": "experience", "title": "Experience", "visible": true },
+    { "key": "projects", "title": "Projects", "visible": true },
+    { "key": "skills", "title": "Skills", "visible": true },
+    { "key": "education", "title": "Education", "visible": true }
+  ],
+  "theme": {
+    "primaryColor": "#0f766e",
+    "fontFamily": "Noto Sans SC",
+    "fontSize": 11,
+    "spacing": 8,
+    "lineHeight": 1.5,
+    "enableLinks": true,
+    "paperSize": "A4"
+  }
+}

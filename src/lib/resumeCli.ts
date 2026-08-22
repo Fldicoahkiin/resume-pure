@@ -7,6 +7,7 @@ export interface ResumeCliOptions {
   format: ResumeExportFormat;
   outputPath: string;
   url?: string;
+  allowRemote?: true;
 }
 
 export const RESUME_CLI_USAGE = `Usage:
@@ -16,6 +17,7 @@ Options:
   --format, -f   Export format: pdf or png
   --output, -o   Output file path
   --url          Use an existing Resume Pure builder URL instead of starting locally
+  --allow-remote Allow resume data to be loaded into a non-loopback builder URL
   --help, -h     Show this help
 
 Examples:
@@ -35,6 +37,7 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
   let format: ResumeExportFormat | undefined;
   let output: string | undefined;
   let url: string | undefined;
+  let allowRemote = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -58,6 +61,11 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
     if (argument === '--url') {
       url = readOptionValue(args, index, argument);
       index += 1;
+      continue;
+    }
+
+    if (argument === '--allow-remote') {
+      allowRemote = true;
       continue;
     }
 
@@ -85,6 +93,13 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
       throw new Error('--url must use http or https');
     }
+    const hostname = parsedUrl.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+    if (!isLoopback && !allowRemote) {
+      throw new Error('--allow-remote is required for non-loopback builder URLs');
+    }
+  } else if (allowRemote) {
+    throw new Error('--allow-remote requires --url');
   }
 
   return {
@@ -92,5 +107,6 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
     format,
     outputPath: path.resolve(cwd, output),
     url,
+    ...(allowRemote ? { allowRemote: true as const } : {}),
   };
 }
