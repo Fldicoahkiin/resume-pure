@@ -11,6 +11,13 @@ export interface GitHubRepoMeta extends GitHubRepoReference {
 }
 
 import { clearAuth, getStoredToken } from './githubAuth';
+import { fetchWithTimeout } from './fetchWithTimeout';
+
+const GITHUB_REQUEST_TIMEOUT_MS = 10_000;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 function normalizeInputUrl(input: string): string | null {
   const trimmed = input.trim();
@@ -74,9 +81,9 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`https://api.github.com/repos/${reference.owner}/${reference.repo}`, {
+  const response = await fetchWithTimeout(`https://api.github.com/repos/${reference.owner}/${reference.repo}`, {
     headers,
-  });
+  }, GITHUB_REQUEST_TIMEOUT_MS);
 
   if (!response.ok) {
     if (response.status === 401 && token) {
@@ -95,17 +102,20 @@ export async function fetchGitHubRepoMeta(input: string): Promise<GitHubRepoMeta
     throw new Error(`request-failed:${response.status}`);
   }
 
-  const payload = await response.json() as {
-    stargazers_count?: number;
-    html_url?: string;
-    owner?: { avatar_url?: string };
-  };
+  const payload: unknown = await response.json();
+  if (!isRecord(payload)
+    || typeof payload.stargazers_count !== 'number'
+    || typeof payload.html_url !== 'string'
+    || !isRecord(payload.owner)
+    || typeof payload.owner.avatar_url !== 'string') {
+    throw new Error('invalid-response');
+  }
 
   return {
     ...reference,
-    stars: typeof payload.stargazers_count === 'number' ? payload.stargazers_count : 0,
-    avatarUrl: payload.owner?.avatar_url,
-    htmlUrl: payload.html_url || reference.normalizedUrl,
+    stars: payload.stargazers_count,
+    avatarUrl: payload.owner.avatar_url,
+    htmlUrl: payload.html_url,
   };
 }
 
@@ -124,9 +134,9 @@ export async function fetchGitHubPullRequests(repoUrl: string, authorLogin: stri
   }
 
   const query = encodeURIComponent(`repo:${reference.owner}/${reference.repo} author:${authorLogin} is:pr is:merged`);
-  const response = await fetch(`https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=100`, {
+  const response = await fetchWithTimeout(`https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=100`, {
     headers,
-  });
+  }, GITHUB_REQUEST_TIMEOUT_MS);
 
   if (!response.ok) {
     if (response.status === 401 && token) {
@@ -138,16 +148,27 @@ export async function fetchGitHubPullRequests(repoUrl: string, authorLogin: stri
     throw new Error(`request-failed:${response.status}`);
   }
 
-  const payload = await response.json();
-  const items = payload.items || [];
+  const payload: unknown = await response.json();
+  if (!isRecord(payload) || !Array.isArray(payload.items)) {
+    throw new Error('invalid-response');
+  }
+  return payload.items.map((item) => {
+    if (!isRecord(item)
+      || typeof item.html_url !== 'string'
+      || typeof item.number !== 'number'
+      || typeof item.title !== 'string'
+      || !isRecord(item.pull_request)
+      || typeof item.pull_request.merged_at !== 'string') {
+      throw new Error('invalid-response');
+    }
 
-  return items.map((item: { number?: number; title?: string; html_url?: string; pull_request?: { merged_at?: string } }, index: number) => ({
-    id: `pr-${index + 1}`,
-    type: 'pr' as const,
-    url: item.html_url || '',
-    number: item.number,
-    title: item.title,
-    mergedAt: item.pull_request?.merged_at,
-  }));
+    return {
+      id: `pr-${item.number}`,
+      type: 'pr' as const,
+      url: item.html_url,
+      number: item.number,
+      title: item.title,
+      mergedAt: item.pull_request.merged_at,
+    };
+  });
 }
-

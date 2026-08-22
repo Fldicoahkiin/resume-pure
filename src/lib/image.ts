@@ -1,4 +1,5 @@
 import { buildRenderArtifact, disposeRenderArtifact } from '@/lib/render/surface';
+import { fetchWithTimeout } from '@/lib/fetchWithTimeout';
 import type { RenderBuildOptions } from '@/lib/render/types';
 import type { ResumeData } from '@/types';
 
@@ -125,11 +126,11 @@ function normalizeCorsUrl(src: string): string {
 
 async function fetchAsDataUrl(src: string): Promise<string | null> {
   try {
-    const resp = await fetch(src, {
+    const resp = await fetchWithTimeout(src, {
       cache: 'no-cache',
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-    });
+    }, 5000);
     if (!resp.ok) return null;
     const blob = await resp.blob();
     return await new Promise<string>((resolve) => {

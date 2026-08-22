@@ -1,4 +1,5 @@
-import type { Canvas, CanvasKit, Image, Surface, TypefaceFontProvider } from 'canvaskit-wasm';
+import type { Canvas, CanvasKit, Surface, TypefaceFontProvider } from 'canvaskit-wasm';
+import { fetchWithTimeout } from '@/lib/fetchWithTimeout';
 import { isSvgImageContentType, normalizeImageSource } from '@/lib/imageSource';
 import { getCanvasKit } from '@/lib/render/canvaskit';
 import {
@@ -8,10 +9,13 @@ import {
   RENDER_SCALE,
 } from '@/lib/render/constants';
 import { loadRendererFonts } from '@/lib/render/fonts';
+import { FontContextCache } from '@/lib/render/fontContextCache';
 import { createRenderFontSet } from '@/lib/render/fontSet';
 import { fitRenderImage } from '@/lib/render/imageGeometry';
 import { buildLayoutDocument } from '@/lib/render/layout';
 import { layoutParagraph } from '@/lib/render/paragraph';
+import { RenderImageCache, type RenderImageLease } from '@/lib/render/renderImageCache';
+import { prefetchRenderImages } from '@/lib/render/renderImagePrefetch';
 import type {
   LayoutDocument,
   RenderArtifact,
@@ -25,7 +29,7 @@ const ICON_VIEWBOX_SIZE = 24;
 const RENDER_FETCH_TIMEOUT_MS = 5000;
 const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
-const imageCache = new Map<string, Promise<Image | null>>();
+const imageCache = new RenderImageCache(32);
 
 function hashString(value: string) {
   let hash = 2166136261;
@@ -72,48 +76,42 @@ function revokeObjectUrl(objectUrl: string | null) {
   }
 }
 
-async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs: number = RENDER_FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
-
 function loadImageElementAsDataUrl(src: string): Promise<string | null> {
   return new Promise((resolve) => {
     const imageElement = document.createElement('img');
-    const timeout = window.setTimeout(() => resolve(null), IMAGE_LOAD_TIMEOUT_MS);
+    let settled = false;
+    const finish = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      imageElement.onload = null;
+      imageElement.onerror = null;
+      if (!value) imageElement.src = '';
+      resolve(value);
+    };
+    const timeout = window.setTimeout(() => finish(null), IMAGE_LOAD_TIMEOUT_MS);
 
     imageElement.crossOrigin = 'anonymous';
     imageElement.referrerPolicy = 'no-referrer';
     imageElement.decoding = 'async';
     imageElement.onload = () => {
-      window.clearTimeout(timeout);
-
       try {
         const canvasElement = document.createElement('canvas');
         canvasElement.width = imageElement.naturalWidth;
         canvasElement.height = imageElement.naturalHeight;
         const renderingContext = canvasElement.getContext('2d');
         if (!renderingContext) {
-          resolve(null);
+          finish(null);
           return;
         }
 
         renderingContext.drawImage(imageElement, 0, 0);
-        resolve(canvasElement.toDataURL('image/png'));
+        finish(canvasElement.toDataURL('image/png'));
       } catch {
-        resolve(null);
+        finish(null);
       }
     };
-    imageElement.onerror = () => {
-      window.clearTimeout(timeout);
-      resolve(null);
-    };
+    imageElement.onerror = () => finish(null);
     imageElement.src = src;
   });
 }
@@ -129,7 +127,7 @@ export async function loadEncodedImageBuffer(src: string) {
       cache: 'force-cache',
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-    });
+    }, RENDER_FETCH_TIMEOUT_MS);
     if (response.ok && !isSvgImageContentType(response.headers.get('content-type'))) {
       return await response.arrayBuffer();
     }
@@ -146,7 +144,7 @@ export async function loadEncodedImageBuffer(src: string) {
     cache: 'force-cache',
     credentials: 'omit',
     referrerPolicy: 'no-referrer',
-  });
+  }, RENDER_FETCH_TIMEOUT_MS);
   if (!dataUrlResponse.ok) {
     throw new Error(`image-dataurl-fetch-failed:${normalizedSrc}`);
   }
@@ -154,29 +152,20 @@ export async function loadEncodedImageBuffer(src: string) {
   return await dataUrlResponse.arrayBuffer();
 }
 
-async function loadRenderImage(CanvasKitModule: CanvasKit, src: string) {
-  const cached = imageCache.get(src);
-  if (cached) {
-    return await cached;
-  }
-
-  const pending = (async () => {
-    const buffer = await loadEncodedImageBuffer(src);
-    const image = CanvasKitModule.MakeImageFromEncoded(buffer);
-    if (!image) {
-      throw new Error(`image-decode-failed:${src}`);
-    }
-
-    return image;
-  })().catch((error) => {
+async function acquireRenderImage(CanvasKitModule: CanvasKit, src: string): Promise<RenderImageLease | null> {
+  try {
+    return await imageCache.acquire(src, async () => {
+      const buffer = await loadEncodedImageBuffer(src);
+      const image = CanvasKitModule.MakeImageFromEncoded(buffer);
+      if (!image) {
+        throw new Error(`image-decode-failed:${src}`);
+      }
+      return image;
+    });
+  } catch (error) {
     console.error('渲染图片资源失败:', error);
-    // 失败不留缓存，下次重建预览时重试。
-    imageCache.delete(src);
     return null;
-  });
-
-  imageCache.set(src, pending);
-  return await pending;
+  }
 }
 
 function drawPathOp(CanvasKitModule: CanvasKit, canvas: Canvas, operation: Extract<RenderDrawOp, { kind: 'path' }>) {
@@ -282,30 +271,31 @@ async function drawImageOp(
   CanvasKitModule: CanvasKit,
   canvas: Canvas,
   operation: Extract<RenderDrawOp, { kind: 'image' }>,
+  lease: RenderImageLease | null | undefined,
 ) {
-  const image = await loadRenderImage(CanvasKitModule, operation.src);
-  if (!image) {
+  if (!lease) {
     return;
   }
+  const { image } = lease;
 
+  const srcRect = CanvasKitModule.LTRBRect(0, 0, image.width(), image.height());
+  const destination = fitRenderImage(
+    {
+      x: operation.x,
+      y: operation.y,
+      width: operation.width,
+      height: operation.height,
+    },
+    { width: image.width(), height: image.height() },
+    operation.fit,
+  );
+  const destRect = CanvasKitModule.LTRBRect(
+    destination.x,
+    destination.y,
+    destination.x + destination.width,
+    destination.y + destination.height,
+  );
   const draw = () => {
-    const srcRect = CanvasKitModule.LTRBRect(0, 0, image.width(), image.height());
-    const destination = fitRenderImage(
-      {
-        x: operation.x,
-        y: operation.y,
-        width: operation.width,
-        height: operation.height,
-      },
-      { width: image.width(), height: image.height() },
-      operation.fit,
-    );
-    const destRect = CanvasKitModule.LTRBRect(
-      destination.x,
-      destination.y,
-      destination.x + destination.width,
-      destination.y + destination.height,
-    );
     const paint = createPaint(CanvasKitModule, { color: '#ffffff' });
     canvas.drawImageRect(image, srcRect, destRect, paint, true);
     paint.delete();
@@ -342,6 +332,7 @@ async function drawOperation(
   canvas: Canvas,
   operation: RenderDrawOp,
   fallbackFamilies: string[],
+  imageLeases: Map<string, RenderImageLease | null>,
 ) {
   switch (operation.kind) {
     case 'rect':
@@ -354,7 +345,7 @@ async function drawOperation(
       drawPathOp(CanvasKitModule, canvas, operation);
       return;
     case 'image':
-      await drawImageOp(CanvasKitModule, canvas, operation);
+      await drawImageOp(CanvasKitModule, canvas, operation, imageLeases.get(operation.src));
       return;
     case 'paragraph':
       drawParagraphOp(CanvasKitModule, fontProvider, canvas, operation, fallbackFamilies);
@@ -372,36 +363,46 @@ async function drawDocument(
   fallbackFamilies: string[],
   documentMode: RenderDocumentMode,
 ) {
+  const imageLeases = await prefetchRenderImages(
+    document.drawOps,
+    (src) => acquireRenderImage(CanvasKitModule, src),
+  );
   const canvas = surface.getCanvas();
   canvas.save();
   canvas.scale(RENDER_SCALE, RENDER_SCALE);
 
-  if (documentMode === 'continuous') {
-    canvas.clear(CanvasKitModule.parseColorString(EXPORT_BACKGROUND));
-  } else {
-    // 页与页之间留透明空隙，每页画白底与描边，预览呈现独立纸张的观感。
-    canvas.clear(CanvasKitModule.TRANSPARENT);
-    for (const page of document.pages) {
-      const pageRect = CanvasKitModule.LTRBRect(0, page.top, document.width, page.top + page.height);
-      const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
-      canvas.drawRect(pageRect, backgroundPaint);
-      backgroundPaint.delete();
+  try {
+    if (documentMode === 'continuous') {
+      canvas.clear(CanvasKitModule.parseColorString(EXPORT_BACKGROUND));
+    } else {
+      // 页与页之间留透明空隙，每页画白底与描边，预览呈现独立纸张的观感。
+      canvas.clear(CanvasKitModule.TRANSPARENT);
+      for (const page of document.pages) {
+        const pageRect = CanvasKitModule.LTRBRect(0, page.top, document.width, page.top + page.height);
+        const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
+        canvas.drawRect(pageRect, backgroundPaint);
+        backgroundPaint.delete();
 
-      const borderPaint = createPaint(CanvasKitModule, {
-        color: PAGE_BORDER_COLOR,
-        stroke: true,
-        strokeWidth: PAGE_BORDER_WIDTH,
-      });
-      canvas.drawRect(pageRect, borderPaint);
-      borderPaint.delete();
+        const borderPaint = createPaint(CanvasKitModule, {
+          color: PAGE_BORDER_COLOR,
+          stroke: true,
+          strokeWidth: PAGE_BORDER_WIDTH,
+        });
+        canvas.drawRect(pageRect, borderPaint);
+        borderPaint.delete();
+      }
+    }
+
+    for (const operation of document.drawOps) {
+      await drawOperation(CanvasKitModule, fontProvider, canvas, operation, fallbackFamilies, imageLeases);
+    }
+  } finally {
+    canvas.restore();
+    for (const lease of imageLeases.values()) {
+      lease?.release();
     }
   }
 
-  for (const operation of document.drawOps) {
-    await drawOperation(CanvasKitModule, fontProvider, canvas, operation, fallbackFamilies);
-  }
-
-  canvas.restore();
   surface.flush();
 }
 
@@ -413,19 +414,7 @@ interface FontContext {
   fallbackFamilies: string[];
 }
 
-let cachedFontContext: FontContext | null = null;
-/** 换字体后延迟释放旧对象：可能仍有 in-flight 的构建在使用 */
-const FONT_CONTEXT_DISPOSE_DELAY_MS = 5000;
-
-/**
- * 字体装配结果按 fontFamily 缓存：wasm 侧的 typeface 解析与 buffer 拷贝
- * 是每次重建预览的固定开销，字体不变时无需重做。
- */
-async function acquireFontContext(CanvasKitModule: CanvasKit, selectedFamily: string): Promise<FontContext> {
-  if (cachedFontContext && cachedFontContext.key === selectedFamily) {
-    return cachedFontContext;
-  }
-
+async function createFontContext(CanvasKitModule: CanvasKit, selectedFamily: string): Promise<FontContext> {
   const { faces } = await loadRendererFonts(selectedFamily);
   // 按 manifest 的 family 名注册（registerFont 的 alias），绕开字体内部 name 表：
   // Google static TTF 常把 family 标成带字重的名字（如 "Noto Serif SC ExtraLight"），
@@ -436,22 +425,29 @@ async function acquireFontContext(CanvasKitModule: CanvasKit, selectedFamily: st
   }
   const fontSet = createRenderFontSet(CanvasKitModule, faces);
 
-  const previous = cachedFontContext;
-  if (previous) {
-    window.setTimeout(() => {
-      previous.fontSet.dispose();
-      previous.fontProvider.delete();
-    }, FONT_CONTEXT_DISPOSE_DELAY_MS);
-  }
-
-  cachedFontContext = {
+  return {
     key: selectedFamily,
     faces,
     fontProvider,
     fontSet,
     fallbackFamilies: fontSet.fallbackFamilies(selectedFamily),
   };
-  return cachedFontContext;
+}
+
+let fontContextCache: FontContextCache<FontContext> | null = null;
+
+function acquireFontContext(CanvasKitModule: CanvasKit, selectedFamily: string) {
+  if (!fontContextCache) {
+    fontContextCache = new FontContextCache(
+      (family) => createFontContext(CanvasKitModule, family),
+      (context) => {
+        context.fontSet.dispose();
+        context.fontProvider.delete();
+      },
+    );
+  }
+
+  return fontContextCache.acquire(selectedFamily);
 }
 
 export async function buildRenderArtifact(
@@ -460,24 +456,26 @@ export async function buildRenderArtifact(
   documentMode: RenderDocumentMode = 'paged',
 ): Promise<RenderArtifact> {
   const CanvasKitModule = await getCanvasKit();
-  const { faces, fontProvider, fontSet, fallbackFamilies } = await acquireFontContext(
+  const fontLease = await acquireFontContext(
     CanvasKitModule,
     data.theme.fontFamily,
   );
-
-  const document = await buildLayoutDocument(
-    CanvasKitModule,
-    fontProvider,
-    fontSet,
-    data,
-    options,
-    documentMode,
-  );
-  const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
-  const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
-  const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
+  const { faces, fontProvider, fontSet, fallbackFamilies } = fontLease.value;
+  let surface: Surface | null = null;
 
   try {
+    const document = await buildLayoutDocument(
+      CanvasKitModule,
+      fontProvider,
+      fontSet,
+      data,
+      options,
+      documentMode,
+    );
+    const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
+    const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
+    surface = createSurface(CanvasKitModule, pixelWidth, pixelHeight).surface;
+
     await drawDocument(
       CanvasKitModule,
       fontProvider,
@@ -531,7 +529,8 @@ export async function buildRenderArtifact(
       snapshot.delete();
     }
   } finally {
-    surface.delete();
+    surface?.delete();
+    fontLease.release();
   }
 }
 

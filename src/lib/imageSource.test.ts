@@ -23,8 +23,27 @@ describe('normalizeImageSource', () => {
     );
   });
 
+  it('does not confuse public hostnames with private IPv6 prefixes', () => {
+    expect(normalizeImageSource('https://fc.example.com/product.png')).toBe(
+      'https://fc.example.com/product.png',
+    );
+    expect(normalizeImageSource('https://fe80.example.com/product.png')).toBe(
+      'https://fe80.example.com/product.png',
+    );
+  });
+
   it.each([
     'http://cdn.example.com/product.png',
+    'https://localhost/product.png',
+    'https://resume.local/product.png',
+    'https://127.0.0.1/product.png',
+    'https://10.0.0.8/product.png',
+    'https://172.16.0.8/product.png',
+    'https://192.168.1.8/product.png',
+    'https://169.254.1.8/product.png',
+    'https://[::1]/product.png',
+    'https://[fd00::1]/product.png',
+    'https://user:password@cdn.example.com/product.png',
     'javascript:alert(1)',
     'file:///tmp/product.png',
     'blob:https://example.com/id',
@@ -32,6 +51,11 @@ describe('normalizeImageSource', () => {
     'not a URL',
   ])('rejects unsupported image source %s', (source) => {
     expect(normalizeImageSource(source)).toBeUndefined();
+  });
+
+  it('rejects embedded images larger than the import limit', () => {
+    const oversizedPayload = 'A'.repeat(700_000);
+    expect(normalizeImageSource(`data:image/png;base64,${oversizedPayload}`)).toBeUndefined();
   });
 });
 

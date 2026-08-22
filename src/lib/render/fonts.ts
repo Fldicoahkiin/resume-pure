@@ -1,4 +1,5 @@
 import { getFontManifest } from '@/lib/fonts';
+import { fetchWithTimeout } from '@/lib/fetchWithTimeout';
 import { stripLayoutTables } from '@/lib/render/fontSubset';
 
 const fontBufferCache = new Map<string, Promise<ArrayBuffer>>();
@@ -20,19 +21,8 @@ function isAbsoluteUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs: number = FONT_FETCH_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
-
 async function loadArrayBuffer(src: string): Promise<ArrayBuffer> {
-  const response = await fetchWithTimeout(src, { cache: 'force-cache' });
+  const response = await fetchWithTimeout(src, { cache: 'force-cache' }, FONT_FETCH_TIMEOUT_MS);
   if (!response.ok) {
     throw new Error(`font-fetch-failed:${src}`);
   }

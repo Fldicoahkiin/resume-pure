@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useCallback } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import Image from 'next/image';
 import { LogOut, Loader2 } from 'lucide-react';
 import { siGithub } from 'simple-icons';
@@ -56,25 +56,43 @@ export function GitHubAuthSection() {
     loading: false,
     error: '',
   }));
+  const loginAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => loginAbortRef.current?.abort(), []);
 
   const handleLogin = useCallback(async () => {
+    loginAbortRef.current?.abort();
+    const controller = new AbortController();
+    loginAbortRef.current = controller;
     dispatch({ type: 'START_LOGIN' });
     try {
-      const deviceData = await requestDeviceCode();
+      const deviceData = await requestDeviceCode(controller.signal);
       dispatch({ type: 'DEVICE_CODE', userCode: deviceData.user_code, verifyUrl: deviceData.verification_uri });
       window.open(deviceData.verification_uri, '_blank');
-      const user = await completeDeviceFlow(deviceData.device_code, deviceData.interval);
+      const user = await completeDeviceFlow(
+        deviceData.device_code,
+        deviceData.interval,
+        deviceData.expires_in,
+        controller.signal,
+      );
       dispatch({ type: 'LOGIN_SUCCESS', user });
     } catch (error) {
+      if (controller.signal.aborted) return;
       const msg = error instanceof Error ? error.message : 'unknown';
       dispatch({
         type: 'LOGIN_ERROR',
         error: msg === 'expired' ? t('editor.theme.githubAuthExpired') : t('editor.theme.githubAuthFailed'),
       });
+    } finally {
+      if (loginAbortRef.current === controller) {
+        loginAbortRef.current = null;
+      }
     }
   }, [t]);
 
   const handleLogout = useCallback(() => {
+    loginAbortRef.current?.abort();
+    loginAbortRef.current = null;
     clearAuth();
     dispatch({ type: 'LOGOUT' });
   }, []);

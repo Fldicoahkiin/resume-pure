@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import withSerwistInit from '@serwist/next';
+import { shouldPrecachePublicAsset } from './scripts/precache-policy.js';
 
 const githubPagesBasePath = process.env.GITHUB_PAGES ? '/resume-pure' : '';
 const generatedServiceWorkerPattern = /^(?:sw(?:\.js|\.js\.map)|swe-worker-.*|workbox-.*)$/;
@@ -20,6 +21,7 @@ function getPublicAssetPrecacheEntries() {
 
     const assetPath = path.relative(publicDirectory, inputPath).split(path.sep).join('/');
     if (generatedServiceWorkerPattern.test(assetPath)) return;
+    if (!shouldPrecachePublicAsset(assetPath)) return;
 
     entries.push({
       url: `${githubPagesBasePath}/${assetPath}`,
@@ -46,7 +48,14 @@ function getStaticPageRevision() {
     hash.update(readFileSync(inputPath));
   };
 
-  for (const input of ['src', 'package.json', 'public/manifest.json']) {
+  for (const input of [
+    'src',
+    'package.json',
+    'bun.lock',
+    'next.config.js',
+    'scripts/precache-policy.js',
+    'public/manifest.json',
+  ]) {
     appendPath(path.resolve(process.cwd(), input));
   }
 
