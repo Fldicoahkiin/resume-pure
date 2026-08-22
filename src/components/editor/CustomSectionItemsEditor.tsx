@@ -81,12 +81,12 @@ export function CustomSectionItemsEditor({
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{t('editor.customSection.addHint')}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {items.map((item, index) => (
             <div
               key={item.id}
               data-editor-anchor={customItemAnchor(sectionId, item.id)}
-              className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/30"
+              className="py-5 first:pt-0 last:pb-0"
             >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1 text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -204,30 +204,26 @@ export function CustomSectionItemsEditor({
                   />
                 </label>
 
-                <div className="md:col-span-2 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateItem(item.id, { showLogo: item.showLogo === false })}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                      item.showLogo !== false
-                        ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:text-white'
-                    }`}
-                  >
-                    {item.showLogo !== false ? t('editor.customSection.showLogo') : t('editor.customSection.hideLogo')}
-                  </button>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 md:col-span-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={item.showLogo !== false}
+                      onChange={(event) => updateItem(item.id, { showLogo: event.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:focus-visible:ring-offset-gray-800"
+                    />
+                    <span>{t('editor.customSection.showLogo')}</span>
+                  </label>
 
-                  <button
-                    type="button"
-                    onClick={() => updateItem(item.id, { showStars: item.showStars === false })}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                      item.showStars !== false
-                        ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-200'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:text-white'
-                    }`}
-                  >
-                    {item.showStars !== false ? t('editor.customSection.showStars') : t('editor.customSection.hideStars')}
-                  </button>
+                  <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={item.showStars !== false}
+                      onChange={(event) => updateItem(item.id, { showStars: event.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:accent-white dark:focus-visible:ring-offset-gray-800"
+                    />
+                    <span>{t('editor.customSection.showStars')}</span>
+                  </label>
                 </div>
 
                 <BulletListTextarea

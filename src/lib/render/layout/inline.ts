@@ -15,6 +15,8 @@ const DENSE_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 6;
 
 const DEFAULT_TECHNOLOGY_PILL_HORIZONTAL_PADDING = 7;
 
+const TECHNOLOGY_PILL_ICON_GAP = 2;
+
 const SKILL_ENTRY_ICON_GAP = 5;
 
 const DENSE_SKILL_ENTRY_DIVIDER_SPACING = 4;
@@ -24,6 +26,10 @@ const DEFAULT_SKILL_ENTRY_DIVIDER_SPACING = 6;
 const DENSE_SKILL_ENTRY_GAP = 9;
 
 const DEFAULT_SKILL_ENTRY_GAP = 12;
+
+export function getTechnologyPillIconWidth(iconBoxSize: number, hasIcon: boolean) {
+  return hasIcon ? iconBoxSize + TECHNOLOGY_PILL_ICON_GAP : 0;
+}
 
 export function buildInlineMetadataItem(
   context: LayoutContext,
@@ -107,7 +113,7 @@ export function buildTechnologyPill(
     : DEFAULT_TECHNOLOGY_PILL_HORIZONTAL_PADDING;
   const marginRight = metrics.isDenseLayout ? 3 : 4;
   const marginBottom = metrics.isDenseLayout ? 1 : 2;
-  const iconBoxWidth = icon ? metrics.inlineIconBoxSize + 2 : 0;
+  const iconBoxWidth = getTechnologyPillIconWidth(metrics.inlineIconBoxSize, Boolean(icon));
   const width = horizontalPadding * 2 + iconBoxWidth + textSize.width + marginRight;
   const height = Math.max(metrics.technologyPillMinHeight, textSize.height) + marginBottom;
 
@@ -138,7 +144,7 @@ export function buildTechnologyPill(
             icon.color,
           ),
         );
-        cursorX += metrics.inlineIconBoxSize;
+        cursorX += iconBoxWidth;
       }
 
       addParagraph(context, {

@@ -17,7 +17,7 @@ export function ThemeToggle() {
         relative w-10 h-10 rounded-full flex items-center justify-center
         bg-gray-100 dark:bg-gray-700
         hover:bg-gray-200 dark:hover:bg-gray-600
-        text-gray-600 dark:text-amber-400
+        text-gray-600 dark:text-gray-300
         transition-colors duration-200
         focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500
       "
@@ -27,14 +27,14 @@ export function ThemeToggle() {
         <Sun
           size={20}
           className={`
-            absolute inset-0 transform transition-all duration-500
+            absolute inset-0 transform transition-[opacity,transform] duration-300
             ${isDark ? 'opacity-0 rotate-180 scale-0' : 'opacity-100 rotate-0 scale-100'}
           `}
         />
         <Moon
           size={20}
           className={`
-            absolute inset-0 transform transition-all duration-500
+            absolute inset-0 transform transition-[opacity,transform] duration-300
             ${isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-180 scale-0'}
           `}
         />

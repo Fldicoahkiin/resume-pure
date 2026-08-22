@@ -87,7 +87,7 @@ export function GitHubAuthSection() {
       </div>
 
       {auth.user ? (
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-700/40">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <Image
               src={auth.user.avatar_url}
@@ -99,13 +99,13 @@ export function GitHubAuthSection() {
             />
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{auth.user.login}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">{t('editor.theme.githubConnected')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('editor.theme.githubConnected')}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-red-300 hover:text-red-500 dark:border-gray-600 dark:text-gray-400"
+            className="inline-flex items-center gap-1 px-1 py-1 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           >
             <LogOut size={12} />
             {t('editor.theme.githubLogout')}
@@ -117,19 +117,19 @@ export function GitHubAuthSection() {
             type="button"
             onClick={() => void handleLogin()}
             disabled={auth.loading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
           >
             {auth.loading ? <Loader2 size={16} className="animate-spin" /> : <BrandIcon path={siGithub.path} size={16} />}
             {auth.loading ? t('editor.theme.githubAuthWaiting') : t('editor.theme.githubLogin')}
           </button>
 
           {auth.deviceUserCode && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 dark:border-blue-500/30 dark:bg-blue-500/10">
-              <p className="text-xs text-blue-700 dark:text-blue-300">
+            <div className="space-y-1.5 border-t border-gray-200 pt-2 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-300">
                 {t('editor.theme.githubDeviceHint')}
               </p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <code className="rounded bg-white px-2 py-1 text-lg font-bold tracking-widest text-gray-900 dark:bg-gray-800 dark:text-white">
+              <div className="flex items-center gap-2">
+                <code className="rounded-sm border border-gray-200 bg-gray-50 px-2 py-1 text-lg font-bold tracking-widest text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                   {auth.deviceUserCode}
                 </code>
                 <a
@@ -158,11 +158,23 @@ export function GitHubAuthSection() {
             </summary>
             <form onSubmit={(event) => event.preventDefault()}>
               <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                value="github"
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                className="sr-only"
+              />
+              <input
                 type="password"
+                name="github-token"
                 autoComplete="new-password"
+                aria-label={t('editor.theme.githubManualToken')}
                 defaultValue={getStoredToken()}
                 onChange={(e) => setManualToken(e.target.value)}
-                className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="ghp_xxxxxxxxxxxx"
               />
             </form>

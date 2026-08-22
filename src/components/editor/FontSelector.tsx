@@ -140,7 +140,7 @@ function FontOption({ font, isSelected, onSelect }: { font: FontConfig, isSelect
         <button
             type="button"
             onClick={onSelect}
-            className={`relative w-full text-left px-2 py-2 rounded-md flex items-center justify-between group transition-all duration-200 ${isSelected ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-[inset_2px_0_0_0_#3b82f6]' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            className={`relative w-full text-left px-2 py-2 rounded-md flex items-center justify-between group transition-[background-color,color,box-shadow] duration-150 ${isSelected ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-[inset_2px_0_0_0_#3b82f6]' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
         >
             <div className="flex items-center overflow-hidden min-w-0">
