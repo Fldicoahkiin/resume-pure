@@ -24,6 +24,7 @@
     "prebuild": "node scripts/sync-render-assets.js",
     "build": "next build --webpack",
     "start": "next start",
+    "export:resume": "bun scripts/export-resume.ts",
     "lint": "eslint .",
     "test": "vitest run",
     "render-assets:update": "node scripts/sync-render-assets.js",
@@ -56,6 +57,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.1",
     "postcss": "^8.5.26",
+    "playwright": "^1.62.1",
     "serwist": "9.5.12",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"

@@ -47,6 +47,30 @@ bun run build
 bun run start
 ```
 
+### Command-line export
+
+Install the Chromium build that matches the current Playwright version before the first export:
+
+```bash
+bunx playwright install chromium
+```
+
+Export a local JSON resume to a PDF or PNG file. The command starts a temporary local Resume Pure server and stops it after the download finishes:
+
+```bash
+bun run export:resume -- ./resume.json --format pdf --output ./exports/resume.pdf
+bun run export:resume -- ./resume.json --format png --output ./exports/resume.png
+```
+
+PDF keeps the preview paper size and pagination. PNG uses the same width, typography, and content layout in a continuous image without page breaks.
+
+Use an existing Resume Pure server instead of starting a temporary one:
+
+```bash
+bun run export:resume -- ./resume.json --format pdf --output ./resume.pdf \
+  --url http://127.0.0.1:3000/builder/
+```
+
 ### Docker
 
 ```bash

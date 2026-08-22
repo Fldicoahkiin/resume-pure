@@ -1,7 +1,11 @@
 import type { CanvasKit, TypefaceFontProvider } from 'canvaskit-wasm';
 import { getPaperDimensions } from '@/lib/paper';
 import type { RenderFontSet } from '@/lib/render/fontSet';
-import type { LayoutDocument, RenderBuildOptions } from '@/lib/render/types';
+import type {
+  LayoutDocument,
+  RenderBuildOptions,
+  RenderDocumentMode,
+} from '@/lib/render/types';
 import type { ResumeData, SectionConfig } from '@/types';
 import { getRenderLayoutMetrics, ptToPx, type LayoutContext } from './context';
 import { addHeader } from './header';
@@ -10,7 +14,7 @@ import { addEducationSection } from './education';
 import { addProjectSection } from './projects';
 import { addSkillSection } from './skills';
 import { addCustomSection } from './custom';
-import { paginateDocument } from './paginate';
+import { createContinuousPage, paginateDocument } from './paginate';
 
 /**
  * 内置模块的布局分发表：新增模块类型时在此登记，
@@ -32,6 +36,7 @@ export async function buildLayoutDocument(
   fontSet: RenderFontSet,
   data: ResumeData,
   options: RenderBuildOptions,
+  documentMode: RenderDocumentMode = 'paged',
 ): Promise<LayoutDocument> {
   const paper = getPaperDimensions(data.theme.paperSize);
   const metrics = getRenderLayoutMetrics(data.theme);
@@ -89,7 +94,9 @@ export async function buildLayoutDocument(
     addCustomSection(context, section, customSection);
   }
 
-  const pages = paginateDocument(context, paper.height);
+  const pages = documentMode === 'continuous'
+    ? [createContinuousPage(context)]
+    : paginateDocument(context, paper.height);
   const lastPage = pages[pages.length - 1];
 
   return {

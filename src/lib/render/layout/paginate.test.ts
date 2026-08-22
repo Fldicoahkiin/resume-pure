@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PAGE_GAP } from '@/lib/render/constants';
 import type { RenderDrawOp } from '@/lib/render/types';
 import type { BreakMark } from './context';
-import { paginateDocument, type PaginateInput } from './paginate';
+import { createContinuousPage, paginateDocument, type PaginateInput } from './paginate';
 
 const PAPER_HEIGHT = 1000;
 const METRICS = { pageTopPadding: 20, pageBottomPadding: 30 };
@@ -157,5 +157,20 @@ describe('paginateDocument', () => {
     const shift = PAPER_HEIGHT + PAGE_GAP + METRICS.pageTopPadding - 950;
     expect(paragraphOp.box.y).toBe(950 + shift);
     expect(paragraphOp.box.paragraph.y).toBe(950 + shift);
+  });
+});
+
+describe('createContinuousPage', () => {
+  it('keeps the content flow unshifted and adds only the final bottom padding', () => {
+    const input = createInput();
+    input.drawOps.push(rectOp(950, 40));
+    input.cursorY = 990;
+
+    const page = createContinuousPage(input);
+
+    expect(page).toMatchObject({ top: 0, height: 1020 });
+    expect(page.drawOps).toBe(input.drawOps);
+    const rect = page.drawOps[0] as Extract<RenderDrawOp, { kind: 'rect' }>;
+    expect(rect.rect.y).toBe(950);
   });
 });

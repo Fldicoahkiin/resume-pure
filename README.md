@@ -53,6 +53,30 @@ bun run build
 bun run start
 ```
 
+### 命令行导出
+
+首次使用时安装与当前 Playwright 版本匹配的 Chromium：
+
+```bash
+bunx playwright install chromium
+```
+
+随后可直接把本地 JSON 导出到指定 PDF 或 PNG 文件。命令会临时启动本地 Resume Pure，完成后自动关闭：
+
+```bash
+bun run export:resume -- ./resume.json --format pdf --output ./exports/resume.pdf
+bun run export:resume -- ./resume.json --format png --output ./exports/resume.png
+```
+
+PDF 保留预览中的纸张尺寸与分页；PNG 使用相同宽度、字体和内容布局导出为无分页间隔的连续长图。
+
+如果 Resume Pure 已经在运行，可跳过临时服务器：
+
+```bash
+bun run export:resume -- ./resume.json --format pdf --output ./resume.pdf \
+  --url http://127.0.0.1:3000/builder/
+```
+
 ### 渲染字体生成
 
 预览与 PDF 导出共用 `public/fonts/` 下的子集字体（Noto Sans SC 正/粗体、Noto Emoji）。

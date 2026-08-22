@@ -22,6 +22,16 @@ export interface PaginateInput {
   cursorY: number;
 }
 
+export function createContinuousPage(context: PaginateInput): LayoutPage {
+  return {
+    top: 0,
+    height: Math.max(1, Math.ceil(context.cursorY + context.metrics.pageBottomPadding)),
+    drawOps: context.drawOps,
+    textRuns: context.textRuns,
+    linkRegions: context.linkRegions,
+  };
+}
+
 /** 取绘制元素的纵向范围，分页时据此判断块是否越过页底 */
 function getDrawOpBounds(op: RenderDrawOp): { top: number; bottom: number } {
   switch (op.kind) {

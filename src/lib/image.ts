@@ -1,7 +1,3 @@
-import {
-  getRenderArtifactKey,
-  readCachedRenderArtifact,
-} from '@/lib/render/cache';
 import { buildRenderArtifact, disposeRenderArtifact } from '@/lib/render/surface';
 import type { RenderBuildOptions } from '@/lib/render/types';
 import type { ResumeData } from '@/types';
@@ -187,9 +183,7 @@ export async function exportToPNG(
   options: RenderBuildOptions,
   filename: string = 'resume.png',
 ): Promise<void> {
-  const cacheKey = getRenderArtifactKey(data, options);
-  const cachedArtifact = readCachedRenderArtifact(cacheKey);
-  const artifact = cachedArtifact || await buildRenderArtifact(data, options);
+  const artifact = await buildRenderArtifact(data, options, 'continuous');
 
   try {
     downloadBlob(artifact.blob, filename);
@@ -197,8 +191,6 @@ export async function exportToPNG(
     console.error('PNG 导出失败:', error);
     throw new Error('PNG 导出失败');
   } finally {
-    if (!cachedArtifact) {
-      disposeRenderArtifact(artifact);
-    }
+    disposeRenderArtifact(artifact);
   }
 }

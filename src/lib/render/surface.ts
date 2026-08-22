@@ -1,7 +1,12 @@
 import type { Canvas, CanvasKit, Image, Surface, TypefaceFontProvider } from 'canvaskit-wasm';
 import { isSvgImageContentType, normalizeImageSource } from '@/lib/imageSource';
 import { getCanvasKit } from '@/lib/render/canvaskit';
-import { EXPORT_BACKGROUND, PAGE_BORDER_COLOR, RENDER_SCALE } from '@/lib/render/constants';
+import {
+  EXPORT_BACKGROUND,
+  PAGE_BORDER_COLOR,
+  PAGE_BORDER_WIDTH,
+  RENDER_SCALE,
+} from '@/lib/render/constants';
 import { loadRendererFonts } from '@/lib/render/fonts';
 import { createRenderFontSet } from '@/lib/render/fontSet';
 import { fitRenderImage } from '@/lib/render/imageGeometry';
@@ -11,6 +16,7 @@ import type {
   LayoutDocument,
   RenderArtifact,
   RenderBuildOptions,
+  RenderDocumentMode,
   RenderDrawOp,
 } from '@/lib/render/types';
 import type { ResumeData } from '@/types';
@@ -364,26 +370,31 @@ async function drawDocument(
   surface: Surface,
   document: LayoutDocument,
   fallbackFamilies: string[],
+  documentMode: RenderDocumentMode,
 ) {
   const canvas = surface.getCanvas();
   canvas.save();
   canvas.scale(RENDER_SCALE, RENDER_SCALE);
 
-  // 页与页之间留透明空隙，每页画白底与描边，预览呈现独立纸张的观感。
-  canvas.clear(CanvasKitModule.TRANSPARENT);
-  for (const page of document.pages) {
-    const pageRect = CanvasKitModule.LTRBRect(0, page.top, document.width, page.top + page.height);
-    const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
-    canvas.drawRect(pageRect, backgroundPaint);
-    backgroundPaint.delete();
+  if (documentMode === 'continuous') {
+    canvas.clear(CanvasKitModule.parseColorString(EXPORT_BACKGROUND));
+  } else {
+    // 页与页之间留透明空隙，每页画白底与描边，预览呈现独立纸张的观感。
+    canvas.clear(CanvasKitModule.TRANSPARENT);
+    for (const page of document.pages) {
+      const pageRect = CanvasKitModule.LTRBRect(0, page.top, document.width, page.top + page.height);
+      const backgroundPaint = createPaint(CanvasKitModule, { color: EXPORT_BACKGROUND });
+      canvas.drawRect(pageRect, backgroundPaint);
+      backgroundPaint.delete();
 
-    const borderPaint = createPaint(CanvasKitModule, {
-      color: PAGE_BORDER_COLOR,
-      stroke: true,
-      strokeWidth: 1,
-    });
-    canvas.drawRect(pageRect, borderPaint);
-    borderPaint.delete();
+      const borderPaint = createPaint(CanvasKitModule, {
+        color: PAGE_BORDER_COLOR,
+        stroke: true,
+        strokeWidth: PAGE_BORDER_WIDTH,
+      });
+      canvas.drawRect(pageRect, borderPaint);
+      borderPaint.delete();
+    }
   }
 
   for (const operation of document.drawOps) {
@@ -446,6 +457,7 @@ async function acquireFontContext(CanvasKitModule: CanvasKit, selectedFamily: st
 export async function buildRenderArtifact(
   data: ResumeData,
   options: RenderBuildOptions,
+  documentMode: RenderDocumentMode = 'paged',
 ): Promise<RenderArtifact> {
   const CanvasKitModule = await getCanvasKit();
   const { faces, fontProvider, fontSet, fallbackFamilies } = await acquireFontContext(
@@ -453,13 +465,27 @@ export async function buildRenderArtifact(
     data.theme.fontFamily,
   );
 
-  const document = await buildLayoutDocument(CanvasKitModule, fontProvider, fontSet, data, options);
+  const document = await buildLayoutDocument(
+    CanvasKitModule,
+    fontProvider,
+    fontSet,
+    data,
+    options,
+    documentMode,
+  );
   const pixelWidth = Math.max(1, Math.ceil(document.width * RENDER_SCALE));
   const pixelHeight = Math.max(1, Math.ceil(document.height * RENDER_SCALE));
   const { surface } = createSurface(CanvasKitModule, pixelWidth, pixelHeight);
 
   try {
-    await drawDocument(CanvasKitModule, fontProvider, surface, document, fallbackFamilies);
+    await drawDocument(
+      CanvasKitModule,
+      fontProvider,
+      surface,
+      document,
+      fallbackFamilies,
+      documentMode,
+    );
     const snapshot = surface.makeImageSnapshot();
     if (!snapshot) {
       throw new Error('render-snapshot-unavailable');
@@ -485,6 +511,7 @@ export async function buildRenderArtifact(
           ops: document.drawOps.length,
           text: document.textRuns.length,
           links: document.linkRegions.length,
+          documentMode,
         }),
       );
 

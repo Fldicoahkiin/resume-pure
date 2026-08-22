@@ -163,6 +163,8 @@ export interface RenderArtifact {
   fingerprint: string;
 }
 
+export type RenderDocumentMode = 'paged' | 'continuous';
+
 export interface RenderBuildOptions {
   theme: ResumeData['theme'];
   translations: {
