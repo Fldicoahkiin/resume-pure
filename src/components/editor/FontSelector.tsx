@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Type } from 'lucide-react';
 import { getFontOptions, FontConfig } from '@/lib/fonts';
 import { useTranslation } from 'react-i18next';
+
+const MENU_GAP = 4;
+const MENU_MARGIN = 8;
+const MENU_MAX_HEIGHT = 400;
+const MENU_DESKTOP_WIDTH = 320;
 
 interface FontSelectorProps {
     value: string;
@@ -14,6 +20,64 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const menuId = useId();
+
+    const closeMenu = useCallback(() => {
+        setIsOpen(false);
+        setSearchQuery('');
+        setMenuStyle(null);
+    }, []);
+
+    const updateMenuPosition = useCallback(() => {
+        const trigger = triggerRef.current;
+        if (!trigger) return;
+
+        const triggerBox = trigger.getBoundingClientRect();
+        const editorBox = trigger.closest('[data-editor-viewport]')?.getBoundingClientRect();
+        const boundaryTop = Math.max(MENU_MARGIN, editorBox?.top ?? MENU_MARGIN);
+        const boundaryBottom = Math.min(window.innerHeight - MENU_MARGIN, editorBox?.bottom ?? window.innerHeight - MENU_MARGIN);
+        const boundaryLeft = Math.max(MENU_MARGIN, editorBox?.left ?? MENU_MARGIN);
+        const boundaryRight = Math.min(window.innerWidth - MENU_MARGIN, editorBox?.right ?? window.innerWidth - MENU_MARGIN);
+        const availableWidth = boundaryRight - boundaryLeft;
+        const width = Math.min(
+            window.innerWidth >= 640 ? MENU_DESKTOP_WIDTH : triggerBox.width,
+            availableWidth,
+        );
+        const left = Math.min(Math.max(triggerBox.left, boundaryLeft), boundaryRight - width);
+        const spaceAbove = triggerBox.top - boundaryTop - MENU_GAP;
+        const spaceBelow = boundaryBottom - triggerBox.bottom - MENU_GAP;
+        const openAbove = spaceAbove >= MENU_MAX_HEIGHT || spaceAbove > spaceBelow;
+        const maxHeight = Math.min(MENU_MAX_HEIGHT, Math.max(0, openAbove ? spaceAbove : spaceBelow));
+
+        setMenuStyle({
+            position: 'fixed',
+            left,
+            width,
+            maxHeight,
+            ...(openAbove
+                ? { bottom: window.innerHeight - triggerBox.top + MENU_GAP }
+                : { top: triggerBox.bottom + MENU_GAP }),
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        updateMenuPosition();
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            closeMenu();
+            triggerRef.current?.focus();
+        };
+        window.addEventListener('resize', updateMenuPosition);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('resize', updateMenuPosition);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [closeMenu, isOpen, updateMenuPosition]);
 
     const { enSansSerif, enSerif, zhFonts, all } = getFontOptions();
 
@@ -29,8 +93,12 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
     return (
         <div className="relative w-full">
             <button
+                ref={triggerRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-controls={isOpen ? menuId : undefined}
+                aria-haspopup="dialog"
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
                 <div className="flex items-center gap-2 overflow-hidden">
@@ -45,17 +113,23 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                 <ChevronDown size={14} className="text-gray-400 shrink-0 ml-2" />
             </button>
 
-            {isOpen && (
+            {isOpen && menuStyle && createPortal(
                 <>
                     <button
                         type="button"
-                        className="fixed inset-0 z-10"
-                        onClick={() => { setIsOpen(false); setSearchQuery(''); }}
-                        aria-label="close font selector"
+                        className="fixed inset-0 z-[60]"
+                        onClick={closeMenu}
+                        aria-label={t('editor.font.closeSelector')}
                     />
-                    <div className="absolute bottom-full left-0 mb-1 w-full sm:w-[320px] max-h-[400px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 flex flex-col origin-bottom">
+                    <div
+                        id={menuId}
+                        role="dialog"
+                        aria-label={t('editor.theme.fontFamily')}
+                        style={menuStyle}
+                        className="z-[70] flex flex-col overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                    >
 
-                        <div className="p-2 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm z-10">
+                        <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
                             <input
                                 type="text"
                                 placeholder={t('editor.theme.searchFont')}
@@ -68,7 +142,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                         <div className="p-2 space-y-4">
                             {filteredZh.length > 0 && (
                                 <div>
-                                    <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
+                                    <div className="mb-1 flex items-center px-2 text-xs font-medium text-gray-500 dark:text-gray-400">
                                         {t('editor.font.groupZh')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
@@ -77,7 +151,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                                                 key={font.family}
                                                 font={font}
                                                 isSelected={value === font.family}
-                                                onSelect={() => { onChange(font.family); setIsOpen(false); setSearchQuery(''); }}
+                                                onSelect={() => { onChange(font.family); closeMenu(); }}
                                             />
                                         ))}
                                     </div>
@@ -86,7 +160,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 
                             {filteredSans.length > 0 && (
                                 <div>
-                                    <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
+                                    <div className="mb-1 flex items-center px-2 text-xs font-medium text-gray-500 dark:text-gray-400">
                                         {t('editor.font.groupSans')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
@@ -95,7 +169,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                                                 key={font.family}
                                                 font={font}
                                                 isSelected={value === font.family}
-                                                onSelect={() => { onChange(font.family); setIsOpen(false); setSearchQuery(''); }}
+                                                onSelect={() => { onChange(font.family); closeMenu(); }}
                                             />
                                         ))}
                                     </div>
@@ -104,7 +178,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 
                             {filteredSerif.length > 0 && (
                                 <div>
-                                    <div className="px-2 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 flex items-center">
+                                    <div className="mb-1 flex items-center px-2 text-xs font-medium text-gray-500 dark:text-gray-400">
                                         {t('editor.font.groupSerif')}
                                     </div>
                                     <div className="flex flex-col gap-0.5">
@@ -113,7 +187,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                                                 key={font.family}
                                                 font={font}
                                                 isSelected={value === font.family}
-                                                onSelect={() => { onChange(font.family); setIsOpen(false); setSearchQuery(''); }}
+                                                onSelect={() => { onChange(font.family); closeMenu(); }}
                                             />
                                         ))}
                                     </div>
@@ -127,7 +201,8 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
                             )}
                         </div>
                     </div>
-                </>
+                </>,
+                document.body,
             )}
         </div>
     );

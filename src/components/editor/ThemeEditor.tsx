@@ -57,7 +57,7 @@ export function ThemeEditor() {
               reset();
             }
           }}
-          className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition"
+          className="flex items-center gap-1 text-sm text-gray-500 transition-colors duration-150 hover:text-red-500 dark:text-gray-400"
         >
           <RotateCcw size={14} />
           {t('editor.theme.reset')}
@@ -76,9 +76,11 @@ export function ThemeEditor() {
                 key={color}
                 type="button"
                 onClick={() => updateTheme({ primaryColor: color })}
-                className={`w-8 h-8 rounded-full border-2 transition ${theme.primaryColor === color
-                  ? 'border-gray-900 dark:border-white scale-110'
-                  : 'border-transparent hover:scale-105'
+                aria-label={color}
+                aria-pressed={theme.primaryColor === color}
+                className={`h-8 w-8 rounded-full border-2 transition-[border-color,box-shadow] duration-150 ${theme.primaryColor === color
+                  ? 'border-gray-900 ring-2 ring-gray-300 ring-offset-2 dark:border-white dark:ring-gray-600 dark:ring-offset-gray-800'
+                  : 'border-transparent hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 style={{ backgroundColor: color }}
               />
@@ -115,7 +117,7 @@ export function ThemeEditor() {
                 key={size}
                 type="button"
                 onClick={() => updateTheme({ paperSize: size })}
-                className={`rounded-lg border px-3 py-2 text-left transition ${
+                className={`rounded-lg border px-3 py-2 text-left transition-colors duration-150 ${
                   theme.paperSize === size
                     ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
@@ -141,7 +143,7 @@ export function ThemeEditor() {
                 <button
                   type="button"
                   onClick={() => updateTheme({ fontSize: 11 })}
-                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  className="px-1.5 py-0.5 text-[11px] text-gray-500 opacity-0 transition-opacity duration-150 hover:text-gray-700 focus-visible:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-200"
                   title={t('editor.theme.resetFontSizeTitle')}
                 >
                   {t('editor.theme.resetToDefault')}
@@ -187,7 +189,7 @@ export function ThemeEditor() {
                 <button
                   type="button"
                   onClick={() => updateTheme({ lineHeight: 1.5 })}
-                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  className="px-1.5 py-0.5 text-[11px] text-gray-500 opacity-0 transition-opacity duration-150 hover:text-gray-700 focus-visible:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-200"
                   title={t('editor.theme.resetLineHeightTitle')}
                 >
                   {t('editor.theme.resetToDefault')}
@@ -233,7 +235,7 @@ export function ThemeEditor() {
                 <button
                   type="button"
                   onClick={() => updateTheme({ spacing: 8 })}
-                  className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100"
+                  className="px-1.5 py-0.5 text-[11px] text-gray-500 opacity-0 transition-opacity duration-150 hover:text-gray-700 focus-visible:opacity-100 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-200"
                   title={t('editor.theme.resetSpacingTitle')}
                 >
                   {t('editor.theme.resetToDefault')}
@@ -281,6 +283,8 @@ export function ThemeEditor() {
           <button
             type="button"
             onClick={() => updateTheme({ enableLinks: !theme.enableLinks })}
+            role="switch"
+            aria-checked={theme.enableLinks !== false}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${theme.enableLinks !== false ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
               }`}
           >

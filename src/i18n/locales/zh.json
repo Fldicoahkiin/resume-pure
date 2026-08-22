@@ -314,7 +314,7 @@
       "enableLinks": "启用超链接",
       "enableLinksHint": "导出 PDF 时可点击跳转",
       "moreSettings": "更多设置功能即将推出...",
-      "githubTokenHint": "登录 GitHub 可提高 API 速率限额，支持同步仓库信息。",
+      "githubTokenHint": "登录 GitHub 可提高 API 速率限额并同步仓库信息。Token 仅保留在当前浏览器会话。",
       "githubLogin": "登录 GitHub",
       "githubLogout": "退出",
       "githubConnected": "已连接",
@@ -336,6 +336,7 @@
       "moveDown": "下移"
     },
     "font": {
+      "closeSelector": "关闭字体选择器",
       "groupZh": "中文字体",
       "groupSans": "无衬线字体",
       "groupSerif": "衬线字体",

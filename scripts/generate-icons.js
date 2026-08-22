@@ -46,8 +46,8 @@ function getTopIcons() {
   // 将输出写入到 src/lib/iconData.ts
   const targetPath = path.resolve(scriptDirectory, '../src/lib/iconData.ts');
   fs.writeFileSync(targetPath, out);
-  
-  console.log(`✅ [icons:update] 成功提取了 ${count} 个前端高频使用的 SVG 图标写入至 src/lib/iconData.ts！`);
+
+  console.log(`[icons:update] 成功提取了 ${count} 个前端高频使用的 SVG 图标写入至 src/lib/iconData.ts！`);
 }
 
 getTopIcons();

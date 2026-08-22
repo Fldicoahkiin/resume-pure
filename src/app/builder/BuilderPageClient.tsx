@@ -283,7 +283,7 @@ function BuilderPageLayout({
 
           {/* 编辑内容 */}
           {ui.editorMode === 'form' ? (
-            <div ref={editorViewportRef} className="flex-1 overflow-y-auto">
+            <div ref={editorViewportRef} data-editor-viewport className="flex-1 overflow-y-auto">
               <div className="flex flex-col gap-6 p-6 max-w-4xl w-full mx-auto">
                 {/* 个人信息 - 固定在顶部 */}
                 <PersonalInfoEditor />

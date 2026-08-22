@@ -41,11 +41,11 @@ function syncCanvasKitAssets() {
   const wroteWasm = syncFile(wasmSourcePath, wasmTargetPath);
 
   if (wroteJs || wroteWasm) {
-    console.log('✅ [render-assets:update] 已同步 CanvasKit 运行时到 public/vendor');
+    console.log('[render-assets:update] 已同步 CanvasKit 运行时到 public/vendor');
     return;
   }
 
-  console.log('ℹ️ [render-assets:update] CanvasKit 运行时已是最新版本。');
+  console.log('[render-assets:update] CanvasKit 运行时已是最新版本。');
 }
 
 syncCanvasKitAssets();

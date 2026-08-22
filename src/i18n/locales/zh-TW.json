@@ -314,7 +314,7 @@
       "enableLinks": "啟用超連結",
       "enableLinksHint": "匯出的 PDF 中可點選連結",
       "moreSettings": "更多設定即將推出...",
-      "githubTokenHint": "登入 GitHub 可提高 API 請求上限並同步儲存庫資訊。",
+      "githubTokenHint": "登入 GitHub 可提高 API 請求上限並同步儲存庫資訊。Token 僅保留在目前的瀏覽器工作階段。",
       "githubLogin": "使用 GitHub 登入",
       "githubLogout": "登出",
       "githubConnected": "已連線",
@@ -336,6 +336,7 @@
       "moveDown": "向下移動"
     },
     "font": {
+      "closeSelector": "關閉字體選擇器",
       "groupZh": "中文字型",
       "groupSans": "無襯線字型",
       "groupSerif": "襯線字型",

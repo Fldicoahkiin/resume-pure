@@ -49,7 +49,7 @@ function main() {
   const output = generateFontCss(fontManifest);
   fs.writeFileSync(outputPath, output);
 
-  console.log(`✅ [fonts:update] 成功生成 ${fontManifest.length} 个字体族的 @font-face 声明。`);
+  console.log(`[fonts:update] 成功生成 ${fontManifest.length} 个字体族的 @font-face 声明。`);
 }
 
 main();

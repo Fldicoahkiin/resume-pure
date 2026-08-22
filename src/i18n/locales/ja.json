@@ -314,7 +314,7 @@
       "enableLinks": "ハイパーリンクを有効にする",
       "enableLinksHint": "書き出した PDF 内でリンクをクリック可能にする",
       "moreSettings": "その他の設定は今後追加予定です...",
-      "githubTokenHint": "GitHub にログインすると API の上限が増え、リポジトリ情報を同期できます。",
+      "githubTokenHint": "GitHub にログインすると API の上限が増え、リポジトリ情報を同期できます。トークンは現在のブラウザーセッションにのみ保存されます。",
       "githubLogin": "GitHub でログイン",
       "githubLogout": "ログアウト",
       "githubConnected": "接続済み",
@@ -336,6 +336,7 @@
       "moveDown": "下へ移動"
     },
     "font": {
+      "closeSelector": "フォント選択を閉じる",
       "groupZh": "中国語フォント",
       "groupSans": "サンセリフ",
       "groupSerif": "セリフ",
