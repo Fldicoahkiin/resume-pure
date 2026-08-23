@@ -63,8 +63,21 @@ export function ProjectTechPanel({
               className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-600 dark:text-gray-200"
             >
               {logo && (
-                <svg viewBox="0 0 24 24" fill={logo.color} xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0">
-                  <path d={logo.svgPath} />
+                <svg
+                  viewBox={`${logo.viewBox.x} ${logo.viewBox.y} ${logo.viewBox.width} ${logo.viewBox.height}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 shrink-0"
+                >
+                  {logo.paths.map((path) => (
+                    <path
+                      key={path.d}
+                      d={path.d}
+                      fill={path.fill ?? 'none'}
+                      stroke={path.stroke}
+                      strokeWidth={path.strokeWidth}
+                      strokeLinecap={path.strokeLineCap}
+                    />
+                  ))}
                 </svg>
               )}
               {tech}

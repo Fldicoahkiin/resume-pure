@@ -1,9 +1,17 @@
 import ICON_DATA from './iconData';
+import {
+  CUSTOM_SKILL_LOGOS,
+  type SkillLogoMeta,
+} from './skillLogoData';
 
-interface SkillLogoMeta {
-  color: string;
-  svgPath: string;
-}
+export type { SkillLogoMeta, SkillLogoPath, SkillLogoViewBox } from './skillLogoData';
+
+const SIMPLE_ICON_VIEW_BOX = {
+  x: 0,
+  y: 0,
+  width: 24,
+  height: 24,
+};
 
 // 名称 → slug 别名映射
 const ALIAS_MAP: Record<string, string> = {
@@ -28,7 +36,6 @@ const ALIAS_MAP: Record<string, string> = {
   postgres: 'postgresql',
   mongo: 'mongodb',
   tailwind: 'tailwindcss',
-  'tailwind css': 'tailwindcss',
   k8s: 'kubernetes',
   aws: 'amazonwebservices',
   gcp: 'googlecloud',
@@ -41,7 +48,7 @@ const ALIAS_MAP: Record<string, string> = {
   scss: 'sass',
   tf: 'terraform',
   pw: 'playwright',
-  'github actions': 'githubactions',
+  githubactions: 'githubactions',
   'ci/cd': 'githubactions',
   wasm: 'webassembly',
   webassembly: 'webassembly',
@@ -53,13 +60,24 @@ const ALIAS_MAP: Record<string, string> = {
   mq: 'rabbitmq',
   'styled-components': 'styledcomponents',
   ue: 'unrealengine',
-  'unreal engine': 'unrealengine',
+  unrealengine: 'unrealengine',
   godot: 'godotengine',
-  'godot engine': 'godotengine',
+  godotengine: 'godotengine',
   'unity3d': 'unity',
   'egui': 'rust',
   'steamworkssdk': 'steam',
-  'steamworks': 'steam',
+  'bash3.2+': 'gnubash',
+  'claudecode': 'claude',
+  'suimove': 'sui',
+  'vdf': 'steam',
+  'cdp': 'googlechrome',
+  'agent/mcp': 'mcp',
+  'agent/mcp/toolcalling': 'mcp',
+  'agent/mcp工作流': 'mcp',
+  'canvaskit': 'webassembly',
+  'ci/release': 'githubactions',
+  'ci/发布': 'githubactions',
+  'giscus': 'github',
 };
 
 function normalizeSkillName(name: string): string {
@@ -68,6 +86,29 @@ function normalizeSkillName(name: string): string {
 
 function canUseFuzzyMatch(input: string, candidate: string): boolean {
   return input.length >= 5 && candidate.length >= 5;
+}
+
+function resolveLogoSlug(slug: string): SkillLogoMeta | undefined {
+  const customLogo = CUSTOM_SKILL_LOGOS[slug];
+  if (customLogo) return customLogo;
+
+  const icon = ICON_DATA[slug];
+  if (!icon) return undefined;
+
+  return {
+    slug,
+    viewBox: SIMPLE_ICON_VIEW_BOX,
+    paths: [{
+      d: icon.path,
+      fill: `#${icon.hex}`,
+    }],
+  };
+}
+
+function resolveExactLogo(name: string) {
+  const normalized = normalizeSkillName(name);
+  const slug = ALIAS_MAP[normalized] || normalized;
+  return resolveLogoSlug(slug);
 }
 
 function levenshteinDistance(a: string, b: string): number {
@@ -92,22 +133,26 @@ function levenshteinDistance(a: string, b: string): number {
 export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
   const normalized = normalizeSkillName(name);
 
-  // 1. 先查别名或精准命中
   const slug = ALIAS_MAP[normalized] || normalized;
-  let icon = ICON_DATA[slug];
+  let logo = resolveLogoSlug(slug);
 
-  // 2. 如果未精确命中，启动智能模糊搜索/容错（错字兜底 / 包含版本号兜底等）
-  if (!icon) {
-    const candidates = [...Object.keys(ICON_DATA), ...Object.keys(ALIAS_MAP)];
+  if (!logo && name.includes('/')) {
+    const leadingTechnology = name.split('/', 1)[0].trim();
+    logo = resolveExactLogo(leadingTechnology);
+  }
+
+  if (!logo) {
+    const candidates = [
+      ...Object.keys(ICON_DATA),
+      ...Object.keys(CUSTOM_SKILL_LOGOS),
+      ...Object.keys(ALIAS_MAP),
+    ];
     let bestCandidate = '';
     let minScore = Infinity;
 
     for (const candidate of candidates) {
-      // a. 包含关系：例如输入 "Vuejs3" 或 "React Native" 或 "Spring Boot" 这种长尾版，包含了基座库 Vue/React/Spring
-      // 避免字母太少（如 c）被所有词包含而引发重大误伤
       if (canUseFuzzyMatch(normalized, candidate)) {
         if (normalized.includes(candidate) || candidate.includes(normalized)) {
-          // 偏差值即两者长度差距，越小说明越匹配
           const score = Math.abs(normalized.length - candidate.length);
           if (score < minScore) {
             minScore = score;
@@ -116,11 +161,9 @@ export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
         }
       }
 
-      // b. Levenshtein 编辑距离算法：如用户打错： "typscript" (漏e) 或 "javascirpt" (打反)
       if (canUseFuzzyMatch(normalized, candidate) && normalized[0] === candidate[0]) {
         const dist = levenshteinDistance(normalized, candidate);
         const maxLength = Math.max(normalized.length, candidate.length);
-        // 只接受低比例的编辑距离，避免短词被错误纠正到无关 logo。
         if (dist <= 2 && dist / maxLength <= 0.2 && dist < minScore) {
           minScore = dist;
           bestCandidate = candidate;
@@ -130,14 +173,9 @@ export function resolveSkillLogo(name: string): SkillLogoMeta | undefined {
 
     if (bestCandidate) {
       const mappedSlug = ALIAS_MAP[bestCandidate] || bestCandidate;
-      icon = ICON_DATA[mappedSlug];
+      logo = resolveLogoSlug(mappedSlug);
     }
   }
 
-  if (!icon) return undefined;
-
-  return {
-    color: `#${icon.hex}`,
-    svgPath: icon.path,
-  };
+  return logo;
 }

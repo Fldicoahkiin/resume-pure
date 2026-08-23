@@ -102,6 +102,13 @@ export interface RenderPath {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  strokeLineCap?: 'round';
+  viewBox?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
 export interface RenderImage {

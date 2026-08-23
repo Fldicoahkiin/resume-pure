@@ -1,7 +1,7 @@
 import type { RenderImage } from '@/lib/render/types';
 import { normalizeImageSource } from '@/lib/imageSource';
 import { formatProofRefLabel, isSafePdfUrl, sanitizeUrl } from '@/lib/resumeUtils';
-import { resolveSkillLogo } from '@/lib/skillLogo';
+import { resolveSkillLogo, type SkillLogoMeta } from '@/lib/skillLogo';
 import type { ProjectProof, SkillItem } from '@/types';
 import { DEFAULT_TEXT_COLOR, LARGE_PARAGRAPH_WIDTH, LIGHT_MUTED_TEXT_COLOR, addParagraph, buildParagraphSpec, createMarkdownSegments, createPath, createPlainSegments, createRectFill, measureParagraph, mergeSegmentGroups, ptToPx, withPointDelta } from './context';
 import type { ContactVisual, InlinePlacementItem, LayoutContext } from './context';
@@ -29,6 +29,36 @@ const DEFAULT_SKILL_ENTRY_GAP = 12;
 
 export function getTechnologyPillIconWidth(iconBoxSize: number, hasIcon: boolean) {
   return hasIcon ? iconBoxSize + TECHNOLOGY_PILL_ICON_GAP : 0;
+}
+
+function pushSkillLogo(
+  context: LayoutContext,
+  logo: SkillLogoMeta,
+  x: number,
+  y: number,
+  size: number,
+) {
+  const sourceToOutputScale = Math.min(
+    size / logo.viewBox.width,
+    size / logo.viewBox.height,
+  );
+
+  for (const path of logo.paths) {
+    context.drawOps.push(
+      createPath(
+        path.d,
+        x,
+        y,
+        size,
+        size,
+        path.fill,
+        path.stroke,
+        path.strokeWidth ? path.strokeWidth * sourceToOutputScale : undefined,
+        path.strokeLineCap,
+        logo.viewBox,
+      ),
+    );
+  }
 }
 
 export function buildInlineMetadataItem(
@@ -87,7 +117,7 @@ export function buildInlineMetadataItem(
 export function buildTechnologyPill(
   context: LayoutContext,
   label: string,
-  icon: { svgPath: string; color: string } | undefined,
+  icon: SkillLogoMeta | undefined,
   muted: boolean,
 ): InlinePlacementItem {
   const { metrics } = context;
@@ -134,15 +164,12 @@ export function buildTechnologyPill(
 
       let cursorX = x + horizontalPadding;
       if (icon) {
-        context.drawOps.push(
-          createPath(
-            icon.svgPath,
-            cursorX,
-            y + (pillHeight - metrics.inlineIconSize) / 2,
-            metrics.inlineIconSize,
-            metrics.inlineIconSize,
-            icon.color,
-          ),
+        pushSkillLogo(
+          context,
+          icon,
+          cursorX,
+          y + (pillHeight - metrics.inlineIconSize) / 2,
+          metrics.inlineIconSize,
         );
         cursorX += iconBoxWidth;
       }
@@ -266,15 +293,12 @@ export function buildSkillEntry(
         } satisfies RenderImage);
         cursorX += iconSize + gapAfterLogo;
       } else if (logo) {
-        context.drawOps.push(
-          createPath(
-            logo.svgPath,
-            cursorX,
-            centerY - iconSize / 2,
-            iconSize,
-            iconSize,
-            logo.color,
-          ),
+        pushSkillLogo(
+          context,
+          logo,
+          cursorX,
+          centerY - iconSize / 2,
+          iconSize,
         );
         cursorX += iconSize + gapAfterLogo;
       }

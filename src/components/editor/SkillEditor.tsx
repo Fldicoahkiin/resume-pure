@@ -354,8 +354,20 @@ function SkillItemRow({
               className="h-5 w-5 object-contain"
             />
           ) : resolvedLogo ? (
-            <svg viewBox="0 0 24 24" fill={resolvedLogo.color} className="h-4 w-4">
-              <path d={resolvedLogo.svgPath} />
+            <svg
+              viewBox={`${resolvedLogo.viewBox.x} ${resolvedLogo.viewBox.y} ${resolvedLogo.viewBox.width} ${resolvedLogo.viewBox.height}`}
+              className="h-4 w-4"
+            >
+              {resolvedLogo.paths.map((path) => (
+                <path
+                  key={path.d}
+                  d={path.d}
+                  fill={path.fill ?? 'none'}
+                  stroke={path.stroke}
+                  strokeWidth={path.strokeWidth}
+                  strokeLinecap={path.strokeLineCap}
+                />
+              ))}
             </svg>
           ) : (
             <Wrench className="h-3.5 w-3.5 text-gray-300 dark:text-gray-500" />

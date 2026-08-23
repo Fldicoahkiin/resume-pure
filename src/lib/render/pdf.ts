@@ -3,6 +3,7 @@ import {
   PDFDocument,
   PDFFont,
   PDFHexString,
+  LineCapStyle,
   PDFImage,
   PDFName,
   PDFNumber,
@@ -20,6 +21,7 @@ import {
   pushGraphicsState,
   rgb,
   setFillingColor,
+  setLineCap,
   setLineWidth,
   setStrokingColor,
   stroke,
@@ -32,6 +34,7 @@ import { subsetFont } from '@/lib/render/fontSubset';
 import { fitRenderImage } from '@/lib/render/imageGeometry';
 import { loadEncodedImageBuffer } from '@/lib/render/surface';
 import { svgPathToPdfOperators } from '@/lib/render/svgPath';
+import { fitSvgPathViewBox } from '@/lib/render/svgViewBox';
 import type {
   LayoutPage,
   RenderArtifact,
@@ -41,7 +44,6 @@ import type {
 
 /** CSS 像素（96dpi）到 PDF point（72dpi）的换算 */
 const K = 72 / 96;
-const ICON_VIEWBOX_SIZE = 24;
 /** 合成斜体的倾斜角度，与 CanvasKit 的 fake-italic（skew 0.25）一致 */
 const ITALIC_SKEW_DEGREES = 14;
 /** 三次贝塞尔拟合四分之一圆弧的控制点系数 */
@@ -261,7 +263,12 @@ function toPdfY(geometry: PageGeometry, docTop: number, height: number) {
 function paintPath(
   page: PDFPage,
   pathOperators: PDFOperator[],
-  style: { fill?: string; stroke?: string; strokeWidth?: number },
+  style: {
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    strokeLineCap?: 'round';
+  },
 ) {
   const paint: PDFOperator[] = [];
   if (style.fill) {
@@ -269,6 +276,9 @@ function paintPath(
   }
   if (style.stroke) {
     paint.push(setStrokingColor(parseHexColor(style.stroke)), setLineWidth((style.strokeWidth ?? 1) * K));
+    if (style.strokeLineCap === 'round') {
+      paint.push(setLineCap(LineCapStyle.Round));
+    }
   }
   const painter = style.fill && style.stroke ? fillAndStroke() : style.fill ? fill() : stroke();
   page.pushOperators(pushGraphicsState(), ...paint, ...pathOperators, painter, popGraphicsState());
@@ -311,17 +321,18 @@ function drawLineOp(page: PDFPage, geometry: PageGeometry, op: Extract<RenderDra
 }
 
 function drawPathOp(page: PDFPage, geometry: PageGeometry, op: Extract<RenderDrawOp, { kind: 'path' }>) {
-  // 图标 viewBox 24×24，x 用宽度缩放、y 用高度缩放（与 canvas 侧一致）
+  const placement = fitSvgPathViewBox(op);
   const pathOperators = svgPathToPdfOperators(op.path, {
-    x: op.x * K,
-    y: toPdfY(geometry, op.y, 0),
-    scaleX: (op.width / ICON_VIEWBOX_SIZE) * K,
-    scaleY: (op.height / ICON_VIEWBOX_SIZE) * K,
+    x: placement.originX * K,
+    y: toPdfY(geometry, placement.originY, 0),
+    scaleX: placement.scaleX * K,
+    scaleY: placement.scaleY * K,
   });
   paintPath(page, pathOperators, {
     fill: op.fill,
     stroke: op.stroke,
     strokeWidth: op.strokeWidth,
+    strokeLineCap: op.strokeLineCap,
   });
 }
 

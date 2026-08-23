@@ -16,6 +16,7 @@ import { buildLayoutDocument } from '@/lib/render/layout';
 import { layoutParagraph } from '@/lib/render/paragraph';
 import { RenderImageCache, type RenderImageLease } from '@/lib/render/renderImageCache';
 import { prefetchRenderImages } from '@/lib/render/renderImagePrefetch';
+import { fitSvgPathViewBox } from '@/lib/render/svgViewBox';
 import type {
   LayoutDocument,
   RenderArtifact,
@@ -25,7 +26,6 @@ import type {
 } from '@/lib/render/types';
 import type { ResumeData } from '@/types';
 
-const ICON_VIEWBOX_SIZE = 24;
 const RENDER_FETCH_TIMEOUT_MS = 5000;
 const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
@@ -59,6 +59,7 @@ function createPaint(CanvasKitModule: CanvasKit, config: {
   color?: string;
   stroke?: boolean;
   strokeWidth?: number;
+  strokeLineCap?: 'round';
 }) {
   const paint = new CanvasKitModule.Paint();
   paint.setAntiAlias(true);
@@ -66,6 +67,9 @@ function createPaint(CanvasKitModule: CanvasKit, config: {
   paint.setStyle(config.stroke ? CanvasKitModule.PaintStyle.Stroke : CanvasKitModule.PaintStyle.Fill);
   if (config.strokeWidth) {
     paint.setStrokeWidth(config.strokeWidth);
+  }
+  if (config.strokeLineCap === 'round') {
+    paint.setStrokeCap(CanvasKitModule.StrokeCap.Round);
   }
   return paint;
 }
@@ -174,9 +178,11 @@ function drawPathOp(CanvasKitModule: CanvasKit, canvas: Canvas, operation: Extra
     return;
   }
 
+  const placement = fitSvgPathViewBox(operation);
+
   canvas.save();
-  canvas.translate(operation.x, operation.y);
-  canvas.scale(operation.width / ICON_VIEWBOX_SIZE, operation.height / ICON_VIEWBOX_SIZE);
+  canvas.translate(placement.originX, placement.originY);
+  canvas.scale(placement.scaleX, placement.scaleY);
 
   if (operation.fill) {
     const fillPaint = createPaint(CanvasKitModule, { color: operation.fill });
@@ -188,7 +194,8 @@ function drawPathOp(CanvasKitModule: CanvasKit, canvas: Canvas, operation: Extra
     const strokePaint = createPaint(CanvasKitModule, {
       color: operation.stroke,
       stroke: true,
-      strokeWidth: operation.strokeWidth ? operation.strokeWidth / (operation.width / ICON_VIEWBOX_SIZE || 1) : 1,
+      strokeWidth: operation.strokeWidth ? operation.strokeWidth / (placement.scaleX || 1) : 1,
+      strokeLineCap: operation.strokeLineCap,
     });
     canvas.drawPath(path, strokePaint);
     strokePaint.delete();

@@ -140,7 +140,18 @@ export function createRectFill(rect: RenderRect, fill?: string, stroke?: string,
   };
 }
 
-export function createPath(path: string, x: number, y: number, width: number, height: number, fill?: string, stroke?: string, strokeWidth?: number): RenderPath {
+export function createPath(
+  path: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  fill?: string,
+  stroke?: string,
+  strokeWidth?: number,
+  strokeLineCap?: RenderPath['strokeLineCap'],
+  viewBox?: RenderPath['viewBox'],
+): RenderPath {
   return {
     kind: 'path',
     path,
@@ -151,6 +162,8 @@ export function createPath(path: string, x: number, y: number, width: number, he
     fill,
     stroke,
     strokeWidth,
+    strokeLineCap,
+    viewBox,
   };
 }
 
