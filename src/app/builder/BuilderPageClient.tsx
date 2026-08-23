@@ -268,6 +268,7 @@ function BuilderPageLayout({
                 {t('builder.form')}
               </button>
               <button
+                data-testid="editor-mode-raw"
                 onClick={() => setUi((prev) => ({ ...prev, editorMode: 'raw' }))}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   ui.editorMode === 'raw'

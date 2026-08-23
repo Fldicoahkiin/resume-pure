@@ -13,6 +13,7 @@ describe('resume export CLI arguments', () => {
       inputPath: '/workspace/resume.json',
       format: 'pdf',
       outputPath: '/workspace/exports/resume.pdf',
+      language: 'en',
       url: undefined,
     });
   });
@@ -30,7 +31,22 @@ describe('resume export CLI arguments', () => {
       inputPath: '/workspace/resume.json',
       format: 'png',
       outputPath: '/workspace/resume.png',
+      language: 'en',
       url: 'http://127.0.0.1:3000/builder/',
+    });
+  });
+
+  it('accepts an explicit export language', () => {
+    expect(parseResumeCliArgs([
+      'resume.json',
+      '--format',
+      'pdf',
+      '--output',
+      'resume.pdf',
+      '--language',
+      'zh',
+    ], '/workspace')).toMatchObject({
+      language: 'zh',
     });
   });
 
@@ -70,6 +86,18 @@ describe('resume export CLI arguments', () => {
       '--output',
       'resume.svg',
     ])).toThrow('--format must be pdf or png');
+  });
+
+  it('rejects unsupported languages', () => {
+    expect(() => parseResumeCliArgs([
+      'resume.json',
+      '--format',
+      'pdf',
+      '--output',
+      'resume.pdf',
+      '--language',
+      'fr',
+    ])).toThrow('--language must be zh, en, zh-TW, or ja');
   });
 
   it('rejects an output extension that does not match the format', () => {

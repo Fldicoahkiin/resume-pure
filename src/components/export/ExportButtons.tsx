@@ -62,6 +62,7 @@ export function ExportButtons() {
   return (
     <div className="flex items-center gap-2">
       <button
+        data-testid="export-png"
         onClick={handleExportPNG}
         disabled={loadingPNG}
         className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition disabled:opacity-50"
@@ -71,6 +72,7 @@ export function ExportButtons() {
         {loadingPNG ? '...' : t('export.png')}
       </button>
       <button
+        data-testid="export-pdf"
         onClick={handleExportPDF}
         disabled={loadingPDF}
         className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition disabled:opacity-50"

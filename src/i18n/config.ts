@@ -6,7 +6,7 @@ import en from './locales/en.json';
 import ja from './locales/ja.json';
 import zh from './locales/zh.json';
 import zhTW from './locales/zh-TW.json';
-import { languageOptions } from './languages';
+import { LANGUAGE_STORAGE_KEY, languageOptions } from './languages';
 
 i18n
   .use(LanguageDetector)
@@ -26,7 +26,7 @@ i18n
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'language',
+      lookupLocalStorage: LANGUAGE_STORAGE_KEY,
     },
     react: {
       useSuspense: false,

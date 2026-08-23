@@ -5,6 +5,7 @@ import { access, mkdir, readFile } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
+import { LANGUAGE_STORAGE_KEY } from '../src/i18n/languages';
 import { parseResumeCliArgs, RESUME_CLI_USAGE } from '../src/lib/resumeCli';
 
 const HOST = '127.0.0.1';
@@ -112,11 +113,11 @@ async function run() {
     const context = await browser.newContext({ acceptDownloads: true });
     const page = await context.newPage();
     page.setDefaultTimeout(EXPORT_TIMEOUT_MS);
-    await page.addInitScript(() => {
-      window.localStorage.setItem('i18nextLng', 'en');
-    });
+    await page.addInitScript(({ language, storageKey }) => {
+      window.localStorage.setItem(storageKey, language);
+    }, { language: options.language, storageKey: LANGUAGE_STORAGE_KEY });
     await page.goto(builderUrl, { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: 'Raw', exact: true }).click();
+    await page.getByTestId('editor-mode-raw').click();
     await page.locator('input[accept=".json,.yaml,.yml,.md,.markdown"]').setInputFiles(options.inputPath);
 
     const expectedName = resume.personalInfo?.name;
@@ -128,7 +129,7 @@ async function run() {
     }
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: options.format.toUpperCase(), exact: true }).click();
+    await page.getByTestId(`export-${options.format}`).click();
     const download = await downloadPromise;
     await download.saveAs(options.outputPath);
     await context.close();

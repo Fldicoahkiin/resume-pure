@@ -5,6 +5,8 @@ export const languageOptions = [
   { code: 'ja', label: '日本語', documentLanguage: 'ja' },
 ] as const;
 
+export const LANGUAGE_STORAGE_KEY = 'language';
+
 export type SupportedLanguage = (typeof languageOptions)[number]['code'];
 
 export function resolveSupportedLanguage(language: string | undefined): SupportedLanguage {

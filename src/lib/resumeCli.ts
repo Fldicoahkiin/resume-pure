@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { languageOptions, type SupportedLanguage } from '../i18n/languages';
 
 export type ResumeExportFormat = 'pdf' | 'png';
 
@@ -6,6 +7,7 @@ export interface ResumeCliOptions {
   inputPath: string;
   format: ResumeExportFormat;
   outputPath: string;
+  language: SupportedLanguage;
   url?: string;
   allowRemote?: true;
 }
@@ -16,13 +18,14 @@ export const RESUME_CLI_USAGE = `Usage:
 Options:
   --format, -f   Export format: pdf or png
   --output, -o   Output file path
+  --language, -l Export language: zh, en, zh-TW, or ja (default: en)
   --url          Use an existing Resume Pure builder URL instead of starting locally
   --allow-remote Allow resume data to be loaded into a non-loopback builder URL
   --help, -h     Show this help
 
 Examples:
   bun run export:resume -- ./resume.json --format pdf --output ./resume.pdf
-  bun run export:resume -- ./resume.json -f png -o ./resume.png`;
+  bun run export:resume -- ./resume.json -f png -o ./resume.png --language zh`;
 
 function readOptionValue(args: string[], index: number, option: string) {
   const value = args[index + 1];
@@ -36,6 +39,7 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
   let input: string | undefined;
   let format: ResumeExportFormat | undefined;
   let output: string | undefined;
+  let language: SupportedLanguage = 'en';
   let url: string | undefined;
   let allowRemote = false;
 
@@ -54,6 +58,17 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
 
     if (argument === '--output' || argument === '-o') {
       output = readOptionValue(args, index, argument);
+      index += 1;
+      continue;
+    }
+
+    if (argument === '--language' || argument === '-l') {
+      const value = readOptionValue(args, index, argument);
+      const supportedLanguage = languageOptions.find((option) => option.code === value);
+      if (!supportedLanguage) {
+        throw new Error('--language must be zh, en, zh-TW, or ja');
+      }
+      language = supportedLanguage.code;
       index += 1;
       continue;
     }
@@ -106,6 +121,7 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
     inputPath: path.resolve(cwd, input),
     format,
     outputPath: path.resolve(cwd, output),
+    language,
     url,
     ...(allowRemote ? { allowRemote: true as const } : {}),
   };

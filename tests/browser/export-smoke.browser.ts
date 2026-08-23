@@ -58,7 +58,7 @@ test('exports matching A4 PDF pages and a gap-free continuous PNG', async ({ pag
   await runCli([FIXTURE_PATH, '--format', 'pdf', '--output', pdfPath, '--url', builderUrl]);
   await runCli([FIXTURE_PATH, '--format', 'png', '--output', pngPath, '--url', builderUrl]);
 
-  await page.addInitScript(() => window.localStorage.setItem('i18nextLng', 'en'));
+  await page.addInitScript(() => window.localStorage.setItem('language', 'en'));
   await page.goto('/builder/', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: 'Raw', exact: true }).click();
   await page.locator('input[accept=".json,.yaml,.yml,.md,.markdown"]').setInputFiles(FIXTURE_PATH);
