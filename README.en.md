@@ -49,13 +49,13 @@ bun run start
 
 ### Command-line export
 
-Install the Chromium build that matches the current Playwright version before the first export:
+Install the Chromium build required by Playwright before the first export:
 
 ```bash
 bunx playwright install chromium
 ```
 
-Export a local JSON resume to a PDF or PNG file. The command starts a temporary local Resume Pure server and stops it after the download finishes:
+Export a local Resume Pure JSON file to PDF or PNG. The command starts a temporary local server and stops it after the download finishes:
 
 ```bash
 bun run export:resume -- ./resume.json --format pdf --output ./exports/resume.pdf
@@ -107,7 +107,7 @@ You can also deploy manually:
    - **Build output directory**: `out`
 5. Click Save and Deploy
 
-### GitHub Actions Auto Deploy (Advanced)
+### GitHub Actions Auto Deploy
 
 The repository includes a Vercel deployment workflow: `/.github/workflows/vercel-deploy.yml`
 
@@ -126,15 +126,15 @@ Trigger rules:
 
 ### 1) Supported Formats
 
-- JSON (recommended)
+- JSON
 - YAML
 
-### 2) Current Data Rules
+### 2) Data Rules
 
 - Imported data goes through normalization (type fix + defaults)
 - Raw data is always parsed as the latest structure without requiring `schemaVersion`
 - Raw keeps pure domain data and does not expose internal render `id`
-- Unknown fields are ignored by the current rendering pipeline
+- Unknown fields are ignored by the rendering pipeline
 
 ### 3) Minimal JSON Example
 
@@ -196,37 +196,6 @@ Trigger rules:
 - Quote date-like values (for example `"2024-02-01"`) for parser consistency
 - Use 2-space indentation and avoid tabs
 
-### 5) AI Prompt Template
-
-```text
-# Role & Goal
-You are a senior tech resume consultant and data structure expert. Please generate structured resume data perfectly supported by the Resume Pure platform, based on the user's provided background (Use JSON format by default, or output YAML if explicitly requested).
-
-# Core Data Structure Specifications:
-1. **Required Standard Root Nodes**:
-   `personalInfo`, `experience`, `education`, `projects`, `skills`, `customSections`, `sections`, `theme`.
-2. **Formatting & Validation**:
-   - All date fields (startDate, endDate, date, etc.) are strongly recommended to be exported as strings (e.g., `"2025.01"`, `"2024-02-01"`).
-   - Only output the raw format code itself. Do not wrap it in Markdown code blocks or append unnecessary explanatory text.
-3. **Sections Routing & Mapping**:
-   - The `sections` array dictates the rendering order by referring to the root data nodes via the `key` field.
-   - It must contain at least: `summary`, `experience`, `education`, `projects`, `skills`.
-4. **Custom Sections Strict Rules**:
-   - For non-standard experiences (e.g., Open Source Contributions, Tech Talks, Patents), you must organize them inside `customSections`.
-   - Each custom module must contain a unique `key` (e.g., "Open Source Contributions").
-   - It is **strongly recommended** to supply the `type` field (accepts `"project"`, `"experience"`, `"education"`, or `"skill"`, fallback is `"project"`). That ensures it behaves precisely like an underlying standard section model.
-   - In the bottom `sections` array, the injected key for a custom module must have a `custom:` prefix (e.g., `{"key": "custom:Open Source Contributions", "title": "Open Source", "visible": true}`).
-   - If `type` is `"project"` (the default and most used), rich item fields available: `name`, `role`, `startDate`, `endDate`, `url` (Proof Link), `repoUrl` (Associated Repository), `repoStars` (Repository Star Count: integer), `description` (Array of descriptions), `technologies` (Array of tech stack strings), `showStars` (boolean), `showLogo` (boolean), `showTechnologies` (boolean), `showBulletPoints` (boolean), `layout` (`"compact"` or `"comfortable"`), `visible` (boolean). Please enrich the metadata as much as possible using these fields.
-   - If `type` is `"skill"`, item fields available: `category` (category name), `categoryIcon` (category icon), `items` (skill entries array, each with `name`, `level` (`"core"` / `"proficient"` / `"familiar"`), `context`, `logo`, `showLogo`, `showContext`), `tags` (associated technology tags array), `visible` (boolean).
-
-Please begin generating the mapped data based on my requests and personal experiences:
-```
-
-### 6) Compatibility Boundary
-
-- Supported: missing fields, minor type drift, partial section mapping (auto-normalized)
-- Not supported: arbitrary unknown structures for rendering
-
 ## Project Structure
 
 ```text
@@ -240,7 +209,7 @@ src/
 │   └── export/             # export features
 ├── lib/
 │   ├── resumeData.ts       # raw normalization + migration
-│   ├── rawData.ts          # raw data bridge (internal ↔ raw conversion)
+│   ├── rawData.ts          # raw and internal data conversion
 │   ├── export.ts           # JSON/YAML import/export
 │   ├── markdownFormat.ts   # Markdown import/export
 │   ├── pdf.tsx             # PDF export

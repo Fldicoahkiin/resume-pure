@@ -13,14 +13,14 @@
 
 ## 项目定位
 
-Resume Pure 的核心目标是：
+Resume Pure 的目标是：
 
 - 极简编辑体验：打开即写，不强制登录
 - 本地优先：数据默认保存在浏览器 localStorage
 - 格式可迁移：支持 JSON/YAML 导入导出
 - 对 AI 友好：可通过 Raw 数据直接驱动简历生成
 
-## 核心特性
+## 功能
 
 - 实时预览：A4 1:1 渲染，所见即所得
 - 多格式导出：PDF / PNG / JSON / YAML
@@ -79,16 +79,16 @@ bun run export:resume -- ./resume.json --format pdf --output ./resume.pdf \
 
 ### 渲染字体生成
 
-预览与 PDF 导出共用 `public/fonts/` 下的子集字体（Noto Sans SC 正/粗体、Noto Emoji）。
+预览与 PDF 导出共用 `public/fonts/` 下的子集字体：Noto Sans SC 正体、粗体和 Noto Emoji。
 这些文件已随仓库提交，仅在需要更新字体时重新生成：
 
 ```bash
-brew install fonttools   # 提供 pyftsubset，仅首次需要
+brew install fonttools   # 首次生成字体时安装 pyftsubset
 bash scripts/generate-render-fonts.sh
 ```
 
-脚本从 Google Fonts 官方 static 字体子集化，保证 name 表与 cmap 正确
-（PDF 文本可被复制与被 ATS 解析）。字符集清单见 `scripts/render-font-unicodes.txt`。
+脚本从 Google Fonts 官方 static 字体子集化，保证 name 表与 cmap 正确。
+生成的 PDF 文本可以复制，也可以被 ATS 解析。字符集清单见 `scripts/render-font-unicodes.txt`。
 
 ### Docker
 
@@ -104,8 +104,6 @@ docker run -p 3000:80 resume-pure
 项目已适配静态导出，可通过 GitHub Actions 自动部署。
 
 ### Vercel
-
-#### 一键部署（推荐）
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fldicoahkiin/resume-pure)
 
@@ -126,7 +124,7 @@ docker run -p 3000:80 resume-pure
    - **Build output directory**: `out`
 5. 点击 Save and Deploy
 
-### GitHub Actions 自动部署（进阶）
+### GitHub Actions 自动部署
 
 仓库已提供 Vercel 自动部署工作流：`/.github/workflows/vercel-deploy.yml`
 
@@ -145,15 +143,15 @@ docker run -p 3000:80 resume-pure
 
 ### 1) 支持格式
 
-- JSON（推荐）
+- JSON
 - YAML
 
-### 2) 设计原则（当前版本）
+### 2) 数据规则
 
-- 数据会在导入时经过归一化（字段类型修正、缺失默认值补齐）
+- 数据在导入时归一化，包括字段类型修正和缺失默认值补齐
 - Raw 始终按最新结构处理，不要求 `schemaVersion`
 - Raw 采用纯数据结构，不暴露内部渲染 `id`
-- 未识别字段不会进入当前渲染管线（避免污染状态）
+- 未识别字段不会进入渲染管线
 
 ### 3) 最小可用 JSON 示例
 
@@ -210,41 +208,10 @@ docker run -p 3000:80 resume-pure
 }
 ```
 
-### 4) YAML 使用建议
+### 4) YAML 说明
 
-- 日期建议加引号（如 `"2024-02-01"`），避免不同解析器行为差异
+- 日期使用引号，例如 `"2024-02-01"`，避免不同解析器产生不同结果
 - 保证缩进为 2 空格，避免 tab
-
-### 5) AI 生成 Raw 提示词模板
-
-```text
-# 角色与目标
-你是一个资深技术简历顾问与数据结构专家。请根据提供的用户个人经历，输出一份 Resume Pure 平台完美支持的结构化简历数据（默认请使用 JSON 格式，如用户明确要求也可输出 YAML）。
-
-# 数据结构核心规范要求：
-1. **必须包含的标准根节点**：
-   `personalInfo`, `experience`, `education`, `projects`, `skills`, `customSections`, `sections`, `theme`。
-2. **格式与验证逻辑**：
-   - 所有的日期字段（startDate, endDate, date 等）强烈建议使用字符串（如 `"2025.01"`, `"2024-02-01"`）。
-   - 只输出合法的格式代码本身，不要包裹在 Markdown 代码块外附加多余的解释文本。
-3. **Sections 路由映射机制**：
-   - `sections` 数组必须通过 `key` 字段对应上方的数据节点来排定渲染顺序。
-   - 至少应包含：`summary`, `experience`, `education`, `projects`, `skills`。
-4. **自定义模块强规范 (Custom Sections)**：
-   - 对于非标准经历（如：开源贡献、技术分享、获取专利），必须使用 `customSections` 组织。
-   - 每个自定义模块必须包含一个唯一的 `key`（如 "开源贡献"）。
-   - **强烈建议**配置 `type` 字段（可选 `"project"`, `"experience"`, `"education"`, `"skill"`，默认 `"project"`），使模块继承对应的内置元信息结构和标准字段。
-   - 在底部 `sections` 数组中，对应的模块注入 key 必须添加 `custom:` 前缀映射（如 `{"key": "custom:开源贡献", "title": "开源贡献", "visible": true}`）。
-   - 若 `type` 配置为 `"project"`（最常用），内部层级字段可用：`name`, `role`, `startDate`, `endDate`, `url`（证明链接）, `repoUrl`（关联仓库链接）, `repoStars`, `description`（描述数组）, `technologies`（技术栈数组）, `showStars`, `showLogo`, `showTechnologies`, `showBulletPoints`, `layout`（`"compact"` 或 `"comfortable"`）, `visible`。请尽可能丰富这部分元信息。
-   - 若 `type` 配置为 `"skill"`，内部层级字段可用：`category`（分类名称）, `categoryIcon`（分类图标）, `items`（技能项数组，每项含 `name`, `level`（`"core"` / `"proficient"` / `"familiar"`）, `context`, `logo`, `showLogo`, `showContext`）, `tags`（关联技术标签数组）, `visible`。
-
-请立即开始根据我的诉求和个人经历生成匹配的数据：
-```
-
-### 6) 当前兼容边界
-
-- 支持：字段缺失、字段类型偏差、模块映射不完整的自动修正
-- 不支持：任意未知结构的渲染（未知字段会被忽略）
 
 ## 项目结构
 
@@ -259,7 +226,7 @@ src/
 │   └── export/             # 导出能力
 ├── lib/
 │   ├── resumeData.ts       # Raw 归一化与迁移
-│   ├── rawData.ts          # Raw 数据连接层（内部 ↔ Raw 转换）
+│   ├── rawData.ts          # Raw 与内部数据转换
 │   ├── export.ts           # JSON/YAML 导入导出
 │   ├── markdownFormat.ts   # Markdown 导入导出
 │   ├── pdf.tsx             # PDF 导出
