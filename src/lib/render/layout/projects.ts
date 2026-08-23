@@ -5,7 +5,7 @@ import { formatCompactNumber, formatGitHubPath, getDateRange, sanitizeUrl } from
 import { resolveSkillLogo } from '@/lib/skillLogo';
 import type { Project, SectionConfig } from '@/types';
 import { addDescriptionLines, addSectionHeading } from './blocks';
-import { BULLET_COLUMN_WIDTH, DEFAULT_TEXT_COLOR, INLINE_ICON_GAP, INLINE_ICON_LINK_GAP, INLINE_METADATA_GAP, LARGE_PARAGRAPH_WIDTH, LIGHT_MUTED_TEXT_COLOR, MUTED_TEXT_COLOR, PROJECT_LOGO_GAP, STAR_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPath, createPlainSegments, layoutInlineItems, markBreakpoint, measureParagraph, ptToPx, withPointDelta } from './context';
+import { DEFAULT_TEXT_COLOR, INLINE_ICON_GAP, INLINE_ICON_LINK_GAP, INLINE_METADATA_GAP, LARGE_PARAGRAPH_WIDTH, LIGHT_MUTED_TEXT_COLOR, MUTED_TEXT_COLOR, PROJECT_LOGO_GAP, STAR_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPath, createPlainSegments, layoutInlineItems, markBreakpoint, measureParagraph, ptToPx, withPointDelta } from './context';
 import type { InlinePlacementItem, LayoutContext } from './context';
 import { GITHUB_ICON, LINK_ICON, STAR_ICON } from './icons';
 import { buildInlineMetadataItem, buildProofParagraph, buildTechnologyPill } from './inline';
@@ -194,6 +194,49 @@ function addProjectItem(context: LayoutContext, project: Project) {
     });
   }
 
+  if (project.showProofs !== false && projectProofs.length > 0) {
+    context.cursorY += ptToPx(metrics.isDenseLayout ? 1.5 : (isCompact ? 2 : 2.5));
+    const proofX = context.contentX + proofIndent;
+    const proofWidth = context.contentWidth - proofIndent;
+
+    for (const proof of projectProofs) {
+      const proofStartY = context.cursorY;
+      const proofTextX = proofX + metrics.inlineIconBoxSize + INLINE_ICON_GAP;
+      const proofSpec = buildParagraphSpec(
+        proofTextX,
+        context.cursorY,
+        proofWidth - (proofTextX - proofX),
+        buildProofParagraph(proof.summary, proof.refs, theme.primaryColor),
+        {
+          fontFamily: theme.fontFamily,
+          fontSize: withPointDelta(theme.fontSize, -1),
+          lineHeight: metrics.detailLineHeight,
+          color: DEFAULT_TEXT_COLOR,
+          linkColor: LIGHT_MUTED_TEXT_COLOR,
+        },
+      );
+      const proofSize = addParagraph(context, proofSpec);
+      const proofHeight = proofSize.height;
+      context.drawOps.push(
+        createPath(
+          LINK_ICON,
+          proofX,
+          context.cursorY + Math.max((proofHeight - metrics.inlineIconSize) / 2, 0),
+          metrics.inlineIconSize,
+          metrics.inlineIconSize,
+          LIGHT_MUTED_TEXT_COLOR,
+        ),
+      );
+      addBlockHitRegion(context, projectProofAnchor(project.id, proof.id), {
+        x: proofX,
+        y: proofStartY,
+        width: proofWidth,
+        height: proofHeight,
+      });
+      context.cursorY += proofHeight + ptToPx(metrics.isDenseLayout ? 0 : 0.5);
+    }
+  }
+
   if (project.showTechnologies !== false && project.technologies && project.technologies.length > 0) {
     const maxVisible = isCompact ? 4 : project.technologies.length;
     const pills = project.technologies.slice(0, maxVisible).map((technology) =>
@@ -209,51 +252,6 @@ function addProjectItem(context: LayoutContext, project: Project) {
       rowGap: 0,
     });
     context.cursorY += listTopMargin + technologyLayout.height;
-  }
-
-  if (project.showProofs !== false && projectProofs.length > 0) {
-    context.cursorY += ptToPx(metrics.isDenseLayout ? 1.5 : (isCompact ? 2 : 2.5));
-    const proofX = context.contentX + proofIndent;
-    const proofWidth = context.contentWidth - proofIndent;
-
-    for (const proof of projectProofs) {
-      const proofStartY = context.cursorY;
-      const bulletSpec = buildParagraphSpec(
-        proofX,
-        context.cursorY,
-        BULLET_COLUMN_WIDTH,
-        createPlainSegments('•', { color: LIGHT_MUTED_TEXT_COLOR }),
-        {
-          fontFamily: theme.fontFamily,
-          fontSize: withPointDelta(theme.fontSize, -1),
-          lineHeight: metrics.detailLineHeight,
-          color: LIGHT_MUTED_TEXT_COLOR,
-        },
-      );
-      const proofSpec = buildParagraphSpec(
-        proofX + BULLET_COLUMN_WIDTH,
-        context.cursorY,
-        proofWidth - BULLET_COLUMN_WIDTH,
-        buildProofParagraph(proof.summary, proof.refs, theme.primaryColor),
-        {
-          fontFamily: theme.fontFamily,
-          fontSize: withPointDelta(theme.fontSize, -1),
-          lineHeight: metrics.detailLineHeight,
-          color: DEFAULT_TEXT_COLOR,
-          linkColor: LIGHT_MUTED_TEXT_COLOR,
-        },
-      );
-      const bulletSize = addParagraph(context, bulletSpec);
-      const proofSize = addParagraph(context, proofSpec);
-      const proofHeight = Math.max(bulletSize.height, proofSize.height);
-      addBlockHitRegion(context, projectProofAnchor(project.id, proof.id), {
-        x: proofX,
-        y: proofStartY,
-        width: proofWidth,
-        height: proofHeight,
-      });
-      context.cursorY += proofHeight + ptToPx(metrics.isDenseLayout ? 0 : 0.5);
-    }
   }
 
   addBlockHitRegion(context, projectAnchor(project.id), {
