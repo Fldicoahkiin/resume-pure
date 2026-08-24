@@ -69,6 +69,7 @@ bun run export:resume -- ./resume.json --format png --output ./exports/resume.pn
 ```
 
 PDF 保留预览中的纸张尺寸与分页；PNG 使用相同宽度、字体和内容布局导出为无分页间隔的连续长图。
+导出语言默认为简体中文；如需英文、繁体中文或日语，可通过 `--language en`、`--language zh-TW` 或 `--language ja` 指定。
 
 如果 Resume Pure 已经在运行，可跳过临时服务器：
 

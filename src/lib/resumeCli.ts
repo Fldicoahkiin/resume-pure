@@ -18,7 +18,7 @@ export const RESUME_CLI_USAGE = `Usage:
 Options:
   --format, -f   Export format: pdf or png
   --output, -o   Output file path
-  --language, -l Export language: zh, en, zh-TW, or ja (default: en)
+  --language, -l Export language: zh, en, zh-TW, or ja (default: zh)
   --url          Use an existing Resume Pure builder URL instead of starting locally
   --allow-remote Allow resume data to be loaded into a non-loopback builder URL
   --help, -h     Show this help
@@ -39,7 +39,7 @@ export function parseResumeCliArgs(args: string[], cwd: string = process.cwd()):
   let input: string | undefined;
   let format: ResumeExportFormat | undefined;
   let output: string | undefined;
-  let language: SupportedLanguage = 'en';
+  let language: SupportedLanguage = 'zh';
   let url: string | undefined;
   let allowRemote = false;
 

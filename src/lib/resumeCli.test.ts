@@ -13,7 +13,7 @@ describe('resume export CLI arguments', () => {
       inputPath: '/workspace/resume.json',
       format: 'pdf',
       outputPath: '/workspace/exports/resume.pdf',
-      language: 'en',
+      language: 'zh',
       url: undefined,
     });
   });
@@ -31,7 +31,7 @@ describe('resume export CLI arguments', () => {
       inputPath: '/workspace/resume.json',
       format: 'png',
       outputPath: '/workspace/resume.png',
-      language: 'en',
+      language: 'zh',
       url: 'http://127.0.0.1:3000/builder/',
     });
   });
