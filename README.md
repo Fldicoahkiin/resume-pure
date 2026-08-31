@@ -1,3 +1,5 @@
+
+
 # Resume Pure
 
 [English](./README.en.md)
@@ -101,7 +103,7 @@ docker run -p 3000:80 resume-pure
 
 ### GitHub Pages
 
-项目已适配静态导出，可通过 GitHub Actions 自动部署。
+项目已适配静态导出，可通过 GitHub Actions 自动部署（`/.github/workflows/deploy.yml`）。
 
 ### Vercel
 
