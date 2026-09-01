@@ -1,8 +1,10 @@
 'use client';
 
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import NextImage from 'next/image';
+import { ChevronDown, ChevronUp, Eye, EyeOff, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createEntityId } from '@/lib/id';
+import { normalizeImageSource } from '@/lib/imageSource';
 import { customItemAnchor } from '@/lib/previewAnchor';
 import { useResumeStore } from '@/store/resumeStore';
 import type { CustomSectionItem } from '@/types';
@@ -21,8 +23,9 @@ function createAgentSkillItem(): CustomSectionItem {
     description: [''],
     url: '',
     repoUrl: '',
+    repoAvatarUrl: '',
     showBulletPoints: false,
-    showLogo: false,
+    showLogo: true,
     showStars: false,
   };
 }
@@ -55,99 +58,155 @@ export function AgentSkillEditor({ sectionId, embedded = false }: AgentSkillEdit
         </div>
       ) : (
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              data-editor-anchor={customItemAnchor(sectionId, item.id)}
-              className="py-5 first:pt-0 last:pb-0"
-            >
-              <div className="mb-4 flex items-center gap-3">
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
-                  {item.title || t('editor.agentSkills.untitled')}
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moveItem(index, index - 1)}
-                    disabled={index === 0}
-                    className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                    title={t('editor.actions.moveUp')}
-                  >
-                    <ChevronUp size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveItem(index, index + 1)}
-                    disabled={index === items.length - 1}
-                    className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-                    title={t('editor.actions.moveDown')}
-                  >
-                    <ChevronDown size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => store.deleteCustomSectionItem(sectionId, item.id)}
-                    className="rounded-md p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-300"
-                    title={t('editor.agentSkills.delete')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+          {items.map((item, index) => {
+            const logo = item.showLogo === false ? undefined : normalizeImageSource(item.repoAvatarUrl);
+            return (
+              <div
+                key={item.id}
+                data-editor-anchor={customItemAnchor(sectionId, item.id)}
+                className="py-5 first:pt-0 last:pb-0"
+              >
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                    {logo ? (
+                      <NextImage
+                        src={logo}
+                        alt=""
+                        width={40}
+                        height={40}
+                        unoptimized
+                        crossOrigin="anonymous"
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Sparkles className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                      {item.title || t('editor.agentSkills.untitled')}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
+                      {item.subtitle || t('editor.agentSkills.purposePlaceholder')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveItem(index, index - 1)}
+                      disabled={index === 0}
+                      className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                      title={t('editor.actions.moveUp')}
+                    >
+                      <ChevronUp size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveItem(index, index + 1)}
+                      disabled={index === items.length - 1}
+                      className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                      title={t('editor.actions.moveDown')}
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => store.deleteCustomSectionItem(sectionId, item.id)}
+                      className="rounded-md p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-300"
+                      title={t('editor.agentSkills.delete')}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('editor.agentSkills.name')}
+                    <input
+                      type="text"
+                      value={item.title || ''}
+                      onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { title: event.target.value })}
+                      className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('editor.agentSkills.purpose')}
+                    <input
+                      type="text"
+                      value={item.subtitle || ''}
+                      onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { subtitle: event.target.value })}
+                      placeholder={t('editor.agentSkills.purposePlaceholder')}
+                      className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('editor.agentSkills.repoUrl')}
+                    <input
+                      type="url"
+                      value={item.repoUrl || ''}
+                      onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { repoUrl: event.target.value })}
+                      placeholder="https://github.com/owner/skill"
+                      className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('editor.agentSkills.productUrl')}
+                    <input
+                      type="url"
+                      value={item.url || ''}
+                      onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { url: event.target.value })}
+                      placeholder="https://example.com"
+                      className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
+                    />
+                  </label>
+                  <div className="md:col-span-2">
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                      <label
+                        htmlFor={`agent-skill-logo-${item.id}`}
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        {t('editor.agentSkills.logoUrl')}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => store.updateCustomSectionItem(sectionId, item.id, { showLogo: item.showLogo === false })}
+                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                      >
+                        {item.showLogo === false ? <Eye size={14} /> : <EyeOff size={14} />}
+                        {item.showLogo === false
+                          ? t('editor.agentSkills.showLogo')
+                          : t('editor.agentSkills.hideLogo')}
+                      </button>
+                    </div>
+                    <input
+                      id={`agent-skill-logo-${item.id}`}
+                      type="url"
+                      value={item.repoAvatarUrl || ''}
+                      onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { repoAvatarUrl: event.target.value })}
+                      placeholder={t('editor.agentSkills.logoUrlPlaceholder')}
+                      className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
+                    />
+                    <p className="mt-1.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                      {t('editor.agentSkills.logoHint')}
+                    </p>
+                  </div>
+                  <BulletListTextarea
+                    className="md:col-span-2"
+                    label={t('editor.agentSkills.description')}
+                    value={item.description}
+                    showBulletPoints={item.showBulletPoints === true}
+                    onChange={(description) => store.updateCustomSectionItem(sectionId, item.id, { description })}
+                    onToggleShowBulletPoints={(showBulletPoints) => store.updateCustomSectionItem(sectionId, item.id, { showBulletPoints })}
+                    showBulletPointsLabel={t('editor.customSection.showBulletPoints')}
+                    hideBulletPointsLabel={t('editor.customSection.hideBulletPoints')}
+                    placeholder={t('editor.agentSkills.descriptionPlaceholder')}
+                  />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('editor.agentSkills.name')}
-                  <input
-                    type="text"
-                    value={item.title || ''}
-                    onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { title: event.target.value })}
-                    className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
-                  />
-                </label>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('editor.agentSkills.purpose')}
-                  <input
-                    type="text"
-                    value={item.subtitle || ''}
-                    onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { subtitle: event.target.value })}
-                    className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
-                  />
-                </label>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('editor.agentSkills.repoUrl')}
-                  <input
-                    type="url"
-                    value={item.repoUrl || ''}
-                    onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { repoUrl: event.target.value })}
-                    placeholder="https://github.com/owner/skill"
-                    className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
-                  />
-                </label>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('editor.agentSkills.productUrl')}
-                  <input
-                    type="url"
-                    value={item.url || ''}
-                    onChange={(event) => store.updateCustomSectionItem(sectionId, item.id, { url: event.target.value })}
-                    placeholder="https://example.com"
-                    className="mt-1.5 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
-                  />
-                </label>
-                <BulletListTextarea
-                  className="md:col-span-2"
-                  label={t('editor.agentSkills.description')}
-                  value={item.description}
-                  showBulletPoints={item.showBulletPoints === true}
-                  onChange={(description) => store.updateCustomSectionItem(sectionId, item.id, { description })}
-                  onToggleShowBulletPoints={(showBulletPoints) => store.updateCustomSectionItem(sectionId, item.id, { showBulletPoints })}
-                  showBulletPointsLabel={t('editor.customSection.showBulletPoints')}
-                  hideBulletPointsLabel={t('editor.customSection.hideBulletPoints')}
-                  placeholder={t('editor.agentSkills.descriptionPlaceholder')}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

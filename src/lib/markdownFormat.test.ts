@@ -89,8 +89,9 @@ describe('Markdown resume format', () => {
         subtitle: '从 Git 历史生成可安装 Skill',
         description: ['输出规则、报告和 evals'],
         repoUrl: 'https://github.com/Fldicoahkiin/code-alchemist',
+        repoAvatarUrl: 'https://avatars.githubusercontent.com/u/48170241?v=4',
         showBulletPoints: false,
-        showLogo: false,
+        showLogo: true,
         showStars: false,
       }],
     });
@@ -104,6 +105,8 @@ describe('Markdown resume format', () => {
           title: 'Code Alchemist',
           subtitle: '从 Git 历史生成可安装 Skill',
           repoUrl: 'https://github.com/Fldicoahkiin/code-alchemist',
+          repoAvatarUrl: 'https://avatars.githubusercontent.com/u/48170241?v=4',
+          showLogo: true,
         })],
       }),
     ]);

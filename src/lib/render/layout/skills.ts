@@ -1,14 +1,14 @@
 import { sectionAnchor, skillAnchor, skillItemAnchor } from '@/lib/previewAnchor';
 import type { SectionConfig, Skill } from '@/types';
 import { addSectionHeading } from './blocks';
-import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, layoutInlineItems, markBreakpoint } from './context';
-import type { InlinePlacementItem, LayoutContext } from './context';
+import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, markBreakpoint, withPointDelta } from './context';
+import type { LayoutContext } from './context';
 import { buildSkillEntry } from './inline';
 
 // 技能区用三级间距区分标题、换行和分类切换。
-const SKILL_TITLE_TO_CONTENT_GAP = 3;
-const SKILL_ROW_GAP = 4;
-const SKILL_GROUP_GAP = 9;
+const SKILL_TITLE_TO_CONTENT_GAP = 4;
+const SKILL_ROW_GAP = 3;
+const SKILL_GROUP_GAP = 11;
 
 function addSkillGroup(context: LayoutContext, skill: Skill) {
   const { metrics } = context;
@@ -21,7 +21,7 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     createPlainSegments(skill.category, { color: HEADING_TEXT_COLOR, fontWeight: 700 }),
     {
       fontFamily: theme.fontFamily,
-      fontSize: theme.fontSize,
+      fontSize: withPointDelta(theme.fontSize, -0.5),
       lineHeight: metrics.headingLineHeight,
       color: HEADING_TEXT_COLOR,
     },
@@ -35,29 +35,19 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     ...skill.items.filter((item) => item.level === 'familiar'),
   ];
 
-  const entries = orderedItems.map((item) => {
-    const entry = buildSkillEntry(context, item);
-    return {
-      ...entry,
-      place: (x: number, y: number) => {
-        entry.place(x, y);
-        addBlockHitRegion(context, skillItemAnchor(skill.id, item.id), {
-          x,
-          y,
-          width: entry.width,
-          height: entry.height,
-        });
-      },
-    } satisfies InlinePlacementItem;
+  orderedItems.forEach((item, index) => {
+    if (index > 0) context.cursorY += SKILL_ROW_GAP;
+    const entry = buildSkillEntry(context, item, context.contentWidth);
+    const itemY = context.cursorY;
+    entry.place(context.contentX, itemY);
+    addBlockHitRegion(context, skillItemAnchor(skill.id, item.id), {
+      x: context.contentX,
+      y: itemY,
+      width: context.contentWidth,
+      height: entry.height,
+    });
+    context.cursorY += entry.height;
   });
-
-  const entryLayout = layoutInlineItems(entries, {
-    x: context.contentX,
-    y: context.cursorY,
-    maxWidth: context.contentWidth,
-    rowGap: SKILL_ROW_GAP,
-  });
-  context.cursorY += entryLayout.height;
   addBlockHitRegion(context, skillAnchor(skill.id), {
     x: context.contentX,
     y: groupStartY,

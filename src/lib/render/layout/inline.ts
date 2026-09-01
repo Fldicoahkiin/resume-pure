@@ -23,10 +23,6 @@ const DENSE_SKILL_ENTRY_DIVIDER_SPACING = 4;
 
 const DEFAULT_SKILL_ENTRY_DIVIDER_SPACING = 6;
 
-const DENSE_SKILL_ENTRY_GAP = 9;
-
-const DEFAULT_SKILL_ENTRY_GAP = 12;
-
 export function getTechnologyPillIconWidth(iconBoxSize: number, hasIcon: boolean) {
   return hasIcon ? iconBoxSize + TECHNOLOGY_PILL_ICON_GAP : 0;
 }
@@ -212,14 +208,21 @@ function getSkillEntryStyle(level: SkillItem['level']) {
 export function buildSkillEntry(
   context: LayoutContext,
   item: SkillItem,
+  width: number,
 ): InlinePlacementItem {
   const { metrics } = context;
   const { theme } = context.data;
   const entryStyle = getSkillEntryStyle(item.level);
+  const iconSize = withPointDelta(theme.fontSize, -1);
+  const labelColumnWidth = Math.min(
+    width * (metrics.isDenseLayout ? 0.31 : 0.3),
+    ptToPx(metrics.isDenseLayout ? 132 : 150),
+  );
+  const labelWidth = Math.max(labelColumnWidth - iconSize - SKILL_ENTRY_ICON_GAP, 1);
   const labelSpec = buildParagraphSpec(
     0,
     0,
-    LARGE_PARAGRAPH_WIDTH,
+    labelWidth,
     createPlainSegments(item.name, {
       color: entryStyle.color,
       fontWeight: entryStyle.fontWeight,
@@ -232,11 +235,21 @@ export function buildSkillEntry(
     },
   );
   const labelSize = measureParagraph(context, labelSpec);
+  const dividerSpacing = item.showContext !== false && item.context
+    ? metrics.isDenseLayout
+      ? DENSE_SKILL_ENTRY_DIVIDER_SPACING
+      : DEFAULT_SKILL_ENTRY_DIVIDER_SPACING
+    : 0;
+  const dividerWidth = dividerSpacing > 0 ? ptToPx(0.75) : 0;
+  const contextWidth = Math.max(
+    width - labelColumnWidth - dividerSpacing * 2 - dividerWidth,
+    1,
+  );
   const contextSpec = item.showContext !== false && item.context
     ? buildParagraphSpec(
         0,
         0,
-        LARGE_PARAGRAPH_WIDTH,
+        contextWidth,
         createPlainSegments(item.context, { color: entryStyle.contextColor }),
         {
           fontFamily: theme.fontFamily,
@@ -249,24 +262,6 @@ export function buildSkillEntry(
   const contextSize = contextSpec ? measureParagraph(context, contextSpec) : null;
   const customLogo = item.showLogo === false ? undefined : normalizeImageSource(item.logo);
   const logo = item.showLogo === false || customLogo ? undefined : resolveSkillLogo(item.name);
-  const gapAfterLogo = customLogo || logo ? SKILL_ENTRY_ICON_GAP : 0;
-  const dividerSpacing = contextSize
-    ? metrics.isDenseLayout
-      ? DENSE_SKILL_ENTRY_DIVIDER_SPACING
-      : DEFAULT_SKILL_ENTRY_DIVIDER_SPACING
-    : 0;
-  const dividerWidth = contextSize ? ptToPx(1) : 0;
-  const iconSize = withPointDelta(theme.fontSize, -1);
-  const iconWidth = customLogo || logo ? iconSize : 0;
-  const entryGap = metrics.isDenseLayout
-    ? DENSE_SKILL_ENTRY_GAP
-    : DEFAULT_SKILL_ENTRY_GAP;
-  const width =
-    iconWidth +
-    gapAfterLogo +
-    labelSize.width +
-    (contextSize ? dividerSpacing * 2 + dividerWidth + contextSize.width : 0) +
-    entryGap;
   const height = Math.max(
     metrics.skillCapsuleMinHeight,
     labelSize.height,
@@ -291,7 +286,7 @@ export function buildSkillEntry(
           src: customLogo,
           fit: 'contain',
         } satisfies RenderImage);
-        cursorX += iconSize + gapAfterLogo;
+        cursorX += iconSize + SKILL_ENTRY_ICON_GAP;
       } else if (logo) {
         pushSkillLogo(
           context,
@@ -300,7 +295,24 @@ export function buildSkillEntry(
           centerY - iconSize / 2,
           iconSize,
         );
-        cursorX += iconSize + gapAfterLogo;
+        cursorX += iconSize + SKILL_ENTRY_ICON_GAP;
+      } else {
+        const markerSize = ptToPx(2.25);
+        context.drawOps.push(
+          createRectFill(
+            {
+              x: cursorX + (iconSize - markerSize) / 2,
+              y: centerY - markerSize / 2,
+              width: markerSize,
+              height: markerSize,
+            },
+            theme.primaryColor,
+            undefined,
+            undefined,
+            markerSize / 2,
+          ),
+        );
+        cursorX += iconSize + SKILL_ENTRY_ICON_GAP;
       }
 
       addParagraph(context, {
@@ -308,7 +320,7 @@ export function buildSkillEntry(
         x: cursorX,
         y: y + (height - labelSize.height) / 2,
       });
-      cursorX += labelSize.width;
+      cursorX = x + labelColumnWidth;
 
       if (contextSpec && contextSize) {
         cursorX += dividerSpacing;

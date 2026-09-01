@@ -86,6 +86,7 @@ function appendCustomSectionItem(
   if (customItem.date) lines.push(`日期: ${customItem.date}`);
   if (customItem.url) lines.push(`链接: ${customItem.url}`);
   if (customItem.repoUrl) lines.push(`GitHub 仓库: ${customItem.repoUrl}`);
+  if (customItem.repoAvatarUrl) lines.push(`图标链接: ${customItem.repoAvatarUrl}`);
   if (typeof customItem.repoStars === 'number') lines.push(`Star 数: ${customItem.repoStars}`);
   if (typeof customItem.showLogo === 'boolean') lines.push(`显示图标: ${customItem.showLogo}`);
   if (typeof customItem.showStars === 'boolean') lines.push(`显示 Star: ${customItem.showStars}`);
@@ -368,6 +369,7 @@ export function importFromMarkdown(md: string): ResumeData {
           else if (key === '日期') customItem.date = val;
           else if (key === '链接') customItem.url = val;
           else if (key === 'GitHub 仓库') customItem.repoUrl = val;
+          else if (key === '图标链接') customItem.repoAvatarUrl = val;
           else if (key === 'Star 数') {
             const stars = Number.parseFloat(val);
             if (Number.isFinite(stars)) customItem.repoStars = stars;
