@@ -1,8 +1,8 @@
 import { sectionAnchor, skillAnchor, skillItemAnchor } from '@/lib/previewAnchor';
 import type { SectionConfig, Skill } from '@/types';
 import { addSectionHeading } from './blocks';
-import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, markBreakpoint, withPointDelta } from './context';
-import type { LayoutContext } from './context';
+import { HEADING_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createPlainSegments, layoutInlineItems, markBreakpoint, withPointDelta } from './context';
+import type { InlinePlacementItem, LayoutContext } from './context';
 import { buildSkillEntry } from './inline';
 
 // 技能区用三级间距区分标题、换行和分类切换。
@@ -35,19 +35,29 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
     ...skill.items.filter((item) => item.level === 'familiar'),
   ];
 
-  orderedItems.forEach((item, index) => {
-    if (index > 0) context.cursorY += SKILL_ROW_GAP;
-    const entry = buildSkillEntry(context, item, context.contentWidth);
-    const itemY = context.cursorY;
-    entry.place(context.contentX, itemY);
-    addBlockHitRegion(context, skillItemAnchor(skill.id, item.id), {
-      x: context.contentX,
-      y: itemY,
-      width: context.contentWidth,
-      height: entry.height,
-    });
-    context.cursorY += entry.height;
+  const entries = orderedItems.map((item) => {
+    const entry = buildSkillEntry(context, item);
+    return {
+      ...entry,
+      place: (x: number, y: number) => {
+        entry.place(x, y);
+        addBlockHitRegion(context, skillItemAnchor(skill.id, item.id), {
+          x,
+          y,
+          width: entry.width,
+          height: entry.height,
+        });
+      },
+    } satisfies InlinePlacementItem;
   });
+
+  const entryLayout = layoutInlineItems(entries, {
+    x: context.contentX,
+    y: context.cursorY,
+    maxWidth: context.contentWidth,
+    rowGap: SKILL_ROW_GAP,
+  });
+  context.cursorY += entryLayout.height;
   addBlockHitRegion(context, skillAnchor(skill.id), {
     x: context.contentX,
     y: groupStartY,
