@@ -74,7 +74,7 @@ export function inferCustomSectionType(value: {
   type?: string;
   items?: unknown[];
 }): CustomSectionType {
-  if (value.type && ['custom', 'project', 'experience', 'education', 'skill'].includes(value.type)) {
+  if (value.type && ['custom', 'project', 'experience', 'education', 'skill', 'agentSkill'].includes(value.type)) {
     return value.type as CustomSectionType;
   }
 

@@ -292,6 +292,20 @@
       "templateType": "セクションテンプレート",
       "changeTemplateConfirm": "テンプレートを変更すると、このセクションの項目が削除されます。続行しますか？"
     },
+    "agentSkills": {
+      "template": "Agent Skills",
+      "noItems": "Skill または関連ツールがありません",
+      "addHint": "用途、利用先、検証結果だけを表示します",
+      "untitled": "名称未設定の Skill",
+      "name": "名前",
+      "purpose": "用途",
+      "repoUrl": "GitHub リポジトリ",
+      "productUrl": "利用先",
+      "description": "使い方と検証",
+      "descriptionPlaceholder": "解決する問題、使い方、検証方法を記載",
+      "add": "Skill を追加",
+      "delete": "この Skill を削除"
+    },
     "theme": {
       "title": "設定",
       "reset": "リセット",

@@ -150,7 +150,7 @@ export interface CustomSectionItem {
   showLogo?: boolean;     // 是否展示 Logo
 }
 
-export type CustomSectionType = 'custom' | 'project' | 'experience' | 'education' | 'skill';
+export type CustomSectionType = 'custom' | 'project' | 'experience' | 'education' | 'skill' | 'agentSkill';
 
 // 自定义模块容器
 export interface CustomSection {

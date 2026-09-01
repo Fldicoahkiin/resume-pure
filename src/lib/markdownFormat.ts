@@ -201,7 +201,7 @@ export function exportToMarkdown(data: ResumeData): string {
 }
 
 function isCustomSectionType(value: string): value is CustomSectionType {
-  return ['custom', 'project', 'experience', 'education', 'skill'].includes(value);
+  return ['custom', 'project', 'experience', 'education', 'skill', 'agentSkill'].includes(value);
 }
 
 function parseMarkdownBoolean(value: string): boolean {
@@ -359,7 +359,10 @@ export function importFromMarkdown(md: string): ResumeData {
       } else if (currentItem) {
         if (key === '描述' || key === '贡献证明' || key === '项') {
           currentContext = key;
-        } else if (currentCustomSection?.type === 'custom') {
+        } else if (
+          currentCustomSection?.type === 'custom' ||
+          currentCustomSection?.type === 'agentSkill'
+        ) {
           const customItem = currentItem as CustomSectionItem;
           if (key === '副标题') customItem.subtitle = val;
           else if (key === '日期') customItem.date = val;

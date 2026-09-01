@@ -70,4 +70,42 @@ describe('Markdown resume format', () => {
       }),
     ]);
   });
+
+  it('round-trips Agent Skill sections without project-only fields', () => {
+    const resume = createInitialResume();
+    resume.sections.push({
+      id: 'agent-skills',
+      title: 'Agent Skills 与工具',
+      visible: true,
+      order: resume.sections.length + 1,
+      isCustom: true,
+    });
+    resume.customSections.push({
+      id: 'agent-skills',
+      type: 'agentSkill',
+      items: [{
+        id: 'code-alchemist',
+        title: 'Code Alchemist',
+        subtitle: '从 Git 历史生成可安装 Skill',
+        description: ['输出规则、报告和 evals'],
+        repoUrl: 'https://github.com/Fldicoahkiin/code-alchemist',
+        showBulletPoints: false,
+        showLogo: false,
+        showStars: false,
+      }],
+    });
+
+    const imported = importFromMarkdown(exportToMarkdown(resume));
+
+    expect(imported.customSections).toEqual([
+      expect.objectContaining({
+        type: 'agentSkill',
+        items: [expect.objectContaining({
+          title: 'Code Alchemist',
+          subtitle: '从 Git 历史生成可安装 Skill',
+          repoUrl: 'https://github.com/Fldicoahkiin/code-alchemist',
+        })],
+      }),
+    ]);
+  });
 });

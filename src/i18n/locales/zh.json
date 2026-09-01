@@ -292,6 +292,20 @@
       "templateType": "模块模板",
       "changeTemplateConfirm": "切换模板会清空当前模块中的条目，是否继续？"
     },
+    "agentSkills": {
+      "template": "Agent Skills",
+      "noItems": "还没有 Skill 或配套工具",
+      "addHint": "添加后只展示用途、入口和可验证结果",
+      "untitled": "未命名 Skill",
+      "name": "名称",
+      "purpose": "一句话用途",
+      "repoUrl": "GitHub 仓库",
+      "productUrl": "可用入口",
+      "description": "说明与验证",
+      "descriptionPlaceholder": "写清解决什么问题、如何使用或如何验证",
+      "add": "添加 Skill",
+      "delete": "删除此 Skill"
+    },
     "theme": {
       "title": "自定义设置",
       "reset": "重置",

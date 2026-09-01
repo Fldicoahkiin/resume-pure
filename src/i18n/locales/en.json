@@ -292,6 +292,20 @@
       "templateType": "Section template",
       "changeTemplateConfirm": "Changing the template removes the items in this section. Continue?"
     },
+    "agentSkills": {
+      "template": "Agent Skills",
+      "noItems": "No Skills or companion tools yet",
+      "addHint": "Each entry shows its purpose, access point, and verified result",
+      "untitled": "Untitled Skill",
+      "name": "Name",
+      "purpose": "Purpose",
+      "repoUrl": "GitHub repository",
+      "productUrl": "Live entry",
+      "description": "Usage and evidence",
+      "descriptionPlaceholder": "Explain the problem, how to use it, or how the result was verified",
+      "add": "Add Skill",
+      "delete": "Delete this Skill"
+    },
     "theme": {
       "title": "Settings",
       "reset": "Reset",

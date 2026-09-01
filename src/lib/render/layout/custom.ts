@@ -12,6 +12,7 @@ import { GITHUB_ICON, LINK_ICON, STAR_ICON } from './icons';
 import { buildInlineMetadataItem } from './inline';
 import { addProjectSection } from './projects';
 import { addSkillSection } from './skills';
+import { addAgentSkillSection } from './agentSkills';
 
 const DENSE_CUSTOM_ITEM_EXTRA_GAP = 1;
 
@@ -232,6 +233,15 @@ export function addCustomSection(context: LayoutContext, section: SectionConfig,
       context,
       section,
       customSection.items.filter(isProjectItem),
+    );
+    return;
+  }
+
+  if (customType === 'agentSkill') {
+    addAgentSkillSection(
+      context,
+      section,
+      customSection.items.filter(isCustomSectionItem),
     );
     return;
   }

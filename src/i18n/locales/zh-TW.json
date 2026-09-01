@@ -292,6 +292,20 @@
       "templateType": "區塊範本",
       "changeTemplateConfirm": "切換範本會清除這個區塊中的項目，是否繼續？"
     },
+    "agentSkills": {
+      "template": "Agent Skills",
+      "noItems": "還沒有 Skill 或配套工具",
+      "addHint": "加入後只顯示用途、入口和驗證結果",
+      "untitled": "未命名 Skill",
+      "name": "名稱",
+      "purpose": "一句話用途",
+      "repoUrl": "GitHub 儲存庫",
+      "productUrl": "可用入口",
+      "description": "說明與驗證",
+      "descriptionPlaceholder": "寫清楚解決什麼問題、如何使用或如何驗證",
+      "add": "加入 Skill",
+      "delete": "刪除此 Skill"
+    },
     "theme": {
       "title": "自訂設定",
       "reset": "重設",

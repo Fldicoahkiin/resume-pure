@@ -8,6 +8,7 @@ import { ExperienceEditor } from './ExperienceEditor';
 import { EducationEditor } from './EducationEditor';
 import { SkillEditor } from './SkillEditor';
 import { CustomSectionItemsEditor } from './CustomSectionItemsEditor';
+import { AgentSkillEditor } from './AgentSkillEditor';
 import { inferCustomSectionType } from '@/lib/resumeUtils';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
@@ -49,6 +50,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
         <option value="experience">{t('editor.experience.title')}</option>
         <option value="education">{t('editor.education.title')}</option>
         <option value="skill">{t('editor.skills.title')}</option>
+        <option value="agentSkill">{t('editor.agentSkills.template')}</option>
         <option value="custom">{t('editor.customSection.title')}</option>
       </select>
     </div>
@@ -68,6 +70,7 @@ export function CustomSectionEditor({ sectionId, embedded = false }: CustomSecti
   if (type === 'experience') return <><div className="px-1">{typeSelect}</div><ExperienceEditor embedded sectionId={sectionId} /></>;
   if (type === 'education') return <><div className="px-1">{typeSelect}</div><EducationEditor embedded sectionId={sectionId} /></>;
   if (type === 'skill') return <><div className="px-1">{typeSelect}</div><SkillEditor embedded sectionId={sectionId} /></>;
+  if (type === 'agentSkill') return <><div className="px-1">{typeSelect}</div><AgentSkillEditor embedded sectionId={sectionId} /></>;
   if (type === 'custom') return <><div className="px-1">{typeSelect}</div><CustomSectionItemsEditor embedded sectionId={sectionId} /></>;
 
   return null;
