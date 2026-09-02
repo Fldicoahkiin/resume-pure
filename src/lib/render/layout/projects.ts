@@ -166,7 +166,7 @@ function addProjectItem(context: LayoutContext, project: Project) {
   });
 
   const blockTop = context.cursorY;
-  const blockHeight = Math.max(headingLayout.height, dateSize.height, hasProjectLogo ? projectLogoSize : 0);
+  const blockHeight = Math.max(headingLayout.height, dateSize.height);
 
   if (projectLogo) {
     context.drawOps.push({
@@ -252,6 +252,10 @@ function addProjectItem(context: LayoutContext, project: Project) {
       rowGap: 0,
     });
     context.cursorY += listTopMargin + technologyLayout.height;
+  }
+
+  if (hasProjectLogo) {
+    context.cursorY = Math.max(context.cursorY, blockTop + projectLogoSize);
   }
 
   addBlockHitRegion(context, projectAnchor(project.id), {
