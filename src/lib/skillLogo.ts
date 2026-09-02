@@ -68,6 +68,7 @@ const ALIAS_MAP: Record<string, string> = {
   'steamworkssdk': 'steam',
   'bash3.2+': 'gnubash',
   'claudecode': 'claude',
+  'codex': 'openai',
   'suimove': 'sui',
   'vdf': 'steam',
   'cdp': 'googlechrome',

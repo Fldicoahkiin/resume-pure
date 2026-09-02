@@ -14,6 +14,7 @@ describe('resolveSkillLogo', () => {
     'Bash 3.2+',
     'SVG',
     'Claude Code',
+    'Codex',
     'Agent / MCP',
     'CanvasKit',
     'CI / 发布',
@@ -35,6 +36,7 @@ describe('resolveSkillLogo', () => {
     ['CanvasKit', 'webassembly'],
     ['CI / Release', 'githubactions'],
     ['Giscus', 'github'],
+    ['Codex', 'openai'],
   ])('uses the leading technology for the composite label %s', (name, expectedSlug) => {
     expect(resolveSkillLogo(name)?.slug).toBe(expectedSlug);
   });
@@ -43,7 +45,7 @@ describe('resolveSkillLogo', () => {
     expect(resolveSkillLogo(name)).toBeUndefined();
   });
 
-  it.each(['Zustand', 'Yjs', 'Playwright', 'MCP', 'Walrus'])('uses renderer-compatible paths for %s', (name) => {
+  it.each(['Codex', 'Zustand', 'Yjs', 'Playwright', 'MCP', 'Walrus'])('uses renderer-compatible paths for %s', (name) => {
     const logo = resolveSkillLogo(name);
 
     expect(() => logo?.paths.forEach((path) => parseSvgPath(path.d))).not.toThrow();
