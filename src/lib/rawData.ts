@@ -495,12 +495,17 @@ function mapProjectProofs(value: unknown): Record<string, unknown>[] | undefined
   return mapped.length > 0 ? mapped : undefined;
 }
 
+// Hand-written JSON often lists skills as one delimited string or names them with label/skill/title.
+const SKILL_NAME_SEPARATOR = /[,，、;；|\n]/;
+const SKILL_NAME_ALIASES = ['label', 'skill', 'title'];
+
 function mapSkillEntries(value: unknown): Record<string, unknown>[] {
-  if (!Array.isArray(value)) {
+  const entries = typeof value === 'string' ? value.split(SKILL_NAME_SEPARATOR) : value;
+  if (!Array.isArray(entries)) {
     return [];
   }
 
-  return value.reduce<Record<string, unknown>[]>((acc, item, index) => {
+  return entries.reduce<Record<string, unknown>[]>((acc, item, index) => {
     if (typeof item === 'string') {
       const name = item.trim();
       if (!name) return acc;
@@ -517,8 +522,13 @@ function mapSkillEntries(value: unknown): Record<string, unknown>[] {
 
     if (!isRecord(item)) return acc;
 
+    const name = typeof item.name === 'string' && item.name.trim()
+      ? item.name
+      : SKILL_NAME_ALIASES.map((key) => item[key]).find((alias) => typeof alias === 'string' && alias.trim());
+
     acc.push({
       ...item,
+      name,
       id: `skill-item-${index + 1}`,
     });
     return acc;
@@ -605,7 +615,7 @@ export function prepareImportedResumeData(input: unknown): unknown {
 
         if (resolvedType === 'project' && Array.isArray(item.proofs)) {
           baseItem.proofs = mapProjectProofs(item.proofs);
-        } else if (resolvedType === 'skill' && Array.isArray(item.items)) {
+        } else if (resolvedType === 'skill' && item.items !== undefined) {
           baseItem.items = mapSkillEntries(item.items);
         }
 
