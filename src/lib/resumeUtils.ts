@@ -65,6 +65,16 @@ export function sanitizeUrl(url: string | undefined): string | undefined {
   return undefined;
 }
 
+export function normalizeGitHubProfileUrl(value: string | undefined): string | undefined {
+  // Check the bare username first so all-digit names don't become tel: links.
+  const username = value?.trim().replace(/^@/, '');
+  if (username && /^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(username)) {
+    return `https://github.com/${username}`;
+  }
+
+  return sanitizeUrl(value);
+}
+
 export const isSafePdfUrl = (url: string | undefined): boolean => {
   if (!url) return false;
   return /^(https?:\/\/|mailto:|tel:)/i.test(url);

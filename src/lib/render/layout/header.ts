@@ -1,5 +1,5 @@
 import { customContactAnchor, personalInfoFieldAnchor } from '@/lib/previewAnchor';
-import { sanitizeUrl } from '@/lib/resumeUtils';
+import { normalizeGitHubProfileUrl, sanitizeUrl } from '@/lib/resumeUtils';
 import type { ContactItem } from '@/types';
 import { DEFAULT_TEXT_COLOR, addBlockHitRegion, addParagraph, buildParagraphSpec, createMarkdownSegments, createPlainSegments, createRectFill, layoutInlineItems, ptToPx, withPointDelta } from './context';
 import type { InlinePlacementItem, LayoutContext } from './context';
@@ -126,7 +126,7 @@ export function addHeader(context: LayoutContext) {
       anchor: personalInfoFieldAnchor('github'),
       type: personalInfo.iconConfig?.githubIcon || 'github',
       value: personalInfo.github,
-      href: sanitizeUrl(personalInfo.github),
+      href: normalizeGitHubProfileUrl(personalInfo.github),
     },
     ...(personalInfo.contacts || [])
       .filter((contact) => contact.value)
