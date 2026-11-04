@@ -8,7 +8,6 @@ import {
   INLINE_ICON_GAP,
   INLINE_ICON_LINK_GAP,
   INLINE_METADATA_GAP,
-  LARGE_PARAGRAPH_WIDTH,
   LIGHT_MUTED_TEXT_COLOR,
   MUTED_TEXT_COLOR,
   addBlockHitRegion,
@@ -42,14 +41,14 @@ function formatUrlLabel(value: string) {
   }
 }
 
-function buildHeadingItems(context: LayoutContext, item: CustomSectionItem) {
+function buildHeadingItems(context: LayoutContext, item: CustomSectionItem, maxWidth: number) {
   const { metrics } = context;
   const { theme } = context.data;
   const items: InlinePlacementItem[] = [];
   const titleSpec = buildParagraphSpec(
     0,
     0,
-    LARGE_PARAGRAPH_WIDTH,
+    maxWidth,
     createPlainSegments(item.title || '', { color: '#111827', fontWeight: 700 }),
     {
       fontFamily: theme.fontFamily,
@@ -69,7 +68,7 @@ function buildHeadingItems(context: LayoutContext, item: CustomSectionItem) {
     const subtitleSpec = buildParagraphSpec(
       0,
       0,
-      LARGE_PARAGRAPH_WIDTH,
+      maxWidth - INLINE_METADATA_GAP,
       createPlainSegments(item.subtitle, { color: MUTED_TEXT_COLOR }),
       {
         fontFamily: theme.fontFamily,
@@ -189,7 +188,7 @@ export function addAgentSkillSection(
     const logoSize = context.metrics.isDenseLayout ? 24 : 28;
     const contentX = context.contentX + (showLogo ? logoSize + SKILL_LOGO_GAP : 0);
     const contentWidth = context.contentWidth - (contentX - context.contentX);
-    const heading = layoutInlineItems(buildHeadingItems(context, item), {
+    const heading = layoutInlineItems(buildHeadingItems(context, item, contentWidth), {
       x: contentX,
       y: context.cursorY,
       maxWidth: contentWidth,
