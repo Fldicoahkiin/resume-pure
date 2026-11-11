@@ -36,7 +36,7 @@ function addSkillGroup(context: LayoutContext, skill: Skill) {
   ];
 
   const entries = orderedItems.map((item) => {
-    const entry = buildSkillEntry(context, item);
+    const entry = buildSkillEntry(context, item, context.contentWidth);
     return {
       ...entry,
       place: (x: number, y: number) => {

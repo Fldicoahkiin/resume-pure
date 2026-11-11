@@ -212,6 +212,7 @@ function getSkillEntryStyle(level: SkillItem['level']) {
 export function buildSkillEntry(
   context: LayoutContext,
   item: SkillItem,
+  maxWidth: number,
 ): InlinePlacementItem {
   const { metrics } = context;
   const { theme } = context.data;
@@ -233,12 +234,30 @@ export function buildSkillEntry(
     },
   );
   const labelSize = measureParagraph(context, labelSpec);
-  const contextSpec = item.showContext !== false && item.context
+  const contextText = item.showContext !== false ? item.context : undefined;
+  const hasIconSlot = item.showLogo !== false;
+  const gapAfterLogo = hasIconSlot ? SKILL_ENTRY_ICON_GAP : 0;
+  const dividerSpacing = contextText
+    ? metrics.isDenseLayout
+      ? DENSE_SKILL_ENTRY_DIVIDER_SPACING
+      : DEFAULT_SKILL_ENTRY_DIVIDER_SPACING
+    : 0;
+  const dividerWidth = contextText ? ptToPx(0.75) : 0;
+  const iconWidth = hasIconSlot ? iconSize : 0;
+  const entryGap = metrics.isDenseLayout
+    ? DENSE_SKILL_ENTRY_GAP
+    : DEFAULT_SKILL_ENTRY_GAP;
+  // A long context wraps within the space left after the icon, label and divider.
+  const contextMaxWidth = Math.max(
+    maxWidth - (iconWidth + gapAfterLogo + labelSize.width + dividerSpacing * 2 + dividerWidth + entryGap),
+    theme.fontSize * 4,
+  );
+  const contextSpec = contextText
     ? buildParagraphSpec(
         0,
         0,
-        LARGE_PARAGRAPH_WIDTH,
-        createPlainSegments(item.context, { color: entryStyle.contextColor }),
+        contextMaxWidth,
+        createPlainSegments(contextText, { color: entryStyle.contextColor }),
         {
           fontFamily: theme.fontFamily,
           fontSize: withPointDelta(theme.fontSize, -(metrics.isDenseLayout ? 2.5 : 1.5)),
@@ -250,18 +269,6 @@ export function buildSkillEntry(
   const contextSize = contextSpec ? measureParagraph(context, contextSpec) : null;
   const customLogo = item.showLogo === false ? undefined : normalizeImageSource(item.logo);
   const logo = item.showLogo === false || customLogo ? undefined : resolveSkillLogo(item.name);
-  const hasIconSlot = item.showLogo !== false;
-  const gapAfterLogo = hasIconSlot ? SKILL_ENTRY_ICON_GAP : 0;
-  const dividerSpacing = contextSize
-    ? metrics.isDenseLayout
-      ? DENSE_SKILL_ENTRY_DIVIDER_SPACING
-      : DEFAULT_SKILL_ENTRY_DIVIDER_SPACING
-    : 0;
-  const dividerWidth = contextSize ? ptToPx(0.75) : 0;
-  const iconWidth = hasIconSlot ? iconSize : 0;
-  const entryGap = metrics.isDenseLayout
-    ? DENSE_SKILL_ENTRY_GAP
-    : DEFAULT_SKILL_ENTRY_GAP;
   const width =
     iconWidth +
     gapAfterLogo +
