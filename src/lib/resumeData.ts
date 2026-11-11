@@ -249,13 +249,15 @@ function normalizeSkillItems(value: unknown): SkillItem[] {
     if (!isRecord(item)) return acc;
 
     const name = asString(item.name, '').trim();
-    if (!name) return acc;
+    const context = asOptionalString(item.context);
+    // An entry may carry only a context; drop it only when both are blank.
+    if (!name && !context) return acc;
 
     acc.push({
       id: asString(item.id, createId('skill-item', index)),
       name,
       level: normalizeSkillLevel(item.level),
-      context: asOptionalString(item.context),
+      context,
       logo: asOptionalString(item.logo),
       showLogo: asBoolean(item.showLogo, true),
       showContext: asBoolean(item.showContext, true),

@@ -57,4 +57,20 @@ describe('resume export', () => {
 
     expect(skill.items.map((item) => item.name)).toEqual(['Git', 'Docker']);
   });
+
+  it('keeps exported skill entries that only have a context', () => {
+    const raw = JSON.parse(exportToJSON(createInitialResume()));
+    raw.skills = [{
+      category: 'xx',
+      items: [
+        { name: '', level: 'core', context: '熟悉分布式系统设计', logo: '', showLogo: true, showContext: true },
+        { name: '', level: 'core', context: '', logo: '', showLogo: true, showContext: true },
+      ],
+      visible: true,
+    }];
+
+    const [skill] = importFromJSON(JSON.stringify(raw)).skills;
+
+    expect(skill.items.map((item) => item.context)).toEqual(['熟悉分布式系统设计']);
+  });
 });
